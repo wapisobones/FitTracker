@@ -86,7 +86,11 @@ Para usar otro navegador instalado, configurar `PLAYWRIGHT_BROWSER_CHANNEL` (por
 
 ## GitHub Pages
 
-Publicar el **contenido de `dist/`** en GitHub Pages. Los recursos usan rutas relativas (`base: './'`) y las secciones usan hash (`#/mis-rutinas`), por lo que funcionan bajo `/FitTracker/` y conservan la sección al recargar sin redirecciones del servidor. No se configura despliegue automático en esta etapa.
+El workflow [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) compila con Node.js 24 y la versión de pnpm indicada en `package.json` (11.1.2). Instala con `pnpm install --frozen-lockfile`, ejecuta `pnpm build` y publica **exclusivamente el contenido de `dist/`** mediante las acciones oficiales de GitHub Pages. Se ejecuta con push a `main` o manualmente desde Actions seleccionando `main`.
+
+En [Settings → Pages](https://github.com/wapisobones/FitTracker/settings/pages), seleccionar **Build and deployment → Source → GitHub Actions**, en lugar de publicar directamente una rama. El repositorio debe permitir las acciones `actions/*` y `pnpm/action-setup`; el environment `github-pages`, si tiene reglas de despliegue, debe permitir `main`. No se necesita un token personal: el workflow declara los permisos de Pages y OIDC en el job de despliegue.
+
+La URL es https://wapisobones.github.io/FitTracker/. Vite conserva `base: './'`: el HTML compilado referencia `./assets/*.js`, `./assets/*.css` y `./favicon.svg`, resueltos bajo `/FitTracker/`. Las secciones siguen usando hash (`#/mis-rutinas`), sin redirecciones del servidor. El `index.html` fuente que referencia `./src/app/main.js` es la entrada de Vite y **no debe publicarse directamente**; el workflow publica el HTML compilado. No es necesario subir `dist/` al repositorio.
 
 Para comprobar esa subruta manualmente después del build:
 
