@@ -1,0 +1,111 @@
+.stats-metrics { margin-top: 22px; }
+.stats-metrics .metric { min-width: 0; }
+.stats-metrics .metric > div { min-width: 0; }
+.stats-metrics .metric-value { white-space: normal; overflow-wrap: anywhere; }
+.stats-metrics .metric-detail { line-height: 1.6; }
+.stats-filter { display: flex; align-items: center; gap: 9px; font-size: 12px; max-width: 100%; min-width: 0; }
+.stats-filter > .icon { color: var(--lime); }
+.stats-filter select, .stats-chart-mode select { min-height: 44px; max-width: 100%; min-width: 0; padding: 9px 12px; font: inherit; color: var(--text); border: 1px solid #465765; border-radius: 12px; background: #1b2834; }
+.period-filter select { font-size: 13px; }
+.stats-toolbar { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 22px; }
+.stats-sections { display: flex; gap: 7px; flex-wrap: wrap; }
+.stats-sections button { min-height: 44px; border-radius: 24px; padding: 9px 17px; background: #17232e; font-weight: 600; font-size: 12px; }
+.stats-sections [aria-pressed="true"] { background: var(--lime); border-color: var(--lime); color: #12200b; }
+.stats-empty { display: grid; gap: 12px; padding: 24px; margin-top: 20px; }
+.stats-empty p { color: var(--muted); max-width: 76ch; }
+.stats-empty .button { justify-self: start; }
+.stats-warning { padding: 12px 16px; margin-top: 20px; border: 1px solid #ffc24466; border-radius: 12px; color: #ffdf99; font-size: 12px; }
+.stats-period-note { margin-top: 16px; color: var(--muted); font-size: 12px; }
+.progress-layout { display: grid; gap: 18px; margin-top: 20px; align-items: start; }
+.progress-layout.summary-view { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr); }
+.summary-view .stats-history { grid-column: 2 / 4; }
+.focused-view { grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); }
+.focused-view > :only-child { grid-column: 1 / -1; }
+.focused-view .stats-muscles { max-width: 900px; width: 100%; justify-self: center; }
+.stats-chart-mode { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: 11px; margin-top: 12px; }
+.stats-chart-mode select { min-height: 36px; padding-block: 5px; }
+.stats-strength .stats-filter { max-width: 100%; }
+.stats-strength .stats-filter select { width: 100%; max-width: 245px; }
+.history-chart { margin-top: 12px; }
+.history-chart .load-chart { overflow: hidden; }
+.history-chart .chart-label { font-size: 14px; }
+.history-chart figcaption { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.stats-chart-empty { min-height: 160px; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 24px 0; }
+.stats-chart-empty p { font-size: 14px; }
+.stats-chart-empty small { font-size: 12px; line-height: 1.8; color: var(--muted); }
+.stats-distribution { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 20px; }
+.stats-distribution .muscle-figure { width: 49%; }
+.stats-donut { width: 47%; max-width: 230px; flex: 0 1 auto; }
+.donut-count { fill: var(--text); font: 700 25px 'Bahnschrift', sans-serif; }
+.donut-label { fill: var(--muted); font-size: 14px; }
+.stats-distribution .muscle-list { flex: 1; min-width: 0; }
+.stats-distribution .muscle-list li > div:first-child { font-size: 11px; flex-wrap: wrap; gap: 4px; }
+.stats-distribution .muscle-list li > div:first-child > span { display: flex; align-items: center; gap: 6px; }
+.stats-distribution .muscle-list i { width: 9px; height: 9px; display: inline-block; border-radius: 2px; }
+.stats-distribution .muscle-list small { font-size: 10px; color: var(--muted); }
+.stats-distribution .muscle-list li + li { margin-top: 9px; }
+.summary-view .stats-distribution { flex-direction: column; gap: 10px; }
+.summary-view .stats-donut { width: 70%; max-width: 180px; }
+.summary-view .muscle-list { width: 100%; }
+.stats-records { padding: 18px; min-width: 0; }
+.stats-record-list > li { display: flex; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.stats-record-list > li:last-child { border: 0; padding-bottom: 0; }
+.stats-record-thumb { width: 66px; flex: 0 0 auto; align-self: start; border-radius: 7px; overflow: hidden; background: #142730; }
+.stats-record-thumb svg { display: block; width: 100%; }
+.stats-record-list > li > div { flex: 1; min-width: 0; }
+.stats-record-list h3 { font-size: 14px; overflow-wrap: anywhere; }
+.stats-record-list p { font-size: 11px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 9px; }
+.stats-record-list p strong { color: var(--lime); font-size: 14px; }
+.stats-record-list small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+.summary-view .stats-record-thumb { width: 40px; }
+.stats-session-list > li + li { border-top: 1px solid var(--line); }
+.stats-session summary { display: flex; align-items: center; gap: 13px; min-height: 94px; padding: 15px 0; list-style: none; }
+.stats-session summary::-webkit-details-marker { display: none; }
+.stats-session summary > .icon { width: 18px; color: var(--lime); flex-shrink: 0; }
+.stats-session[open] summary > .icon { transform: rotate(180deg); }
+.stats-session .workout-copy { min-width: 0; }
+.stats-session .workout-copy strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.stats-session .workout-copy small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; }
+.stats-session-detail { padding: 4px 14px 20px; }
+.stats-session-detail > p { color: var(--muted); font-size: 12px; }
+.stats-session-detail section { padding-top: 16px; }
+.stats-session-detail li { padding-top: 7px; font-size: 12px; }
+.stats-goal-progress { width: 100%; height: 10px; border: 0; overflow: hidden; border-radius: 20px; background: var(--track); accent-color: var(--lime); }
+.stats-goal-progress::-webkit-progress-bar { background: var(--track); }
+.stats-goal-progress::-webkit-progress-value { background: var(--lime); border-radius: 20px; }
+@media (max-width: 1350px) {
+  .progress-layout.summary-view { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .summary-view .stats-records { grid-column: 2; grid-row: 1 / 3; }
+  .summary-view .stats-muscles { grid-column: 1; }
+  .summary-view .stats-history { grid-column: 2; }
+}
+@media (max-width: 900px) {
+  .progress-layout.summary-view, .progress-layout.focused-view { grid-template-columns: 1fr; }
+  .summary-view .stats-records, .summary-view .stats-muscles, .summary-view .stats-history { grid-column: auto; grid-row: auto; }
+  .summary-view .stats-distribution { flex-direction: row; }
+  .summary-view .stats-donut { width: 43%; }
+}
+@media (max-width: 600px) {
+  .stats-filter { flex-wrap: wrap; width: 100%; }
+  .stats-filter select { width: 100%; font-size: 16px; }
+  .period-filter { flex-wrap: nowrap; width: auto; }
+  .period-filter select { font-size: 13px; }
+  .stats-toolbar { gap: 14px; }
+  .stats-sections { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 8px; }
+  .stats-sections button { flex-shrink: 0; padding-inline: 16px; }
+  .stats-metrics { margin-top: 16px; }
+  .stats-empty { padding: 20px 16px; }
+  .stats-empty h2 { font-size: 20px; }
+  .stats-strength .stats-filter select { max-width: 100%; }
+  .stats-chart-mode { align-items: start; flex-direction: column; gap: 5px; }
+  .stats-chart-mode select { min-height: 44px; width: 100%; font-size: 16px; }
+  .history-chart .chart-label { font-size: 20px; }
+  .stats-records { padding: 16px; }
+  .stats-distribution { gap: 12px; }
+  .stats-distribution .muscle-list li > div:first-child { font-size: 11px; }
+  .stats-session summary { gap: 9px; }
+  .stats-session .date-tile { width: 48px; }
+  .stats-session .date-tile strong { font-size: 10px; }
+  .stats-session .workout-copy strong { font-size: 14px; }
+  .stats-session .workout-copy small { font-size: 10px; }
+}

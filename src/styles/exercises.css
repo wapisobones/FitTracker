@@ -1,0 +1,114 @@
+.catalog-scope-note { margin: 14px 0 22px; color: var(--muted); font-size: 12px; }
+.catalog-filters { display: grid; grid-template-columns: minmax(190px, 1.15fr) 2fr; gap: 18px; align-items: end; }
+.exercise-search { display: flex; align-items: center; gap: 10px; border: 1px solid #465868; background: #18232e; border-radius: 12px; min-height: 53px; padding: 0 15px; }
+.exercise-search .icon { width: 21px; color: var(--muted); }
+.exercise-search input { width: 100%; border: 0; background: transparent; min-height: 50px; color: var(--text); }
+.exercise-search input:focus-visible { outline-offset: 0; }
+.exercise-search input::placeholder { color: var(--muted); }
+.exercise-filter-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.exercise-filter-fields label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 11px; }
+.exercise-filter-fields select, .exercise-editor input, .exercise-editor select, .exercise-editor textarea { width: 100%; min-width: 0; border: 1px solid #465868; border-radius: 10px; background: #18232e; color: var(--text); min-height: 46px; padding: 10px 12px; font: inherit; }
+.exercise-filter-fields select { font-size: 13px; }
+.filter-toggle { display: none; }
+.muscle-chips { display: flex; gap: 10px; overflow-x: auto; margin-top: 22px; padding: 3px 3px 9px; }
+.muscle-chips button { border: 1px solid #40515f; background: #111d27; padding: 9px 20px; border-radius: 99px; min-height: 43px; white-space: nowrap; }
+.muscle-chips button[aria-pressed="true"] { background: var(--lime); color: #15220c; border-color: var(--lime); font-weight: 650; }
+.catalog-results-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 13px 0 18px; }
+.catalog-count { color: var(--lime); font-size: 14px; font-weight: 600; }
+.clear-filters { background: transparent; border: 0; min-height: 44px; padding: 8px; }
+.catalog-feedback:not(:empty) { padding: 12px 16px; background: #9bf45c09; border: 1px solid #9bf45c30; border-radius: 10px; color: var(--muted); margin-bottom: 18px; }
+.exercise-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.exercise-card { overflow: hidden; display: flex; flex-direction: column; border-radius: 15px; }
+.exercise-card:focus-within { border-color: var(--lime); }
+.exercise-preview { position: relative; width: 100%; background: linear-gradient(145deg, #1b303b, #0d1b24); border: 0; border-bottom: 1px solid var(--line); padding: 0; color: var(--text); }
+.exercise-preview:hover { background: linear-gradient(145deg, #233d43, #122429); }
+.exercise-preview:focus-visible { outline-offset: -4px; }
+.exercise-visual { display: block; width: 100%; height: auto; }
+.preview-caption { position: absolute; bottom: 9px; left: 10px; font-size: 9px; color: #b4c8d0; }
+.technique-badge { position: absolute; right: 9px; top: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 7px; color: var(--lime); background: #0d1921ed; border: 1px solid #9bf45c30; border-radius: 7px; font-size: 10px; }
+.technique-badge .icon { width: 13px; height: 13px; }
+.exercise-card-body { padding: 15px; display: flex; flex: 1; flex-direction: column; }
+.exercise-card-body h2 { font-size: 18px; margin-bottom: 13px; overflow-wrap: anywhere; }
+.exercise-attribute { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.exercise-attribute .icon { width: 18px; height: 18px; color: var(--lime); }
+.exercise-attribute span { min-width: 0; overflow-wrap: anywhere; }
+.exercise-attribute.difficulty-intermediate, .exercise-attribute.difficulty-intermediate .icon { color: var(--amber); }
+.exercise-attribute.difficulty-beginner { color: var(--lime); }
+.exercise-attribute.difficulty-unknown .icon { color: var(--muted); }
+.custom-exercise-actions { display: flex; align-items: center; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: auto; }
+.custom-exercise-actions > span { color: var(--muted); font-size: 10px; margin-right: auto; }
+.custom-exercise-actions .icon-button { width: 38px; height: 44px; padding: 9px; }
+.custom-exercise-actions .icon { width: 19px; height: 19px; }
+.catalog-empty { grid-column: 1 / -1; padding: 38px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 17px; }
+.catalog-empty p { color: var(--muted); }
+.exercise-dialog { width: min(930px, calc(100vw - 48px)); max-width: none; max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid #526573; border-radius: 20px; background: var(--card); color: var(--text); padding: 24px; }
+.exercise-dialog::backdrop { background: #03090dd9; }
+.exercise-dialog[data-kind="editor"], .exercise-dialog[data-kind="delete"] { width: min(560px, calc(100vw - 32px)); }
+.exercise-dialog h2 { font-size: 25px; }
+.exercise-dialog .dialog-heading h2 { min-width: 0; overflow-wrap: anywhere; }
+.exercise-dialog .dialog-heading { margin-bottom: 20px; position: sticky; top: 0; z-index: 1; background: var(--card); }
+.technique-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 24px; align-items: start; }
+.technique-illustration { background: #10212b; border-radius: 13px; border: 1px solid var(--line); padding: 12px; }
+.technique-illustration p { color: var(--muted); text-align: center; font-size: 11px; padding-bottom: 8px; }
+.video-unavailable { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
+.video-unavailable .icon { color: var(--lime); width: 18px; height: 18px; }
+.technique-copy h3 { display: flex; align-items: center; gap: 9px; font-size: 19px; margin-bottom: 16px; }
+.technique-copy h3 .icon { color: var(--lime); width: 22px; }
+.technique-steps { list-style: none; padding: 0; counter-reset: steps; }
+.technique-steps li { counter-increment: steps; position: relative; padding-left: 36px; color: var(--muted); line-height: 1.7; margin-bottom: 17px; }
+.technique-steps li::before { content: counter(steps); position: absolute; left: 0; top: 1px; width: 25px; height: 25px; display: grid; place-items: center; background: var(--lime); color: #17250e; border-radius: 50%; font-weight: 700; font-size: 13px; }
+.technique-tips { border-top: 1px solid var(--line); padding-top: 17px; margin-top: 22px; }
+.technique-tips li { display: flex; gap: 8px; color: var(--muted); margin-top: 10px; line-height: 1.7; }
+.technique-tips li .icon { color: var(--lime); width: 18px; margin-top: 2px; }
+.future-routine-action { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; text-align: right; }
+.future-routine-action p { color: var(--muted); font-size: 12px; margin-top: 9px; }
+.editor-scope { color: var(--muted); font-size: 13px; }
+.exercise-editor { margin-top: 22px; }
+.exercise-editor > label { display: block; margin-bottom: 18px; font-size: 14px; }
+.exercise-editor > label > input, .exercise-editor > label > select, .exercise-editor > label > textarea { display: block; margin-top: 7px; }
+.exercise-editor label > span { color: var(--muted); font-size: 12px; }
+.exercise-editor textarea { resize: vertical; line-height: 1.6; }
+.exercise-form-error:not(:empty) { padding: 12px; border: 1px solid #ffbd7c66; color: #ffd0a1; border-radius: 10px; margin-top: 17px; }
+.exercise-dialog[data-kind="delete"] > p { color: var(--muted); line-height: 1.8; overflow-wrap: anywhere; }
+.button-danger { color: #ffd1ce; background: #652f30; border-color: #ad5b5d; }
+.exercise-notes { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); line-height: 1.8; }
+@media (max-width: 1350px) { .exercise-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (max-width: 1100px) {
+  .catalog-filters { grid-template-columns: 1fr; }
+  .exercise-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .catalog-scope-note { font-size: 11px; line-height: 1.7; }
+  .catalog-filters { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .exercise-search { grid-column: 1 / -1; }
+  .filter-toggle { display: inline-flex; min-height: 44px; padding: 9px 16px; }
+  .exercise-filter-fields { grid-column: 1 / -1; grid-template-columns: 1fr; gap: 12px; }
+  .exercise-filter-fields[data-expanded="false"] { display: none; }
+  .exercise-filter-fields label { font-size: 13px; }
+  .exercise-filter-fields select { font-size: 16px; }
+  .exercise-search input, .exercise-editor input, .exercise-editor select, .exercise-editor textarea { font-size: 16px; }
+  .muscle-chips { margin-top: 15px; gap: 8px; }
+  .muscle-chips button { padding: 9px 17px; font-size: 13px; }
+  .catalog-count { font-size: 12px; }
+  .catalog-results-heading { margin-bottom: 13px; }
+  .exercise-grid { gap: 12px; }
+  .exercise-card { border-radius: 13px; }
+  .exercise-card-body { padding: 12px 10px; }
+  .exercise-card-body h2 { font-size: 16px; line-height: 1.4; margin-bottom: 12px; }
+  .exercise-attribute { font-size: 12px; gap: 6px; }
+  .exercise-attribute .icon { width: 16px; height: 18px; }
+  .technique-badge { font-size: 9px; padding: 3px 5px; right: 6px; top: 6px; }
+  .technique-badge .icon { display: none; }
+  .preview-caption { font-size: 8px; left: 7px; bottom: 6px; }
+  .custom-exercise-actions { flex-wrap: wrap; }
+  .custom-exercise-actions > span { flex-basis: 100%; }
+  .exercise-dialog, .exercise-dialog[data-kind="editor"], .exercise-dialog[data-kind="delete"] { margin: auto 0 0; width: 100%; max-height: 93dvh; border-radius: 22px 22px 0 0; padding: 16px 20px calc(24px + env(safe-area-inset-bottom)); }
+  .exercise-dialog::before { content: ''; display: block; width: 48px; height: 5px; background: #81909a; border-radius: 6px; margin: 0 auto 18px; }
+  .exercise-dialog h2 { font-size: 24px; }
+  .technique-layout { grid-template-columns: 1fr; gap: 20px; }
+  .technique-illustration { padding: 8px; }
+  .technique-illustration .exercise-visual { max-height: 200px; }
+  .future-routine-action { text-align: left; }
+  .future-routine-action .button { width: 100%; }
+  .future-routine-action p { text-align: center; }
+}

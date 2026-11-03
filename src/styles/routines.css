@@ -1,0 +1,91 @@
+.routine-top-actions, .routine-actions, .session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.routine-top-actions { margin: 25px 0 18px; }
+.routine-feedback { font-size: 13px; color: var(--lime); margin: 16px 0; }
+.routines-layout { display: grid; grid-template-columns: minmax(230px, .43fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.routine-list { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.routine-list-card { width: 100%; display: flex; align-items: center; gap: 13px; padding: 15px; text-align: left; color: var(--text); }
+.routine-list-card.selected { border-color: var(--lime); box-shadow: inset 0 0 0 1px var(--lime); }
+.routine-list-card > span:not(.routine-cover) { flex: 1; min-width: 0; }
+.routine-list-card strong { font-size: 17px; display: block; overflow-wrap: anywhere; }
+.routine-list-card small { display: block; color: var(--muted); font-size: 12px; margin-top: 6px; }
+.routine-list-card > .icon { width: 15px; transform: rotate(-90deg); }
+.routine-cover { display: grid; place-items: center; width: 52px; height: 70px; flex-shrink: 0; background: linear-gradient(135deg, #254232, #12232a); border-radius: 10px; border: 1px solid #4e754344; color: var(--lime); }
+.routine-cover .icon { width: 32px; height: 32px; }
+.routine-cover.large { width: 75px; height: 88px; }
+.routine-cover.large .icon { width: 43px; height: 43px; }
+.routine-detail { min-width: 0; }
+.routine-detail-card { padding: 24px; }
+.routine-detail-heading { display: flex; align-items: flex-start; gap: 18px; }
+.routine-detail-heading > div { min-width: 0; }
+.routine-detail-heading h2 { font-size: 27px; overflow-wrap: anywhere; }
+.routine-detail-heading p { color: var(--muted); margin-top: 10px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.routine-meta { display: flex; flex-wrap: wrap; gap: 12px; color: var(--lime); margin-top: 12px; font-size: 12px; }
+.routine-actions { border-bottom: 1px solid var(--line); padding: 20px 0; margin-bottom: 23px; }
+.routine-actions .button { font-size: 12px; padding: 9px 13px; }
+.routine-actions .icon { width: 18px; height: 18px; }
+.routine-sequence-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 13px; }
+.routine-sequence-heading h3 { display: flex; align-items: center; gap: 9px; font-size: 20px; }
+.routine-sequence-heading h3 > .icon { color: var(--lime); }
+.routine-sequence-heading .button { font-size: 12px; padding: 9px 13px; }
+.sequence-note { color: var(--muted); margin: 14px 0; font-size: 12px; line-height: 1.8; }
+.session-tabs { display: flex; overflow-x: auto; gap: 9px; padding: 4px 3px 10px; }
+.session-tabs > button { min-width: 98px; max-width: 180px; min-height: 66px; padding: 10px 14px; background: #15212c; color: var(--text); border: 1px solid #465765; border-radius: 13px; flex-shrink: 0; }
+.session-tabs small { display: block; font-size: 11px; margin-bottom: 5px; }
+.session-tabs strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
+.session-tabs [aria-pressed="true"] { color: #15220c; background: var(--lime); border-color: var(--lime); }
+.session-content { border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 16px; }
+.session-heading { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.session-heading h3 { font-size: 20px; overflow-wrap: anywhere; }
+.session-heading > span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.session-actions { margin: 15px 0; }
+.session-actions .button { padding: 7px 10px; font-size: 11px; }
+.prescription-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 13px; padding: 17px 0; border-top: 1px solid var(--line); }
+.prescription-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.prescription-name strong { font-size: 14px; display: block; overflow-wrap: anywhere; }
+.prescription-name small { color: var(--muted); font-size: 11px; display: block; margin-top: 5px; }
+.prescription-thumb { width: 62px; flex-shrink: 0; background: #142a34; border-radius: 7px; overflow: hidden; }
+.prescription-targets { display: flex; gap: 12px; margin: 0; text-align: center; align-items: center; }
+.prescription-targets dt { font-size: 10px; color: var(--muted); }
+.prescription-targets dd { margin: 5px 0 0; font-size: 13px; white-space: nowrap; }
+.prescription-actions { display: flex; justify-content: flex-end; gap: 0; }
+.prescription-actions .icon-button { width: 40px; height: 44px; }
+.prescription-actions .icon { width: 19px; }
+.prescription-notes { grid-column: 1 / -1; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); font-size: 12px; }
+.routine-inline-empty { text-align: center; padding: 30px 14px; }
+.routine-inline-empty p { color: var(--muted); margin-top: 10px; font-size: 13px; line-height: 1.8; }
+.add-session-exercise { width: 100%; margin-top: 15px; }
+.routine-start { border-top: 1px solid var(--line); padding-top: 18px; }
+.routine-start p { font-size: 11px; color: var(--muted); margin-top: 9px; }
+.routine-dialog { width: min(620px, calc(100vw - 32px)); }
+.routine-dialog label, .picker-search-label { display: block; margin: 18px 0; font-size: 14px; }
+.routine-dialog input, .routine-dialog select, .routine-dialog textarea { display: block; width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; color: var(--text); background: #18232e; border: 1px solid #465868; border-radius: 10px; font: inherit; margin-top: 7px; }
+.routine-dialog textarea { resize: vertical; }
+.routine-dialog > p, .routine-form-context { color: var(--muted); line-height: 1.8; overflow-wrap: anywhere; }
+.routine-form-error:not(:empty) { padding: 12px; border: 1px solid #ffbd7c66; color: #ffd0a1; border-radius: 10px; margin-top: 17px; }
+.prescription-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+.routine-dialog [hidden] { display: none; }
+.routine-exercise-picker { max-height: 45dvh; overflow-y: auto; margin-top: 14px; }
+.picker-exercise { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; text-align: left; color: var(--text); background: #14212b; border: 1px solid var(--line); padding: 14px; border-radius: 10px; margin-bottom: 9px; min-height: 64px; }
+.picker-exercise:hover { border-color: var(--lime); }
+.picker-exercise strong { display: block; font-size: 14px; }
+.picker-exercise small { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.picker-exercise > span:last-child { color: var(--lime); font-size: 22px; }
+@media (max-width: 1200px) { .routines-layout { grid-template-columns: 1fr; } .routine-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .routine-list { display: flex; }
+  .routines-layout { gap: 20px; }
+  .routine-detail-card { padding: 18px 14px; }
+  .routine-detail-heading { gap: 12px; }
+  .routine-detail-heading h2 { font-size: 24px; }
+  .routine-cover.large { width: 52px; height: 70px; }
+  .routine-cover.large .icon { width: 32px; }
+  .routine-detail-heading p { font-size: 13px; }
+  .session-content { padding: 13px; }
+  .prescription-row { grid-template-columns: 1fr; }
+  .prescription-actions { grid-column: 1 / -1; }
+  .prescription-targets { justify-content: space-between; padding: 10px 12px; background: #172630; border-radius: 8px; }
+  .prescription-targets dt { font-size: 11px; }
+  .prescription-targets dd { font-size: 14px; }
+  .routine-dialog { width: 100%; }
+  .routine-dialog input, .routine-dialog select, .routine-dialog textarea { font-size: 16px; }
+}

@@ -1,0 +1,63 @@
+import { icon } from '../../components/icons.js';
+import { exerciseVisual } from '../../components/exercise-visual.js';
+import { seriesChart, distribution } from '../../components/history-charts.js';
+import { escapeHTML as esc } from '../../utils/html.js';
+import { PERIODS, number, dateLabel } from './metrics.js';
+
+export const SECTIONS = { summary: 'Resumen', strength: 'Fuerza por ejercicio', volume: 'Volumen', muscles: 'Grupos musculares', history: 'Historial' };
+const title = (id, symbol, text, extra = '') => `<div class="card-heading"><h2 id="${id}">${icon(symbol)}${text}</h2>${extra}</div>`;
+export function metric(symbol, label, value, detail, key, unit = '') {
+  return `<article class="metric card" data-metric="${key}">${icon(symbol, 'metric-icon')}<div><h2>${label}</h2><p class="metric-value">${esc(value)}${unit ? ` <span>${unit}</span>` : ''}</p><p class="metric-detail">${esc(detail)}</p></div></article>`;
+}
+export function periodSelect(period) {
+  return `<label class="stats-filter period-filter">${icon('calendar')}<span class="sr-only">Período</span><select data-stats-filter="period" aria-label="Período">${Object.entries(PERIODS).map(([value, label]) => `<option value="${value}"${value === period ? ' selected' : ''}>${label}</option>`).join('')}</select></label>`;
+}
+export function exerciseSelect(exercises, value, { chart = false, all = true } = {}) {
+  return `<label class="stats-filter"><span${chart ? ' class="sr-only"' : ''}>${chart ? 'Ejercicio del gráfico' : 'Ejercicio'}</span><select data-stats-filter="${chart ? 'chartExerciseId' : 'exerciseId'}" aria-label="${chart ? 'Ejercicio del gráfico' : 'Ejercicio'}"${!exercises.length ? ' disabled' : ''}>${all ? '<option value="">Todos los ejercicios</option>' : ''}${!exercises.length && !all ? '<option value="">Sin registros</option>' : exercises.map((exercise) => `<option value="${esc(exercise.id)}"${exercise.id === value ? ' selected' : ''}>${esc(exercise.name)}</option>`).join('')}</select></label>`;
+}
+export function statsHeading(progress, mode, period) {
+  return `<section class="page-heading"><div><h1>${progress ? icon('chart') + 'Progreso' : mode === 'demo' ? '¡Hola, deportista! <span class="greeting-symbol" aria-hidden="true">💪</span>' : 'Tu espacio de entrenamiento'}</h1><p>${progress ? 'Analiza tu evolución, récords y entrenamientos realizados.' : 'Cada serie guardada forma parte de tu progreso.'}</p></div>${periodSelect(period)}</section>${mode === 'demo' ? `<p class="demo-notice">${icon('info')}<span>Demostración · El historial inicial es ficticio. También se incluyen las sesiones que registres en este espacio.</span></p>` : ''}`;
+}
+export function dataNotice(history, stats, { exerciseId, period }) {
+  return `${history.ignored ? `<p class="stats-warning" role="status">Se omitieron ${history.ignored} series con datos incompletos o repetidos. Los registros originales se conservan.</p>` : ''}${!history.rows.length ? '<section class="stats-empty card"><h2>Aún no tienes entrenamientos guardados</h2><p>Completa series y guarda una sesión completa o parcial para ver tu progreso. Las sesiones en curso no aportan estadísticas.</p><a class="button button-primary" href="#/mis-rutinas">Ver Mis rutinas</a></section>' : !stats.rows.length ? '<section class="stats-empty card"><h2>Sin entrenamientos en este filtro</h2><p>Prueba otro ejercicio o amplía el período.</p><button type="button" class="button button-secondary" data-reset-stats>Ver todo el historial</button></section>' : `<p class="stats-period-note">${PERIODS[period]}${exerciseId ? ' · Solo el ejercicio seleccionado' : ' · Todos los ejercicios'}. Incluye sesiones completas y parciales guardadas.</p>`}`;
+}
+export function strengthCard(stats, history, state) {
+  const name = history.exercises.find((exercise) => exercise.id === stats.selectedExerciseId)?.name;
+  const points = stats.strength.filter((point) => state.strengthMetric !== 'estimated1RM' || point.estimated1RM !== null).map((point) => ({ date: point.date, value: state.strengthMetric === 'estimated1RM' ? point.estimated1RM : point.weight }));
+  const chartName = `${state.strengthMetric === 'estimated1RM' ? '1RM estimado' : 'Carga máxima diaria'}${name ? ` · ${name}` : ''}`;
+  return `<section class="card load-card stats-strength" aria-labelledby="strength-heading">${title('strength-heading', 'chart', 'Evolución de carga', !state.exerciseId ? exerciseSelect(history.exercises, stats.selectedExerciseId, { chart: true, all: false }) : '')}<label class="stats-chart-mode">Mostrar<select data-stats-filter="strengthMetric" aria-label="Métrica de fuerza"><option value="weight"${state.strengthMetric === 'weight' ? ' selected' : ''}>Carga registrada</option><option value="estimated1RM"${state.strengthMetric === 'estimated1RM' ? ' selected' : ''}>1RM estimado</option></select></label>${seriesChart(points, { id: 'strength', title: chartName })}<p class="card-caption">${state.strengthMetric === 'estimated1RM' ? 'Epley: peso × (1 + reps / 30), con 2–10 reps; con 1 repetición se usa la carga real. Estimación, no un máximo medido.' : 'Mayor peso registrado por fecha local. Una carga de 0 kg indica peso corporal sin carga externa registrada.'}</p></section>`;
+}
+export function musclesCard(stats, schematic = false) {
+  return `<section class="card muscle-card stats-muscles" aria-labelledby="muscles-heading">${title('muscles-heading', 'dumbbell', schematic ? 'Trabajo por grupo muscular' : 'Grupos musculares (series)')}${distribution(stats.muscles, stats.totalSets, { schematic })}</section>`;
+}
+export function volumeCard(stats, state) {
+  const grouping = state.period === 'all' ? 'mes' : state.period === '90' ? 'semana (lunes)' : 'día';
+  return `<section class="card load-card stats-volume" aria-labelledby="volume-heading">${title('volume-heading', 'layers', 'Volumen de entrenamiento')}${seriesChart(stats.volume, { id: 'volume', title: `Volumen por ${grouping}`, bars: true })}<p class="card-caption">Suma de kg × repeticiones realizadas. Solo las series completadas. Los ejercicios sin carga externa aportan series, pero 0 kg de volumen.</p></section>`;
+}
+export function recordsCard(stats, limit = Infinity) {
+  return `<section class="card stats-records" aria-labelledby="records-heading">${title('records-heading', 'trophy', 'Récords por ejercicio')}<p class="card-caption">Máximos dentro del período y ejercicio filtrados.</p>${stats.records.length ? `<ul class="stats-record-list">${stats.records.slice(0, limit).map((record) => `<li><span class="stats-record-thumb">${exerciseVisual(record.exercise)}</span><div><h3>${esc(record.name)}</h3><p><span>Carga máxima</span><strong>${number(record.maxLoad.weightKg)} kg</strong></p><small>${esc(dateLabel(record.maxLoad.date, { year: 'numeric' }))} · ${record.maxLoad.reps} reps</small><p><span>1RM estimado</span><strong>${record.max1RM ? number(record.max1RM.estimated1RM) + ' kg' : '—'}</strong></p><small>${record.max1RM ? `${number(record.max1RM.weightKg)} kg × ${record.max1RM.reps} reps · ${esc(dateLabel(record.max1RM.date))}` : 'Requiere carga positiva y 1–10 reps.'}</small></div></li>`).join('')}</ul>` : '<div class="stats-chart-empty"><p>Aún no hay récords en este filtro.</p></div>'}<p class="card-caption">El 1RM es una estimación de Epley. No representa una repetición máxima comprobada.</p></section>`;
+}
+function duration(workout) {
+  const elapsed = Date.parse(workout.endedAt) - Date.parse(workout.startedAt);
+  return Number.isFinite(elapsed) && elapsed >= 0 ? `${number(Math.round(elapsed / 60000), 0)} min transcurridos` : 'Duración no disponible';
+}
+export function historyCard(stats, { limit = Infinity, dashboard = false, filtered = false } = {}) {
+  return `<section class="card workouts-card stats-history" aria-labelledby="workouts-heading">${title('workouts-heading', 'clock', dashboard ? 'Últimos entrenamientos' : 'Historial de entrenamientos', limit < Infinity ? '<a class="text-link" href="#/progreso?ambito=' + (stats.mode ?? 'personal') + '&vista=history&periodo=all">Ver historial completo ' + icon('arrow') + '</a>' : '')}${stats.sessions.length ? `<ul class="stats-session-list">${stats.sessions.slice(0, limit).map((session) => {
+    const { workout, rows, date, volume } = session;
+    const entries = new Map();
+    for (const row of rows) { const group = entries.get(row.prescriptionId) ?? { name: row.name, prescription: row.prescription, sets: [] }; group.sets.push(row); entries.set(row.prescriptionId, group); }
+    return `<li><details class="stats-session"><summary><span class="date-tile"><span>${esc(date.toLocaleDateString('es-CL', { weekday: 'short' }))}</span><strong>${esc(dateLabel(date))}</strong></span><span class="workout-copy"><strong>${esc(workout.sessionName || 'Sesión guardada')}</strong><small>${esc(workout.routineName || 'Sin rutina')} · ${workout.status === 'partial' ? 'Parcial' : 'Completa'}</small><small>${session.exerciseIds.size} ejercicios · ${rows.length} series · ${number(volume)} kg${filtered ? ' (del filtro)' : ''}</small></span>${icon('chevron')}</summary><div class="stats-session-detail"><p>${esc(date.toLocaleString('es-CL'))} · ${duration(workout)}</p>${[...entries.values()].map((entry) => `<section><h3>${esc(entry.name)}</h3><p class="availability-note">Plan original: ${entry.prescription.sets} series de ${entry.prescription.repsMin}–${entry.prescription.repsMax} reps.</p><ul>${entry.sets.sort((a, b) => a.position - b.position).map((set) => `<li>Serie ${set.position + 1}: <strong>${number(set.weightKg)} kg × ${set.reps} reps</strong></li>`).join('')}</ul></section>`).join('')}</div></details></li>`;
+  }).join('')}</ul>` : '<div class="stats-chart-empty"><p>No hay entrenamientos guardados en este filtro.</p></div>'}</section>`;
+}
+export function goalsCard(stats, goals) {
+  const valid = [];
+  if (Number.isInteger(goals?.sessions) && goals.sessions > 0 && goals.sessions <= 100) valid.push({ title: 'Sesiones de entrenamiento', value: stats.weekSessions, target: goals.sessions, unit: '' });
+  if (Number.isFinite(goals?.volumeKg) && goals.volumeKg > 0 && goals.volumeKg <= 1000000000) valid.push({ title: 'Volumen semanal', value: stats.weekVolume, target: goals.volumeKg, unit: ' kg' });
+  return `<section class="card goals-card" aria-labelledby="goals-heading">${title('goals-heading', 'target', 'Objetivos de la semana')}<p class="card-caption">Desde el lunes ${esc(dateLabel(stats.weekStart))} · Todos los ejercicios.</p>${valid.length ? `<ul>${valid.map((goal) => `<li class="goal-row">${icon('target')}<div class="goal-body"><div class="goal-label"><h3>${goal.title}</h3><span>${number(goal.value)} / ${number(goal.target)}${goal.unit}</span></div><progress class="stats-goal-progress" max="${goal.target}" value="${Math.min(goal.target, goal.value)}" aria-label="${goal.title}: ${number(goal.value)} de ${number(goal.target)}${goal.unit}"></progress></div></li>`).join('')}</ul>` : '<div class="stats-chart-empty"><p>No hay objetivos semanales configurados.</p><small>Se mostrarán cuando exista una configuración de objetivos en el perfil.</small></div>'}</section>`;
+}
+export function progressView(history, stats, state, mode) {
+  stats.mode = mode;
+  const summary = state.section === 'summary';
+  const show = (section) => summary || state.section === section;
+  return `${statsHeading(true, mode, state.period)}<div class="stats-toolbar"><nav class="stats-sections" aria-label="Vistas de progreso">${Object.entries(SECTIONS).map(([value, label]) => `<button type="button" data-stats-section="${value}" aria-pressed="${state.section === value}">${label}</button>`).join('')}</nav>${exerciseSelect(history.exercises, state.exerciseId)}</div><section class="metrics-grid stats-metrics" aria-label="Indicadores de progreso">${metric('calendar', 'Entrenamientos', number(stats.sessions.length, 0), 'Sesiones con series realizadas', 'sessions')}${metric('layers', 'Volumen total', number(stats.totalVolume), 'Peso × repeticiones', 'volume', 'kg')}${metric('trophy', 'Ejercicios con récord', number(stats.records.filter((record) => record.maxLoad.weightKg > 0).length, 0), 'Con carga externa registrada', 'records')}${metric('dumbbell', 'Series realizadas', number(stats.totalSets, 0), 'Solo completadas', 'sets')}</section>${dataNotice(history, stats, state)}<div class="progress-layout${summary ? ' summary-view' : ' focused-view'}">${show('strength') ? strengthCard(stats, history, state) : ''}${show('muscles') ? musclesCard(stats) : ''}${show('strength') ? recordsCard(stats, summary ? 3 : Infinity) : ''}${show('volume') ? volumeCard(stats, state) : ''}${show('history') ? historyCard(stats, { limit: summary ? 5 : Infinity, filtered: Boolean(state.exerciseId) }) : ''}</div>`;
+}

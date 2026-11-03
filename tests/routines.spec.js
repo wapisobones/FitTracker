@@ -1,0 +1,209 @@
+import { mkdir } from 'node:fs/promises';
+import { test, expect } from '@playwright/test';
+import { readDatabase, writeRecords, selectMode } from './helpers/storage.js';
+
+async function start(page, route = 'mis-rutinas') {
+  await page.goto(`./#/${route}`);
+  await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
+  if (route === 'mis-rutinas') await expect(page.getByRole('button', { name: 'Crear rutina', exact: true })).toBeEnabled();
+}
+
+const modal = (page, name) => page.getByRole('dialog', { name, exact: true });
+async function addSession(page, name) {
+  await page.getByRole('button', { name: 'Añadir sesión', exact: true }).click();
+  const form = modal(page, 'Añadir sesión');
+  await form.getByRole('textbox', { name: 'Nombre de sesión', exact: true }).fill(name);
+  await form.getByRole('button', { name: 'Guardar sesión', exact: true }).click();
+  await expect(form).not.toBeVisible();
+}
+async function addExercise(page, name) {
+  await page.getByRole('button', { name: 'Añadir ejercicio', exact: true }).click();
+  await modal(page, 'Añadir ejercicio a la sesión').getByRole('searchbox').fill(name);
+  await modal(page, 'Añadir ejercicio a la sesión').getByRole('button', { name: new RegExp(`^${name}`) }).click();
+  return modal(page, 'Configurar ejercicio');
+}
+
+test('Rutina, sesiones y objetivos: edición, orden, recuperación y rollback atómico', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: 'Crear rutina', exact: true }).click();
+  const create = modal(page, 'Crear rutina');
+  await create.getByRole('textbox', { name: 'Nombre de rutina', exact: true }).fill('Ciclo flexible');
+  await create.getByRole('textbox', { name: 'Descripción', exact: true }).fill('Pull, Push, Legs y refuerzo, sin calendario obligatorio.');
+  await create.getByRole('textbox', { name: 'Primera sesión', exact: true }).fill('Pull');
+  await create.getByRole('button', { name: 'Guardar rutina', exact: true }).click();
+  await expect(create).not.toBeVisible();
+  const goals = await addExercise(page, 'Remo en polea');
+  await goals.getByRole('spinbutton', { name: 'Series', exact: true }).fill('4');
+  await goals.getByRole('spinbutton', { name: 'Repeticiones mínimas', exact: true }).fill('6');
+  await goals.getByRole('spinbutton', { name: 'Repeticiones máximas', exact: true }).fill('8');
+  await goals.getByRole('spinbutton', { name: 'Descanso (segundos)', exact: true }).fill('120');
+  await goals.getByRole('textbox', { name: 'Notas del ejercicio', exact: true }).fill('Pausa con control.');
+  await goals.getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(goals).not.toBeVisible();
+  await expect(page.locator('.prescription-targets dd')).toHaveText(['4', '6–8', '120 s']);
+  const second = await addExercise(page, 'Jalón al pecho');
+  await second.getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(second).not.toBeVisible();
+  await page.getByRole('button', { name: 'Subir Jalón al pecho', exact: true }).click();
+  await expect(page.locator('.prescription-name strong')).toHaveText(['Jalón al pecho', 'Remo en polea']);
+  await page.getByRole('button', { name: 'Quitar Jalón al pecho', exact: true }).click();
+  await modal(page, '¿Quitar ejercicio de la sesión?').getByRole('button', { name: 'Confirmar eliminación', exact: true }).click();
+  await expect(page.locator('.prescription-name strong')).toHaveText(['Remo en polea']);
+  for (const name of ['Push', 'Legs', 'Refuerzo superior']) await addSession(page, name);
+  await expect(page.locator('.session-tabs strong')).toHaveText(['Pull', 'Push', 'Legs', 'Refuerzo superior']);
+  await page.getByRole('button', { name: 'Duplicar sesión', exact: true }).click();
+  await expect(page.locator('.session-tabs strong')).toHaveText(['Pull', 'Push', 'Legs', 'Refuerzo superior', 'Refuerzo superior (copia)']);
+  await page.getByRole('button', { name: 'Subir sesión', exact: true }).click();
+  await expect(page.locator('.session-tabs strong')).toHaveText(['Pull', 'Push', 'Legs', 'Refuerzo superior (copia)', 'Refuerzo superior']);
+  await page.getByRole('button', { name: 'Eliminar sesión', exact: true }).click();
+  await modal(page, '¿Eliminar sesión?').getByRole('button', { name: 'Confirmar eliminación', exact: true }).click();
+  await expect(page.locator('.session-tabs strong')).toHaveText(['Pull', 'Push', 'Legs', 'Refuerzo superior']);
+  await page.getByRole('button', { name: 'Editar sesión', exact: true }).click();
+  await modal(page, 'Editar sesión').getByRole('textbox', { name: 'Nombre de sesión', exact: true }).fill('Tirón');
+  await modal(page, 'Editar sesión').getByRole('button', { name: 'Guardar sesión', exact: true }).click();
+  await expect(page.locator('.session-tabs strong').first()).toHaveText('Tirón');
+  await page.getByRole('button', { name: 'Editar rutina', exact: true }).click();
+  await modal(page, 'Editar rutina').getByRole('textbox', { name: 'Nombre de rutina', exact: true }).fill('Ciclo personal');
+  await modal(page, 'Editar rutina').getByRole('button', { name: 'Guardar rutina', exact: true }).click();
+  await expect(page.locator('.routine-detail h2')).toHaveText('Ciclo personal');
+  await page.reload();
+  await expect(page.locator('.routine-detail h2')).toHaveText('Ciclo personal');
+  await expect(page.locator('.session-tabs strong')).toHaveText(['Tirón', 'Push', 'Legs', 'Refuerzo superior']);
+  const before = await readDatabase(page, 'personal');
+  expect(before.routines[0].nextSessionId).toBe(before.routines[0].sessionIds[0]);
+  await page.getByRole('button', { name: 'Editar objetivos de Remo en polea', exact: true }).click();
+  const editing = modal(page, 'Configurar ejercicio');
+  await editing.getByRole('spinbutton', { name: 'Repeticiones mínimas', exact: true }).fill('10');
+  await editing.getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(editing.getByRole('alert')).toContainText('mínimas no pueden superar');
+  await editing.getByRole('spinbutton', { name: 'Repeticiones máximas', exact: true }).fill('10');
+  await page.evaluate(() => {
+    const put = IDBObjectStore.prototype.put;
+    window.failRoutineWrite = true;
+    IDBObjectStore.prototype.put = function () {
+      if (window.failRoutineWrite && this.name === 'routines') throw new DOMException('Prueba de rollback', 'QuotaExceededError');
+      return put.apply(this, arguments);
+    };
+  });
+  await editing.getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(editing.getByRole('alert')).toContainText('No hay espacio suficiente');
+  const afterFailure = await readDatabase(page, 'personal');
+  expect(afterFailure.routines).toEqual(before.routines);
+  expect(afterFailure.routineSessions).toEqual(before.routineSessions);
+  await page.evaluate(() => { window.failRoutineWrite = false; });
+  await editing.getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(editing).not.toBeVisible();
+  await expect(page.locator('.prescription-targets dd')).toHaveText(['4', '10', '120 s']);
+});
+
+test('Plantillas y duplicación independientes, clic repetido, confirmación e aislamiento', async ({ page }) => {
+  await start(page, 'predisenadas');
+  await expect(page.locator('.routine-list-card')).toHaveCount(3);
+  for (const [level, name] of [['Intermedio', 'Torso / Pierna'], ['Avanzado', 'Push · Pull · Legs'], ['Principiante', 'Full body básico']]) {
+    await page.getByRole('button', { name: level, exact: true }).click();
+    await expect(page.locator('.routine-detail h2')).toHaveText(name);
+  }
+  await page.getByRole('button', { name: 'Guardar en Mis rutinas', exact: true }).evaluate((button) => { button.click(); button.click(); });
+  await page.getByRole('link', { name: 'Ver copia en Mis rutinas', exact: true }).click();
+  await expect(page.locator('.routine-detail h2')).toHaveText('Full body básico');
+  const original = await readDatabase(page, 'personal');
+  expect(original.routines).toHaveLength(1);
+  expect(original.routineSessions).toHaveLength(2);
+  await page.getByRole('button', { name: 'Duplicar rutina', exact: true }).evaluate((button) => { button.click(); button.click(); });
+  await expect(page.locator('.routine-list-card')).toHaveCount(2);
+  const duplicated = await readDatabase(page, 'personal');
+  const copy = duplicated.routines.find((routine) => routine.id !== original.routines[0].id);
+  expect(copy.sessionIds.every((id) => !original.routines[0].sessionIds.includes(id))).toBe(true);
+  const oldIds = new Set(original.routineSessions.flatMap((session) => session.prescriptions.map((item) => item.id)));
+  expect(duplicated.routineSessions.filter((session) => session.routineId === copy.id).flatMap((session) => session.prescriptions).every((item) => !oldIds.has(item.id))).toBe(true);
+  await page.getByRole('button', { name: /Full body básico \(copia\)/ }).click();
+  await page.getByRole('button', { name: 'Editar rutina', exact: true }).click();
+  await modal(page, 'Editar rutina').getByRole('textbox', { name: 'Nombre de rutina', exact: true }).fill('Mi copia editable');
+  await modal(page, 'Editar rutina').getByRole('button', { name: 'Guardar rutina', exact: true }).click();
+  await expect(page.locator('.routine-detail h2')).toHaveText('Mi copia editable');
+  const firstExercise = page.locator('[data-item-action="edit"]').first();
+  await firstExercise.click();
+  await modal(page, 'Configurar ejercicio').getByRole('spinbutton', { name: 'Series', exact: true }).fill('5');
+  await modal(page, 'Configurar ejercicio').getByRole('button', { name: 'Guardar objetivos', exact: true }).click();
+  await expect(modal(page, 'Configurar ejercicio')).not.toBeVisible();
+  const edited = await readDatabase(page, 'personal');
+  expect(edited.routineSessions.filter((session) => session.routineId === original.routines[0].id)).toEqual(original.routineSessions);
+  await writeRecords(page, 'personal', { workouts: [{ id: crypto.randomUUID(), marker: 'Historial intacto' }], setRecords: [{ id: crypto.randomUUID(), marker: 'Series intactas' }] });
+  const history = await readDatabase(page, 'personal');
+  await page.getByRole('button', { name: 'Eliminar rutina', exact: true }).click();
+  await expect(modal(page, '¿Eliminar rutina?').getByRole('button', { name: 'Cancelar', exact: true })).toBeFocused();
+  await modal(page, '¿Eliminar rutina?').getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.locator('.routine-list-card')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Eliminar rutina', exact: true }).click();
+  await modal(page, '¿Eliminar rutina?').getByRole('button', { name: 'Confirmar eliminación', exact: true }).click();
+  await expect(page.locator('.routine-list-card')).toHaveCount(1);
+  const personal = await readDatabase(page, 'personal');
+  expect(personal.workouts).toEqual(history.workouts);
+  expect(personal.setRecords).toEqual(history.setRecords);
+  expect(personal.routineSessions.every((session) => session.routineId !== copy.id)).toBe(true);
+  await page.locator('.sidebar [data-page="predisenadas"]').click();
+  await expect(page.locator('.routine-detail h2')).toHaveText('Full body básico');
+  await expect(page.locator('.prescription-targets').first().locator('dd').first()).toHaveText('3');
+  await selectMode(page, 'demo');
+  await page.getByRole('button', { name: 'Guardar en Mis rutinas', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Ver copia en Mis rutinas', exact: true })).toBeVisible();
+  expect((await readDatabase(page, 'demo')).routines).toHaveLength(1);
+  expect(await readDatabase(page, 'personal')).toEqual(personal);
+});
+
+test('Catálogo integrado: destino nuevo y existente, contexto móvil y protección de referencias', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await start(page, 'ejercicios');
+  await page.getByRole('button', { name: 'Crear ejercicio', exact: true }).click();
+  const editor = modal(page, 'Crear ejercicio personalizado');
+  await editor.getByRole('textbox', { name: 'Nombre', exact: true }).fill('Remo de banda propio');
+  await editor.getByRole('combobox', { name: 'Músculo principal', exact: true }).selectOption('Espalda');
+  await editor.getByRole('combobox', { name: 'Equipamiento', exact: true }).fill('Banda');
+  await editor.getByRole('button', { name: 'Guardar ejercicio', exact: true }).click();
+  await expect(editor).not.toBeVisible();
+  const search = page.getByRole('searchbox', { name: 'Buscar por nombre', exact: true });
+  await search.fill('Remo de banda propio');
+  const openAssignment = async () => {
+    await page.getByRole('button', { name: 'Ver técnica de Remo de banda propio', exact: true }).click();
+    await modal(page, 'Remo de banda propio').getByRole('button', { name: 'Añadir a rutina', exact: true }).click();
+    const assignment = modal(page, 'Añadir a rutina');
+    await expect(assignment.getByRole('button', { name: 'Añadir ejercicio', exact: true })).toBeEnabled();
+    return assignment;
+  };
+  const first = await openAssignment();
+  await first.getByRole('textbox', { name: 'Nombre de la nueva rutina', exact: true }).fill('Desde el catálogo');
+  await first.getByRole('textbox', { name: 'Nombre de la nueva sesión', exact: true }).fill('Base');
+  await first.locator('form').evaluate((form) => { form.requestSubmit(); form.requestSubmit(); });
+  await modal(page, 'Ejercicio añadido').getByRole('button', { name: 'Volver al catálogo', exact: true }).click();
+  await expect(search).toHaveValue('Remo de banda propio');
+  const second = await openAssignment();
+  await second.getByRole('combobox', { name: 'Sesión', exact: true }).selectOption('');
+  await second.getByRole('textbox', { name: 'Nombre de la nueva sesión', exact: true }).fill('Refuerzo');
+  await second.getByRole('button', { name: 'Añadir ejercicio', exact: true }).click();
+  await modal(page, 'Ejercicio añadido').getByRole('button', { name: 'Volver al catálogo', exact: true }).click();
+  const third = await openAssignment();
+  const stored = await readDatabase(page, 'personal');
+  const target = stored.routineSessions.find((session) => session.name === 'Refuerzo');
+  await third.getByRole('combobox', { name: 'Sesión', exact: true }).selectOption(target.id);
+  await third.getByRole('button', { name: 'Añadir ejercicio', exact: true }).click();
+  await modal(page, 'Ejercicio añadido').getByRole('link', { name: 'Ver rutina y objetivos', exact: true }).click();
+  await expect(page.locator('.session-heading h3')).toHaveText('Refuerzo');
+  await page.goBack();
+  await expect(page.getByRole('searchbox', { name: 'Buscar por nombre', exact: true })).toHaveValue('Remo de banda propio');
+  await page.goForward();
+  await expect(page.locator('.session-heading h3')).toHaveText('Refuerzo');
+  await page.reload();
+  await expect(page.locator('.session-heading h3')).toHaveText('Refuerzo');
+  const result = await readDatabase(page, 'personal');
+  expect(result.routines).toHaveLength(1);
+  expect(result.routineSessions).toHaveLength(2);
+  expect(result.routineSessions.find((session) => session.name === 'Base').prescriptions).toHaveLength(1);
+  expect(result.routineSessions.find((session) => session.name === 'Refuerzo').prescriptions).toHaveLength(2);
+  for (const width of [320, 390]) { await page.setViewportSize({ width, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width); }
+  await mkdir('.cache', { recursive: true });
+  await page.screenshot({ path: '.cache/ft004-routines-mobile.png', fullPage: true });
+  await page.goto('./#/ejercicios');
+  await page.getByRole('button', { name: 'Eliminar Remo de banda propio', exact: true }).click();
+  await modal(page, '¿Eliminar ejercicio personalizado?').getByRole('button', { name: 'Eliminar ejercicio', exact: true }).click();
+  await expect(modal(page, '¿Eliminar ejercicio personalizado?').getByRole('alert')).toContainText('utilizado en una rutina');
+});

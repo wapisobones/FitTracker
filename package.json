@@ -1,0 +1,20 @@
+{
+  "name": "fittracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.1.2",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:smoke": "playwright test",
+    "test:metrics": "node --test tests/metrics.unit.js",
+    "test:generator": "node --test tests/generator.unit.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "vite": "^8.3.5"
+  }
+}

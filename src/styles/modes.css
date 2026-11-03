@@ -1,0 +1,56 @@
+.mode-switcher { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-shrink: 0; }
+.current-mode { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+.current-mode::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
+.mode-switcher button { border: 0; background: none; padding: 4px 0; min-height: 28px; }
+.mode-switcher button:disabled { color: var(--muted); }
+.button-secondary { border: 1px solid #596b7e; background: #1b2733; color: var(--text); }
+.button-secondary:hover { border-color: var(--lime); }
+.welcome-view { max-width: 950px; margin: 30px auto 0; }
+.welcome-intro { text-align: center; }
+.welcome-intro > .empty-icon { margin: 0 auto 24px; }
+.welcome-intro p { color: var(--muted); margin-top: 14px; line-height: 1.8; }
+.mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 36px; }
+.mode-option { display: flex; flex-direction: column; align-items: flex-start; padding: 30px; gap: 18px; }
+.mode-option > .icon { width: 32px; height: 32px; color: var(--lime); }
+.mode-option p { color: var(--muted); line-height: 1.8; }
+.mode-option .button { margin-top: auto; width: 100%; }
+.local-data-note { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 26px; text-align: center; }
+.mode-dialog { padding: 28px; max-width: min(540px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+.mode-dialog::backdrop { background: #03080dcc; }
+.dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.mode-dialog p { color: var(--muted); line-height: 1.7; }
+.mode-dialog h2 + p, .mode-dialog p + p { margin-top: 16px; }
+.mode-dialog-options { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.mode-dialog-options .button { justify-content: flex-start; min-height: 50px; }
+.reset-demo-option { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; }
+.reset-demo-option p { margin-top: 8px; font-size: 13px; }
+.reset-demo-option button { margin-top: 16px; }
+.dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.storage-error { padding: 24px; margin-bottom: 24px; border-color: #b68c46; }
+.storage-error > div { display: flex; align-items: center; gap: 12px; color: var(--amber); }
+.storage-error > p { color: var(--muted); margin-top: 14px; max-width: 70ch; }
+.storage-error > button { margin-top: 18px; }
+.operation-status:not(:empty) { margin-top: 16px; padding: 12px 16px; border: 1px solid #9bf45c40; border-radius: 10px; color: var(--lime); font-size: 13px; }
+.personal-empty { padding: 30px 24px; margin: 22px 0; min-height: 0; gap: 16px; }
+.personal-empty h2 { font-size: 24px; }
+.empty-chart { padding: 26px; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 16px; }
+.empty-chart > .icon { color: var(--lime); width: 30px; height: 30px; }
+.empty-chart p { color: var(--muted); max-width: 45ch; font-size: 13px; }
+@media (max-width: 900px) {
+  .topbar { flex-wrap: wrap; padding-top: 12px; gap: 8px 12px; }
+  .mode-switcher { order: 4; flex-basis: 100%; flex-direction: row; align-items: center; justify-content: space-between; border-top: 1px solid #26333f; margin-top: 4px; padding: 6px 0; }
+  .mode-switcher button { min-height: 36px; }
+  .topbar-actions { margin-left: auto; }
+  .welcome-view { margin-top: 10px; }
+}
+@media (max-width: 600px) {
+  .mode-options { grid-template-columns: 1fr; margin-top: 26px; gap: 14px; }
+  .mode-option { padding: 24px; gap: 16px; }
+  .mode-option h2 { font-size: 22px; }
+  .mode-dialog { padding: 22px; }
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions button { width: 100%; }
+  .storage-error { padding: 20px; }
+  .storage-error h2 { font-size: 20px; }
+  .welcome-intro p { font-size: 13px; }
+}
