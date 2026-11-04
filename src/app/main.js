@@ -6,6 +6,7 @@ import '../styles/exercises.css';
 import '../styles/routines.css';
 import '../styles/workouts.css';
 import '../styles/progress.css';
+import '../styles/anatomy-map.css';
 import '../styles/generator.css';
 import '../styles/tools-profile.css';
 import { shell } from '../components/shell.js';

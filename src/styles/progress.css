@@ -42,6 +42,7 @@
 .stats-chart-empty small { font-size: 12px; line-height: 1.8; color: var(--muted); }
 .stats-distribution { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 20px; }
 .stats-distribution .muscle-figure { width: 49%; }
+.stats-distribution--anatomy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .stats-donut { width: 47%; max-width: 230px; flex: 0 1 auto; }
 .donut-count { fill: var(--text); font: 700 25px 'Bahnschrift', sans-serif; }
 .donut-label { fill: var(--muted); font-size: 14px; }
@@ -101,6 +102,9 @@
   .summary-view .stats-donut { width: 43%; }
 }
 @media (max-width: 600px) {
+  .stats-distribution--anatomy { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .stats-distribution--anatomy .muscle-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .stats-distribution--anatomy .muscle-list li + li { margin-top: 0; }
   .stats-filter { flex-wrap: wrap; width: 100%; }
   .stats-filter select { width: 100%; font-size: 16px; }
   .period-filter { flex-wrap: nowrap; width: auto; }

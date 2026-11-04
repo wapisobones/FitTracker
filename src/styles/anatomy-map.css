@@ -1,0 +1,17 @@
+.anatomy-map { display: flex; justify-content: center; gap: 12px; padding-top: 12px; }
+.anatomy-figure { flex: 1; min-width: 0; max-width: 310px; }
+.anatomy-figure figcaption { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 6px; }
+.anatomy-body { display: block; width: 100%; max-height: 620px; }
+.anatomy-map[data-body-view="front"] [data-body-side="back"], .anatomy-map[data-body-view="back"] [data-body-side="front"] { display: none; }
+.anatomy-body .body-outline { fill: #35434f; stroke: #bac7d6; stroke-width: 1.2; }
+.anatomy-body .body-lines { fill: none; stroke: #8797a5; stroke-width: 1.4; pointer-events: none; }
+.anatomy-body .body-fibers { fill: none; stroke: #172530; stroke-width: 1.3; opacity: .5; pointer-events: none; }
+.anatomy-body [data-anatomy-region] path { fill: #8799a8; stroke: #1a2b39; stroke-width: 1.8; stroke-linejoin: round; }
+.anatomy-body [data-active="true"] path, .anatomy-body [aria-pressed="true"] path { fill: var(--lime); stroke: #365c23; }
+.anatomy-map--informative { width: 100%; max-width: 220px; gap: 8px; padding: 0; justify-self: center; }
+.anatomy-map--informative .anatomy-body { height: 240px; max-height: 240px; }
+.anatomy-map--informative figcaption { font-size: 12px; }
+@media (max-width: 600px) {
+  .anatomy-map--informative { max-width: 184px; }
+  .anatomy-map--informative .anatomy-body { height: 200px; max-height: 200px; }
+}

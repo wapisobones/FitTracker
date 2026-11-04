@@ -8,17 +8,7 @@
 .generator-map-switch { display: flex; justify-content: center; gap: 7px; margin: 18px 0 8px; }
 .generator-map-switch button { min-height: 44px; padding: 9px 15px; background: #1b2935; border-radius: 22px; font-size: 12px; }
 .generator-map-switch [aria-pressed="true"] { color: var(--lime); border-color: var(--lime); background: #9bf45c0b; }
-.generator-map { display: flex; justify-content: center; gap: 12px; padding-top: 12px; }
-.anatomy-figure { flex: 1; min-width: 0; max-width: 310px; }
-.anatomy-figure figcaption { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 6px; }
-.generator-body { display: block; width: 100%; max-height: 620px; }
-.generator-map[data-body-view="front"] [data-body-side="back"], .generator-map[data-body-view="back"] [data-body-side="front"] { display: none; }
-.body-outline { fill: #35434f; stroke: #bac7d6; stroke-width: 1.2; }
-.body-lines { fill: none; stroke: #8797a5; stroke-width: 1.4; pointer-events: none; }
-.body-fibers { fill: none; stroke: #172530; stroke-width: 1.3; opacity: .5; pointer-events: none; }
 .generator-body [role="button"] { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-.generator-body [role="button"] path { fill: #8799a8; stroke: #1a2b39; stroke-width: 1.8; stroke-linejoin: round; }
-.generator-body [role="button"][aria-pressed="true"] path { fill: var(--lime); stroke: #365c23; }
 @media (hover: hover) {
   .generator-body [role="button"]:hover path { fill: #bfd0db; stroke: var(--lime); stroke-width: 2.5; }
   .generator-body [role="button"][aria-pressed="true"]:hover path { fill: #bbff8c; }
@@ -112,7 +102,7 @@
   .generator-map { gap: 8px; }
   .generator-body { max-height: 600px; }
   .generator-map[data-body-view="both"] { flex-direction: column; align-items: center; gap: 24px; }
-  .anatomy-figure { width: 100%; max-width: 270px; }
+  .generator-map .anatomy-figure { width: 100%; max-width: 270px; }
   .generator-steps { gap: 6px; }
   .generator-steps li { padding: 10px 7px; font-size: var(--text-small); }
   .generator-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }

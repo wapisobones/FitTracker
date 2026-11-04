@@ -1,5 +1,7 @@
 import { escapeHTML as esc } from '../utils/html.js';
 import { number, dateLabel, dayDate } from '../features/progress/metrics.js';
+import { anatomyMap } from './anatomy-map.js';
+import { selectedRegions } from '../data/muscle-taxonomy.js';
 
 export function seriesChart(points, { id, title, unit = 'kg', bars = false } = {}) {
   if (!points.length) return `<div class="stats-chart-empty"><p>No hay registros para este gráfico.</p><small>${id === 'strength' ? 'Selecciona otro ejercicio o amplía el período. El 1RM estimado requiere carga positiva y entre 1 y 10 repeticiones.' : 'Completa series y guarda una sesión para ver su evolución.'}</small></div>`;
@@ -43,19 +45,13 @@ export function distribution(groups, total, { schematic = false } = {}) {
     offset += length;
     return circle;
   }).join('');
-  return `<div class="stats-distribution">${schematic ? bodyFigure(groups) : `<svg class="stats-donut" viewBox="0 0 200 200" role="img" aria-label="Distribución de ${total} series por grupo muscular; detalle en la lista contigua"><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="98" text-anchor="middle" class="donut-count">${number(total, 0)}</text><text x="100" y="120" text-anchor="middle" class="donut-label">series</text></svg>`}<ul class="muscle-list">${groups.map((group) => `<li><div><span><i style="background:${colors[group.name] ?? '#b9c6d5'}"></i>${esc(group.name)}</span><strong>${number(group.percent)} %</strong></div><div class="progress-track"><span style="width:${group.percent}%;background:${colors[group.name] ?? '#b9c6d5'}"></span></div><small>${number(group.count, 0)} series</small></li>`).join('')}</ul></div><p class="card-caption">Solo el grupo principal de cada serie. Los músculos secundarios no se suman.</p>`;
+  return `<div class="stats-distribution${schematic ? ' stats-distribution--anatomy' : ''}">${schematic ? muscleActivityMap(groups) : `<svg class="stats-donut" viewBox="0 0 200 200" role="img" aria-label="Distribución de ${total} series por grupo muscular; detalle en la lista contigua"><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="98" text-anchor="middle" class="donut-count">${number(total, 0)}</text><text x="100" y="120" text-anchor="middle" class="donut-label">series</text></svg>`}<ul class="muscle-list">${groups.map((group) => `<li><div><span><i style="background:${colors[group.name] ?? '#b9c6d5'}"></i>${esc(group.name)}</span><strong>${number(group.percent)} %</strong></div><div class="progress-track"><span style="width:${group.percent}%;background:${colors[group.name] ?? '#b9c6d5'}"></span></div><small>${number(group.count, 0)} series</small></li>`).join('')}</ul></div><p class="card-caption">Solo el grupo principal de cada serie. Los músculos secundarios no se suman.${schematic ? ' Las zonas resaltadas representan grupos generales, no la activación de cada músculo.' : ''}</p>`;
 }
 
-function bodyFigure(groups) {
-  const intensity = (name) => groups.some((group) => group.name === name) ? .35 + .65 * groups.find((group) => group.name === name).percent / 100 : 0;
-  const body = '<circle cx="60" cy="20" r="12"/><path d="M52 32h16l7 9 16 7 11 36 13 41-9 4-17-39-9-20-2 40 8 50-6 67H68l-4-60-4-31-4 31-4 60H40l-6-67 8-50-2-40-9 20-17 39-9-4 13-41 11-36 16-7Z"/>';
-  const zones = [
-    ['Pecho', 'M47 46l12 2v23q-17 1-17-8Zm26 0-12 2v23q17 1 17-8Z'],
-    ['Espalda', 'm176 43 15 7v27l-15 20-6-29Zm32 0-15 7v27l15 20 6-29Z'],
-    ['Piernas', 'm41 119 14 4-5 65-11-4Zm24 4 14-4 2 65-11 4Z'],
-    ['Hombros', 'M31 49q10-9 17-4l-5 18-15 8Zm58 0q-10-9-17-4l5 18 15 8Z'],
-    ['Brazos', 'm22 75 10 5-18 45-8-3Zm66 5 10-5 16 47-8 3Z'],
-    ['Core', 'M47 77h26l-3 31H50Z'],
-  ];
-  return `<svg class="muscle-figure" viewBox="0 0 255 242" aria-hidden="true"><g fill="#687887" stroke="#111c26">${body}<g transform="translate(132)">${body}</g></g>${zones.map(([name, path]) => `<path d="${path}" fill="#9bf45c" opacity="${intensity(name)}"/>`).join('')}<g fill="#9ba9b4" font-size="11" text-anchor="middle"><text x="60" y="241">Frente</text><text x="192" y="241">Espalda</text></g></svg>`;
+function muscleActivityMap(groups) {
+  const activeGroups = groups.filter((group) => group.count > 0).map((group) => group.name);
+  return anatomyMap(selectedRegions({ muscles: activeGroups }), {
+    idPrefix: 'stats-anatomy',
+    label: `Mapa anatómico frontal y posterior. Grupos con series completadas: ${activeGroups.join(', ')}. Las zonas resaltadas representan grupos generales, no la activación de cada músculo. Series y porcentajes en la lista contigua.`,
+  });
 }

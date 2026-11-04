@@ -19,18 +19,3 @@ export function loadChart(data) {
   </svg><figcaption class="sr-only">Evolución ficticia de la carga, expresada en kilogramos.</figcaption></figure>
   <details class="chart-data"><summary>Ver valores de ejemplo</summary><div class="table-scroll"><table><caption>${escapeHTML(data.exercise)} · octubre ficticio</caption><thead><tr><th scope="col">Registro</th><th scope="col">Carga (kg)</th></tr></thead><tbody>${data.load.map((value, i) => `<tr><th scope="row">${i + 1}</th><td>${value.toLocaleString('es-CL')}</td></tr>`).join('')}</tbody></table></div></details>`;
 }
-
-// Original schematic illustration, decorative; the adjacent list carries the data.
-export function muscleFigure() {
-  const body = '<circle cx="60" cy="20" r="12"/><path d="M52 32h16l7 9 16 7 11 36 13 41-9 4-17-39-9-20-2 40 8 50-6 67H68l-4-60-4-31-4 31-4 60H40l-6-67 8-50-2-40-9 20-17 39-9-4 13-41 11-36 16-7Z"/>';
-  return `<svg class="muscle-figure" viewBox="0 0 255 242" aria-hidden="true">
-    <g fill="#687887" stroke="#111c26" stroke-width="1.1">${body}<g transform="translate(132)">${body}</g></g>
-    <g fill="#9bf45c" fill-opacity=".85" stroke="#253d30" stroke-width="1.1">
-      <path d="M31 49q10-9 17-4l-5 18-15 8Zm58 0q-10-9-17-4l5 18 15 8ZM47 46l12 2v23q-17 1-17-8Zm26 0-12 2v23q17 1 17-8Z"/>
-      <path d="m41 159 10 2-1 28-11-4Zm28 2 10-2 2 26-11 4Z" fill-opacity=".5"/>
-      <path d="m176 43 15 7v27l-15 20-6-29Zm32 0-15 7v27l15 20 6-29ZM163 48l10-5-6 26-9 3Zm58 0-10-5 6 26 9 3Z"/>
-      <path d="m172 163 11 2-2 26-10 6Zm28 2 11-2 1 34-10-6Z" fill-opacity=".55"/>
-    </g><g stroke="#26343e" fill="none"><path d="M60 74v42m-13-37 26 0m-26 11h26m-25 11h24M192 51v60m-15-35 15 7 15-7m-33 34 18 9 18-9"/></g>
-    <g fill="#9ba9b4" font-size="11" text-anchor="middle"><text x="60" y="241">Frente</text><text x="192" y="241">Espalda</text></g>
-  </svg>`;
-}
