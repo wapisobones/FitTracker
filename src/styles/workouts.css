@@ -31,6 +31,7 @@
 .workout-exercise-state { font-size: 11px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 20px; }
 .selected .workout-exercise-state { color: var(--lime); border-color: #9bf45c66; }
 .workout-session-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+.workout-register-actions { display: none; }
 .workout-session-actions .button { flex: 1 1 auto; padding-inline: 12px; }
 .workout-session-actions [data-workout-action="finish"] { border-color: #ff6e6e88; color: #ff9393; }
 .workout-register { padding: 20px; scroll-margin-top: 16px; }
@@ -101,6 +102,12 @@
   .workout-register { display: none; padding: 16px 12px; }
   .show-workout-register .workout-overview { display: none; }
   .show-workout-register .workout-register { display: block; }
+  .show-workout-register { padding-bottom: 84px; }
+  .show-workout-register .workout-register-actions { display: flex; gap: 12px; position: fixed; z-index: 3; inset: auto 0 calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)); padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); border-top: 1px solid var(--line); background: var(--sidebar); }
+  .workout-register-actions .button { flex: 1; min-width: 0; min-height: 48px; padding-inline: 10px; }
+  .workout-register-actions [data-workout-action="finish"] { color: #ff9393; border-color: #ff6e6e88; }
+  .workout-register > [data-workout-action="finish"], .workout-paused [data-workout-action="resume"] { display: none; }
+  html:has(.show-workout-register .workout-register-actions) { scroll-padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 96px); }
   .workout-register h2 { font-size: 24px; }
   .workout-session { padding: 14px; gap: 12px; flex-wrap: wrap; }
   .workout-session .stage-pill { margin-left: auto; }

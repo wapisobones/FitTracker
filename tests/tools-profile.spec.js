@@ -15,15 +15,57 @@ async function route(page, id) {
 const importFile = (page, content) => page.locator('[data-import-personal]').setInputFiles({ name: 'respaldo-sintetico.json', mimeType: 'application/json', buffer: Buffer.from(typeof content === 'string' ? content : JSON.stringify(content)) });
 const preview = page => page.getByRole('dialog', { name: 'Restaurar respaldo personal', exact: true });
 
+test('Error de importación móvil junto al archivo, foco, corrección y cancelación sin cambios', async ({ page }) => {
+  await personal(page);
+  const fixture = backupFixture();
+  await writeRecords(page, 'personal', fixture.stores);
+  await page.reload();
+  const before = await readDatabase(page, 'personal');
+  const input = page.getByLabel('Importar respaldo personal', { exact: true });
+  const error = page.locator('#backup-error');
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await input.scrollIntoViewIfNeeded();
+    await importFile(page, '{');
+    await expect(error).toContainText('No se importó ningún dato');
+    await expect(error).toBeInViewport();
+    await expect(input).toBeInViewport();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(input).toHaveAccessibleDescription(/No se importó ningún dato/);
+    const fieldBox = await input.boundingBox();
+    const errorBox = await error.boundingBox();
+    const nav = await page.locator('.bottom-nav').boundingBox();
+    expect(errorBox.y).toBeGreaterThanOrEqual(fieldBox.y + fieldBox.height);
+    expect(errorBox.y + errorBox.height).toBeLessThanOrEqual(nav.y);
+    expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+    await page.screenshot({ path: `.cache/ft009b-backup-${width}.png` });
+    expect(await readDatabase(page, 'personal')).toEqual(before);
+    await importFile(page, fixture);
+    await expect(preview(page)).toBeVisible();
+    await expect(input).not.toHaveAttribute('aria-invalid');
+    await expect(error).toBeEmpty();
+    await page.keyboard.press('Escape');
+    await expect(input).toBeFocused();
+    expect(await readDatabase(page, 'personal')).toEqual(before);
+  }
+});
+
 test('Calculadoras offline, validación, privacidad y vistas de escritorio/móvil', async ({ page, context }) => {
   await personal(page, 'calculadora-1rm');
   const before = await readDatabase(page, 'personal');
   await context.setOffline(true);
   await page.getByRole('button', { name: 'Calcular 1RM', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Peso');
+  await expect(page.locator('[name="weight"]')).toBeFocused();
+  await expect(page.locator('[name="weight"]')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('[name="weight"]')).toHaveAccessibleDescription(/Peso/);
   await page.getByRole('spinbutton', { name: 'Peso utilizado (kg)', exact: true }).fill('80');
   await page.getByRole('spinbutton', { name: 'Repeticiones realizadas' }).fill('6');
+  const desktopScroll = await page.evaluate(() => scrollY);
   await page.getByRole('button', { name: 'Calcular 1RM', exact: true }).click();
+  expect(await page.evaluate(() => scrollY)).toBe(desktopScroll);
+  await expect(page.getByRole('button', { name: 'Calcular 1RM', exact: true })).toBeFocused();
   await expect(page.getByLabel('1RM estimado', { exact: true })).toHaveText('96 kg');
   await expect(page.getByRole('row').filter({ hasText: '80 %' })).toContainText('76,8');
   await mkdir('.cache', { recursive: true });
@@ -32,6 +74,31 @@ test('Calculadoras offline, validación, privacidad y vistas de escritorio/móvi
   await expect(page.getByLabel('1RM estimado', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Calcular 1RM', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('entre 1 y 10');
+  await expect(page.locator('[name="reps"]')).toBeFocused();
+  await expect(page.locator('[name="reps"]')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('[name="reps"]')).toHaveAccessibleDescription(/entre 1 y 10/);
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.locator('[name="reps"]').fill('6');
+    await expect(page.locator('[name="reps"]')).not.toHaveAttribute('aria-invalid');
+    await page.getByRole('button', { name: 'Calcular 1RM', exact: true }).click();
+    await expect(page.locator('#rm-result-heading')).toBeFocused();
+    await expect(page.getByLabel('1RM estimado', { exact: true })).toHaveText('96 kg');
+    const result = await page.getByLabel('1RM estimado', { exact: true }).boundingBox();
+    const nav = await page.locator('.bottom-nav').boundingBox();
+    expect(result.y).toBeGreaterThanOrEqual(0);
+    expect(result.y + result.height).toBeLessThan(nav.y);
+    await expect(page.locator('[name="weight"]')).toHaveValue('80');
+    await expect(page.getByRole('row').filter({ hasText: '80 %' })).toContainText('76,8');
+    await page.screenshot({ path: `.cache/ft009b-1rm-${width}.png` });
+    await page.locator('[name="reps"]').fill('11');
+    await page.getByRole('button', { name: 'Calcular 1RM', exact: true }).click();
+    await expect(page.locator('[name="reps"]')).toBeFocused();
+    await expect(page.locator('[name="reps"]')).toHaveAccessibleDescription(/entre 1 y 10/);
+    await expect(page.locator('.calculation-error')).toBeInViewport();
+    await expect(page.getByLabel('1RM estimado', { exact: true })).toHaveCount(0);
+  }
+  await page.setViewportSize({ width: 1536, height: 1024 });
   await route(page, 'calculadora-calorias');
   await page.getByRole('combobox', { name: 'Sexo usado por la fórmula' }).selectOption('male');
   await page.getByRole('spinbutton', { name: 'Edad (años)' }).fill('32');
@@ -172,7 +239,7 @@ test('Respaldo personal: descarga, vista previa, cancelación, rechazo, rollback
   expect(await readDatabase(page, 'personal')).toEqual(original);
   for (const content of ['{', { ...exported, schemaVersion: 999 }, { ...exported, stores: { ...exported.stores, setRecords: [] } }]) {
     await importFile(page, content);
-    await expect(page.locator('.profile-feedback')).toContainText('No se importó ningún dato');
+    await expect(page.locator('#backup-error')).toContainText('No se importó ningún dato');
     await expect(preview(page)).not.toBeVisible();
     expect(await readDatabase(page, 'personal')).toEqual(original);
   }

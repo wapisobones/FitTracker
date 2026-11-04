@@ -12,7 +12,7 @@ function guide(calories) {
   return `<details class="card calculation-guide" id="calculation-guide"><summary>${icon('info')}Guía y fórmulas</summary>${calories ? `<p>Mifflin–St Jeor: 10 × peso (kg) + 6,25 × estatura (cm) − 5 × edad + constante (+5 para hombre, −161 para mujer). Estima energía en reposo; aquí se muestra como metabolismo basal (TMB).</p><p>Gasto diario (TDEE) = TMB × factor de actividad. Factores aproximados: 1,2 / 1,375 / 1,55 / 1,725 / 1,9. La actividad cotidiana también cuenta: los días de entrenamiento son solo una referencia.</p><p>Escenarios elegidos: déficit −15 %, mantenimiento y superávit +10 %. Reparto ilustrativo: proteína 30 %, carbohidratos 40 %, grasas 30 %; 4, 4 y 9 kcal por gramo. Se calcula sin redondear y se muestran cifras redondeadas.</p><p>Para adultos de 18–100 años; no contempla embarazo, lactancia ni condiciones clínicas. Son aproximaciones, no consejo clínico ni una promesa de cambio de peso.</p><a class="text-link" href="https://pubmed.ncbi.nlm.nih.gov/2305711/" target="_blank" rel="noopener noreferrer">Estudio original de Mifflin–St Jeor (1990)</a>` : `<p>Epley: peso × (1 + repeticiones / 30). Esta calculadora aplica la fórmula a 1–10 repeticiones, incluso a una repetición. Con más repeticiones la estimación es menos fiable.</p><p>Usa una serie de esfuerzo alto con técnica controlada. El resultado depende del ejercicio y de la persona; no es un máximo comprobado ni una indicación para intentar esa carga.</p><p>Los porcentajes son referencias matemáticas. No predicen cuántas repeticiones podrás realizar ni se redondean al material disponible. Progreso conserva su criterio anterior: una repetición realizada se muestra como carga real.</p>`}</details>`;
 }
 function calculator(calories, unit) {
-  return `${heading(calories)}<div class="calculation-links"><a class="button button-primary" href="#/${calories ? 'calculadora-calorias' : 'calculadora-1rm'}">${icon('calculator')}Calculadora</a><button type="button" class="button button-secondary" data-guide>${icon('info')}Guía y fórmulas</button></div><div class="calculator-grid"><section class="card calculator-form"><h2>${icon(calories ? 'user' : 'dumbbell')}${calories ? 'Tus datos' : 'Datos del ejercicio'}</h2><form data-calculator novalidate>${calories ? `<label>Sexo usado por la fórmula<select name="sex" required><option value="">Seleccionar</option><option value="male">Hombre (+5)</option><option value="female">Mujer (−161)</option></select></label><div class="calculator-fields">${field('age', 'Edad (años)', 18, 100, '1')}${field('weight', `Peso (${unit})`, fromKg(30, unit), fromKg(350, unit))}${field('height', 'Estatura (cm)', 120, 230)}</div><label>Nivel de actividad<select name="activity">${Object.entries(ACTIVITIES).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join('')}</select></label><p class="availability-note" data-activity>${ACTIVITIES.sedentary.detail}</p><fieldset class="energy-goals"><legend>Objetivo</legend>${Object.entries(ENERGY_GOALS).map(([key, value]) => `<label><input type="radio" name="goal" value="${key}"${key === 'maintenance' ? ' checked' : ''}><span>${value.label}</span></label>`).join('')}</fieldset>` : `<p class="availability-note">El cálculo se aplica a la carga de la serie que introduzcas.</p><div class="calculator-fields">${field('weight', `Peso utilizado (${unit})`, .01, fromKg(2000, unit))}${field('reps', 'Repeticiones realizadas', 1, 10, '1')}</div>`}<p class="calculation-error" role="alert"></p><button type="submit" class="button button-primary">${icon('calculator')}Calcular ${calories ? 'calorías' : '1RM'}</button><p class="availability-note">${calories ? 'Estos datos solo se usan en esta pantalla. No se guardan ni se incluyen en respaldos.' : `Unidad del perfil: ${unit}. No se guarda este cálculo como un récord.`}</p></form></section><section class="card calculator-result" aria-live="polite" aria-atomic="true"><h2>${icon('target')}Tu ${calories ? 'estimación de energía' : '1RM estimado'}</h2><div data-calculation-result><p class="calculation-empty">Completa los datos y calcula para ver la estimación.</p></div></section><section class="card calculator-reference" aria-live="polite"><h2>${icon(calories ? 'chart' : 'dumbbell')}${calories ? 'Macronutrientes' : 'Cargas de referencia'}</h2><div data-calculation-reference><p class="calculation-empty">${calories ? 'Verás un reparto ilustrativo según el objetivo elegido.' : 'Los porcentajes se calcularán a partir de tu 1RM estimado.'}</p></div></section></div>${guide(calories)}`;
+  return `${heading(calories)}<div class="calculation-links"><a class="button button-primary" href="#/${calories ? 'calculadora-calorias' : 'calculadora-1rm'}">${icon('calculator')}Calculadora</a><button type="button" class="button button-secondary" data-guide>${icon('info')}Guía y fórmulas</button></div><div class="calculator-grid"><section class="card calculator-form"><h2>${icon(calories ? 'user' : 'dumbbell')}${calories ? 'Tus datos' : 'Datos del ejercicio'}</h2><form data-calculator novalidate>${calories ? `<label>Sexo usado por la fórmula<select name="sex" required><option value="">Seleccionar</option><option value="male">Hombre (+5)</option><option value="female">Mujer (−161)</option></select></label><div class="calculator-fields">${field('age', 'Edad (años)', 18, 100, '1')}${field('weight', `Peso (${unit})`, fromKg(30, unit), fromKg(350, unit))}${field('height', 'Estatura (cm)', 120, 230)}</div><label>Nivel de actividad<select name="activity">${Object.entries(ACTIVITIES).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join('')}</select></label><p class="availability-note" data-activity>${ACTIVITIES.sedentary.detail}</p><fieldset class="energy-goals"><legend>Objetivo</legend>${Object.entries(ENERGY_GOALS).map(([key, value]) => `<label><input type="radio" name="goal" value="${key}"${key === 'maintenance' ? ' checked' : ''}><span>${value.label}</span></label>`).join('')}</fieldset>` : `<p class="availability-note">El cálculo se aplica a la carga de la serie que introduzcas.</p><div class="calculator-fields">${field('weight', `Peso utilizado (${unit})`, .01, fromKg(2000, unit))}${field('reps', 'Repeticiones realizadas', 1, 10, '1')}</div>`}<p id="calculation-error" class="calculation-error" role="alert"></p><button type="submit" class="button button-primary">${icon('calculator')}Calcular ${calories ? 'calorías' : '1RM'}</button><p class="availability-note">${calories ? 'Estos datos solo se usan en esta pantalla. No se guardan ni se incluyen en respaldos.' : `Unidad del perfil: ${unit}. No se guarda este cálculo como un récord.`}</p></form></section><section class="card calculator-result" aria-live="polite" aria-atomic="true"><h2${calories ? '' : ' id="rm-result-heading" tabindex="-1"'}>${icon('target')}Tu ${calories ? 'estimación de energía' : '1RM estimado'}</h2><div data-calculation-result><p class="calculation-empty">Completa los datos y calcula para ver la estimación.</p></div></section><section class="card calculator-reference" aria-live="polite"><h2>${icon(calories ? 'chart' : 'dumbbell')}${calories ? 'Macronutrientes' : 'Cargas de referencia'}</h2><div data-calculation-reference><p class="calculation-empty">${calories ? 'Verás un reparto ilustrativo según el objetivo elegido.' : 'Los porcentajes se calcularán a partir de tu 1RM estimado.'}</p></div></section></div>${guide(calories)}`;
 }
 function result1RM(result, unit) {
   return `<output class="calculation-value" aria-label="1RM estimado">${weightNumber(result.estimatedKg, unit)} <small>${unit}</small></output><p class="calculation-highlight">Estimación de Epley</p><dl class="calculation-summary"><div><dt>Fórmula</dt><dd>Peso × (1 + reps / 30)</dd></div><div><dt>Cálculo (${unit})</dt><dd>${weightNumber(result.weightKg, unit)} × (1 + ${result.reps} / 30)</dd></div></dl><p class="availability-note">Referencia orientativa. No representa un máximo comprobado.</p>`;
@@ -33,6 +33,13 @@ export function mountCalculator(root, mode, calories) {
   const events = new AbortController();
   let alive = true;
   let unit;
+  function clearValidation() {
+    root.querySelectorAll('[aria-invalid]').forEach((input) => {
+      input.removeAttribute('aria-invalid');
+      input.removeAttribute('aria-describedby');
+    });
+    root.querySelector('.calculation-error').textContent = '';
+  }
   async function load() {
     root.innerHTML = `${heading(calories)}<p role="status">Cargando preferencias…</p>`;
     try {
@@ -47,19 +54,34 @@ export function mountCalculator(root, mode, calories) {
     event.preventDefault();
     const fields = Object.fromEntries(new FormData(event.target));
     const error = root.querySelector('.calculation-error');
+    if (!calories) clearValidation();
     try {
       const result = calories ? estimateCalories(fields, unit) : estimate1RM(fields.weight, fields.reps, unit);
       error.textContent = '';
       root.querySelector('[data-calculation-result]').innerHTML = calories ? resultCalories(result) : result1RM(result, unit);
       root.querySelector('[data-calculation-reference]').innerHTML = calories ? referenceCalories(result) : reference1RM(result, unit);
+      if (!calories && matchMedia('(max-width: 700px)').matches) {
+        const heading = root.querySelector('#rm-result-heading');
+        heading.focus({ preventScroll: true });
+        heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
     } catch (failure) {
       error.textContent = failure.message;
       root.querySelector('[data-calculation-result]').innerHTML = '<p class="calculation-empty">Revisa los datos para calcular una estimación válida.</p>';
       root.querySelector('[data-calculation-reference]').innerHTML = '';
+      if (!calories) {
+        const invalid = [...event.target.querySelectorAll('input')].find((input) => !input.validity.valid);
+        if (invalid) {
+          invalid.setAttribute('aria-invalid', 'true');
+          invalid.setAttribute('aria-describedby', 'calculation-error');
+          invalid.focus();
+        }
+      }
     }
   }, { signal: events.signal });
   root.addEventListener('input', (event) => {
     if (!event.target.closest('[data-calculator]')) return;
+    if (!calories && event.target.hasAttribute('aria-invalid')) clearValidation();
     root.querySelector('[data-calculation-result]').innerHTML = '<p class="calculation-empty">Datos modificados. Pulsa Calcular para actualizar el resultado.</p>';
     root.querySelector('[data-calculation-reference]').innerHTML = '';
     if (event.target.name === 'activity') root.querySelector('[data-activity]').textContent = ACTIVITIES[event.target.value].detail;

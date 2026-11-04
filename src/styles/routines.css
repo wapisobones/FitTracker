@@ -54,7 +54,7 @@
 .routine-inline-empty { text-align: center; padding: 30px 14px; }
 .routine-inline-empty p { color: var(--muted); margin-top: 10px; font-size: 13px; line-height: 1.8; }
 .add-session-exercise { width: 100%; margin-top: 15px; }
-.routine-start { border-top: 1px solid var(--line); padding-top: 18px; }
+.routine-start { margin-top: 16px; }
 .routine-start p { font-size: 11px; color: var(--muted); margin-top: 9px; }
 .routine-dialog { width: min(620px, calc(100vw - 32px)); }
 .routine-dialog label, .picker-search-label { display: block; margin: 18px 0; font-size: 14px; }

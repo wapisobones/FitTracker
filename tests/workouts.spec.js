@@ -43,6 +43,106 @@ async function finish(page, partial = false) {
   await expect(page.getByRole('heading', { name: `Entrenamiento ${partial ? 'parcial' : 'completo'} guardado`, exact: true })).toBeVisible();
 }
 
+for (const width of [1536, 390]) {
+  test(`Inicio junto a la sesión seleccionada con cinco ejercicios y recuperación a ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1024 });
+    await page.goto('./#/predisenadas');
+    await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
+    await page.getByRole('button', { name: 'Guardar en Mis rutinas', exact: true }).click();
+    await page.getByRole('link', { name: 'Ver copia en Mis rutinas', exact: true }).click();
+    await expect(page.locator('.prescription-row')).toHaveCount(5);
+    await page.locator('.session-tabs button').filter({ hasText: 'Cuerpo completo B' }).click();
+    const start = page.getByRole('link', { name: 'Iniciar sesión', exact: true });
+    await expect(start).toHaveCount(1);
+    // Bring only the selected session heading into view, without traversing exercises.
+    await page.locator('.session-heading').evaluate(element => element.scrollIntoView({ block: 'start' }));
+    await expect(start).toBeInViewport();
+    expect((await start.boundingBox()).y).toBeLessThan((await page.locator('.prescription-row').first().boundingBox()).y);
+    await start.click();
+    await expect(page.getByRole('combobox', { name: 'Sesión', exact: true }).locator('option:checked')).toHaveText(/Cuerpo completo B/);
+    await page.getByRole('button', { name: 'Iniciar entrenamiento', exact: true }).click();
+    await expect(page.locator('.workout-session p')).toHaveText('Cuerpo completo B');
+    const active = (await readDatabase(page, 'personal')).workouts;
+    await page.goto('./#/mis-rutinas');
+    await page.getByRole('link', { name: 'Iniciar sesión', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Tienes una sesión pendiente' })).toBeVisible();
+    expect((await readDatabase(page, 'personal')).workouts).toEqual(active);
+    await page.getByRole('button', { name: 'Continuar entrenamiento', exact: true }).click();
+    await expect(page.locator('#register-heading')).toBeVisible();
+  });
+}
+
+test('Controles del registro móvil: pausa, foco, revisión, parcial y descarte sin salir del ejercicio', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fixture(page);
+  await start(page);
+  await page.locator('[data-workout-exercise="0"]').click();
+  const toolbar = page.getByRole('group', { name: 'Controles del entrenamiento' });
+  await expect(toolbar).toBeInViewport();
+  await weight(page, 1).fill('40');
+  await reps(page, 1).fill('8');
+  await weight(page, 1).focus();
+  await page.keyboard.press('Tab');
+  // The focused fields and completion buttons stay above the fixed actions.
+  for (const control of [reps(page, 1), page.getByRole('button', { name: 'Completar serie 1', exact: true })]) {
+    await control.focus();
+    const box = await control.boundingBox();
+    expect(box.y + box.height).toBeLessThanOrEqual((await toolbar.boundingBox()).y);
+  }
+  await toolbar.getByRole('button', { name: 'Pausar sesión', exact: true }).click();
+  await expect(toolbar.getByRole('button', { name: 'Reanudar sesión', exact: true })).toBeFocused();
+  await expect(weight(page, 1)).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Completar serie 1', exact: true })).toBeDisabled();
+  expect((await readDatabase(page, 'personal')).workouts[0].status).toBe('paused');
+  await toolbar.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
+  const finish = modal(page, 'Guardar entrenamiento');
+  await expect(finish.getByRole('button', { name: 'Guardar completo', exact: true })).toBeDisabled();
+  await expect(finish.getByRole('button', { name: 'Guardar parcial', exact: true })).toBeDisabled();
+  await finish.getByRole('button', { name: 'Seguir entrenando', exact: true }).click();
+  await expect(toolbar.getByRole('button', { name: 'Finalizar entrenamiento', exact: true })).toBeFocused();
+  await toolbar.getByRole('button', { name: 'Reanudar sesión', exact: true }).click();
+  await expect(toolbar.getByRole('button', { name: 'Pausar sesión', exact: true })).toBeFocused();
+  await expect(weight(page, 1)).toHaveValue('40');
+  await complete(page, 1, '40', '8');
+  await page.getByRole('button', { name: 'Siguiente ejercicio', exact: true }).click();
+  await expect(page.locator('#register-heading')).toHaveText('Remo en polea');
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await weight(page, 1).focus();
+    const bar = await toolbar.boundingBox();
+    const nav = await page.locator('.bottom-nav').boundingBox();
+    expect(bar.y + bar.height).toBeLessThanOrEqual(nav.y);
+    expect((await weight(page, 1).boundingBox()).y + 48).toBeLessThanOrEqual(bar.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.screenshot({ path: `.cache/ft009b-register-${width}.png` });
+  }
+  await toolbar.getByRole('button', { name: 'Pausar sesión', exact: true }).click();
+  await expect(weight(page, 1)).toBeDisabled();
+  await toolbar.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
+  await expect(finish.getByRole('button', { name: 'Guardar parcial', exact: true })).toBeEnabled();
+  await finish.getByRole('button', { name: 'Seguir entrenando', exact: true }).click();
+  await expect(toolbar.getByRole('button', { name: 'Finalizar entrenamiento', exact: true })).toBeFocused();
+  await toolbar.getByRole('button', { name: 'Reanudar sesión', exact: true }).click();
+  await toolbar.getByRole('button', { name: 'Finalizar entrenamiento', exact: true }).click();
+  await finish.getByRole('button', { name: 'Guardar parcial', exact: true }).click();
+  await expect(page.locator('.workout-result h2')).toHaveText('Entrenamiento parcial guardado');
+  const partial = await readDatabase(page, 'personal');
+  expect(partial.setRecords).toHaveLength(1);
+  await page.getByRole('link', { name: 'Elegir otra sesión', exact: true }).click();
+  await page.getByRole('button', { name: 'Iniciar entrenamiento', exact: true }).click();
+  await page.locator('[data-workout-exercise="0"]').click();
+  await page.getByRole('button', { name: 'Ver rutina', exact: true }).click();
+  await page.getByRole('button', { name: 'Descartar', exact: true }).click();
+  const discard = modal(page, '¿Descartar entrenamiento?');
+  await expect(discard.getByRole('button', { name: 'Cancelar', exact: true })).toBeFocused();
+  await discard.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.locator('.workout-overview')).toBeVisible();
+  expect((await readDatabase(page, 'personal')).workouts).toHaveLength(2);
+  await page.getByRole('button', { name: 'Descartar', exact: true }).click();
+  await discard.getByRole('button', { name: 'Confirmar descarte', exact: true }).click();
+  expect((await readDatabase(page, 'personal')).workouts).toEqual(partial.workouts);
+});
+
 test('Inicio desde rutina, validación, persistencia, snapshots y ciclo completo con referencias', async ({ page }) => {
   const { routine, sessions } = await fixture(page);
   await start(page);

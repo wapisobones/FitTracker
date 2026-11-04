@@ -142,7 +142,10 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
       if (command.type === 'navigate') focusRegister();
       else if (command.position !== undefined) root.querySelector(`[data-complete-set="${command.position}"]`)?.focus({ preventScroll: true });
       else if (command.type === 'rest') root.querySelector(`[data-workout-action="rest-${command.action === 'pause' ? 'resume' : command.action === 'resume' ? 'pause' : 'start'}"]`)?.focus({ preventScroll: true });
-      else root.querySelector(`[data-workout-action="${command.type === 'pause' ? 'resume' : 'pause'}"]`)?.focus({ preventScroll: true });
+      else {
+        const actions = matchMedia('(max-width: 700px)').matches && mobileRegister ? '.workout-register-actions' : '.workout-session-actions';
+        root.querySelector(`${actions} [data-workout-action="${command.type === 'pause' ? 'resume' : 'pause'}"]`)?.focus({ preventScroll: true });
+      }
     });
   }
 
