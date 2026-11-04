@@ -17,6 +17,7 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
     if (!history.exercises.some((exercise) => exercise.id === state.exerciseId)) state.exerciseId = '';
     if (!history.exercises.some((exercise) => exercise.id === state.chartExerciseId)) state.chartExerciseId = '';
     const stats = calculate(history, state);
+    stats.unit = history.weightUnit;
     root.innerHTML = progress ? progressView(history, stats, state, mode) : dashboard(history, stats, state, mode);
     const query = new URLSearchParams({ ambito: mode, periodo: state.period });
     if (state.exerciseId) query.set('ejercicio', state.exerciseId);

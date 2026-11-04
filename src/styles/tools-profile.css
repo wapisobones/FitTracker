@@ -1,0 +1,95 @@
+.calculation-links { display: flex; gap: 12px; margin: 22px 0; flex-wrap: wrap; }
+.calculator-grid { display: grid; grid-template-columns: 1.05fr 1fr 1fr; gap: 18px; align-items: start; }
+.calculator-grid > *, .profile-grid > *, .profile-data { min-width: 0; }
+.calculator-form, .calculator-result, .calculator-reference, .profile-settings, .profile-backup, .profile-reset, .tool-error { padding: 24px; }
+.calculator-grid h2, .profile-grid h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.calculator-grid h2 .icon, .profile-grid h2 .icon { color: var(--lime); }
+.calculator-form form, .profile-settings form { display: grid; gap: 18px; }
+.calculator-form label, .profile-settings label { display: grid; gap: 8px; font-weight: 600; min-width: 0; }
+.calculator-form input, .calculator-form select, .profile-settings input, .profile-settings select { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #465765; border-radius: 10px; color: var(--text); background: #101c26; font: inherit; }
+.calculator-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.calculator-form form > .calculator-fields:has([name="height"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.energy-goals { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
+.energy-goals legend { margin-bottom: 12px; font-weight: 600; }
+.energy-goals label { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.energy-goals label:has(:checked) { border-color: var(--lime); color: var(--lime); background: #9bf45c0a; }
+.energy-goals input { width: 20px; min-height: 20px; height: 20px; accent-color: var(--lime); }
+.calculation-error, .profile-form-error { color: #ffb6aa; overflow-wrap: anywhere; }
+.calculation-error:empty, .profile-form-error:empty { display: none; }
+.calculation-empty { color: var(--muted); padding: 35px 0; line-height: 1.8; }
+.calculator-result { border-color: #9bf45c88; }
+.calculation-value { display: block; text-align: center; font: 700 clamp(34px, 3.5vw, 58px)/1.3 'Bahnschrift', 'Segoe UI', sans-serif; margin: 22px 0; overflow-wrap: anywhere; }
+.calculation-value small { font-size: .5em; }
+.calculation-caption { color: var(--muted); text-align: center; }
+.calculation-highlight { background: #9bf45c13; color: var(--lime); border-radius: 8px; padding: 10px; text-align: center; }
+.calculation-summary { margin: 24px 0; }
+.calculation-summary > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 0; border-top: 1px solid var(--line); }
+.calculation-summary dt { color: var(--muted); }
+.calculation-summary dd { margin: 0; text-align: right; font-weight: 600; }
+.reference-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+.reference-table caption { text-align: left; color: var(--muted); margin-bottom: 12px; }
+.reference-table th, .reference-table td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #303e4c88; overflow-wrap: anywhere; }
+.reference-table th { font-weight: 600; }
+.reference-table td:last-child { text-align: right; }
+.reference-highlight { background: #9bf45c20; color: var(--lime); }
+.calculation-guide { padding: 20px 24px; margin-top: 22px; }
+.calculation-guide summary { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 650; min-height: 44px; }
+.calculation-guide summary .icon { color: var(--lime); }
+.calculation-guide p { max-width: 80ch; margin: 18px 0; color: var(--muted); line-height: 1.8; }
+.energy-scenarios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.energy-scenarios > div { padding: 14px 8px; border: 1px solid var(--line); border-radius: 12px; text-align: center; }
+.energy-scenarios .selected { border-color: var(--lime); background: #9bf45c0a; }
+.energy-scenarios span { font-size: 12px; display: block; }
+.energy-scenarios strong { font: 650 25px 'Bahnschrift', 'Segoe UI', sans-serif; display: block; margin: 12px 0 2px; }
+.energy-scenarios small { color: var(--muted); }
+.macro-ring { background: conic-gradient(var(--lime) 0 30%, #54cde1 30% 70%, #a28bf8 70% 100%); width: 172px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; margin: 24px auto; }
+.macro-ring > span { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 126px; aspect-ratio: 1; border-radius: 50%; background: var(--card-bottom); }
+.macro-ring strong { font: 650 28px 'Bahnschrift', 'Segoe UI', sans-serif; }
+.macro-ring small { color: var(--muted); }
+.macro-list { margin: 22px 0; }
+.macro-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.macro-list li::before { content: ''; width: 10px; height: 10px; flex-shrink: 0; border-radius: 3px; background: var(--lime); }
+.macro-list .carbs::before { background: #54cde1; }
+.macro-list .fat::before { background: #a28bf8; }
+.macro-list span { flex: 1; }
+.profile-banner { padding: 26px; margin: 24px 0; display: flex; align-items: center; gap: 22px; position: relative; overflow: hidden; }
+.profile-avatar { border: 2px solid var(--lime); border-radius: 50%; width: 88px; height: 88px; display: grid; place-items: center; flex-shrink: 0; background: #1b3029; color: var(--lime); }
+.profile-avatar .icon { width: 44px; height: 44px; }
+.profile-banner > div { min-width: 0; }
+.profile-banner h2 { font-size: 30px; overflow-wrap: anywhere; }
+.profile-banner p { color: var(--muted); margin: 6px 0 12px; }
+.profile-banner-mark { color: #9bf45c18; margin-left: auto; transform: rotate(-20deg); }
+.profile-banner-mark .icon { width: 130px; height: 100px; }
+.profile-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 22px; align-items: start; }
+.profile-data { display: grid; gap: 22px; }
+.profile-grid p { max-width: 75ch; line-height: 1.8; }
+.profile-settings > p { margin-bottom: 22px; }
+.profile-feedback { color: var(--lime); overflow-wrap: anywhere; margin: 14px 0; }
+.profile-feedback:empty { display: none; }
+.backup-scope { margin-top: 18px; padding-left: 14px; border-left: 3px solid var(--lime); color: var(--muted); }
+.profile-actions { display: flex; flex-wrap: wrap; align-items: start; gap: 12px; margin: 22px 0; }
+.profile-actions .button { font-size: 13px; }
+.backup-file { display: grid; gap: 10px; font-weight: 600; width: 100%; }
+.backup-file input { max-width: 100%; width: 100%; min-height: 48px; padding: 8px; border-radius: 10px; background: #101c26; }
+.backup-file input::file-selector-button { font: inherit; background: #263744; color: var(--text); border: 1px solid #496071; border-radius: 7px; padding: 8px 12px; margin-right: 10px; cursor: pointer; }
+.danger-button { color: #ffb6aa; border-color: #b3665966; }
+.profile-reset > .text-link { min-height: 44px; padding: 0; border: 0; background: transparent; text-align: left; }
+.backup-preview { table-layout: fixed; margin: 20px 0; }
+.backup-preview th:first-child { width: 56%; }
+.tool-error .button { margin-top: 18px; }
+@media (max-width: 1220px) { .calculator-grid { grid-template-columns: 1fr 1fr; } .calculator-reference { grid-column: 2; } .calculator-form { grid-row: span 2; } .energy-scenarios { grid-template-columns: 1fr; } .energy-scenarios > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; } .energy-scenarios strong { margin: 0; } }
+@media (max-width: 700px) {
+  .calculator-grid, .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .calculator-reference { grid-column: auto; }
+  .calculator-form { grid-row: auto; }
+  .calculator-form, .calculator-result, .calculator-reference, .profile-settings, .profile-backup, .profile-reset { padding: 20px; }
+  .calculator-fields { grid-template-columns: minmax(0, 1fr); }
+  .calculator-form form > .calculator-fields:has([name="height"]) { grid-template-columns: minmax(0, 1fr); }
+  .profile-banner { flex-direction: column; padding: 22px; text-align: center; gap: 16px; }
+  .profile-banner h2 { font-size: 26px; }
+  .profile-banner-mark { display: none; }
+  .profile-actions > .button { width: 100%; }
+  .calculation-value { font-size: 44px; }
+  .calculation-links { gap: 8px; }
+  .calculation-links .button { padding: 10px 13px; }
+}

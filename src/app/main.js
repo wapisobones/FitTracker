@@ -7,6 +7,7 @@ import '../styles/routines.css';
 import '../styles/workouts.css';
 import '../styles/progress.css';
 import '../styles/generator.css';
+import '../styles/tools-profile.css';
 import { shell } from '../components/shell.js';
 import { findRoute } from './routes.js';
 import { mountStatistics } from '../features/progress/controller.js';
@@ -19,6 +20,8 @@ import { mountWorkout } from '../features/workouts/controller.js';
 import { workoutService } from '../features/workouts/workout-service.js';
 import { escapeHTML } from '../utils/html.js';
 import { mountGenerator } from '../features/generator/controller.js';
+import { mountCalculator, toolsHome } from '../features/tools/controller.js';
+import { mountProfile } from '../features/profile/controller.js';
 
 document.querySelector('#app').innerHTML = shell();
 const main = document.querySelector('main');
@@ -37,6 +40,8 @@ let navigationVersion = 0;
 let statisticsView;
 let generatorView;
 let generatorMode;
+let toolsView;
+let profileView;
 const generatorStates = new Map();
 
 async function refreshPendingWorkout() {
@@ -84,6 +89,10 @@ function render({ focus = false } = {}) {
   workoutView = null;
   statisticsView?.destroy();
   statisticsView = null;
+  toolsView?.destroy();
+  toolsView = null;
+  profileView?.destroy();
+  profileView = null;
   if (generatorView) generatorStates.set(generatorMode, generatorView.getState());
   generatorView?.destroy();
   generatorView = null;
@@ -98,6 +107,9 @@ function render({ focus = false } = {}) {
   else if (id === 'rutina-activa') workoutView = mountWorkout(main, state.mode, new URLSearchParams(query));
   else if (id === 'generador') { generatorMode = state.mode; generatorView = mountGenerator(main, state.mode, generatorStates.get(state.mode)); }
   else if (id === 'inicio' || id === 'progreso') statisticsView = mountStatistics(main, state.mode, { progress: id === 'progreso', params: new URLSearchParams(query) });
+  else if (id === 'herramientas') main.innerHTML = toolsHome();
+  else if (id === 'calculadora-1rm' || id === 'calculadora-calorias') toolsView = mountCalculator(main, state.mode, id === 'calculadora-calorias');
+  else if (id === 'perfil') profileView = mountProfile(main, state.mode, { onPersonalChange: () => generatorStates.delete('personal') });
   else main.innerHTML = !route ? notFound() : placeholder(route, state.mode);
   document.title = `${state.status === 'loading' ? 'Cargando' : state.status === 'error' ? 'Almacenamiento' : !state.mode ? 'Bienvenido' : route?.title ?? 'Sección no encontrada'} · FitTracker`;
   document.querySelector('.current-mode').textContent = `${modeLabel(state.mode)}${state.status === 'loading' ? ' · Cargando' : ''}`;
@@ -126,7 +138,7 @@ function render({ focus = false } = {}) {
 
 window.addEventListener('hashchange', async () => {
   const version = ++navigationVersion;
-  const canLeave = await (workoutView?.prepareLeave() ?? generatorView?.prepareLeave() ?? true);
+  const canLeave = await (workoutView?.prepareLeave() ?? generatorView?.prepareLeave() ?? profileView?.prepareLeave() ?? true);
   if (version !== navigationVersion) return;
   if (!canLeave) { history.replaceState(null, '', renderedHash); return; }
   render({ focus: true });
@@ -143,6 +155,7 @@ document.addEventListener('click', async (event) => {
     if (modeSelector.open) modeSelector.close();
     if (workoutView && !await workoutView.prepareLeave()) return;
     if (generatorView && !await generatorView.prepareLeave()) return;
+    if (profileView && !await profileView.prepareLeave()) return;
     modes.select(target.dataset.selectMode).then(focusContent);
   } else if (target.hasAttribute('data-request-reset')) {
     modeSelector.close();
@@ -152,6 +165,7 @@ document.addEventListener('click', async (event) => {
     resetConfirmation.close();
     if (workoutView && !await workoutView.prepareLeave()) return;
     if (generatorView && !await generatorView.prepareLeave()) return;
+    if (profileView && !await profileView.prepareLeave()) return;
     modes.resetDemo().then(() => {
       if (modes.state.status === 'ready') {
         generatorStates.delete('demo');

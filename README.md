@@ -2,11 +2,11 @@
 
 Aplicación web para planificar rutinas, registrar entrenamientos de fuerza y visualizar el progreso físico desde el computador o el celular.
 
-## Estado actual: FT-007
+## Estado actual: FT-008
 
 Base responsive con bienvenida, IndexedDB y ámbitos **demostración/personal separados**. Incluye catálogo de 24 ejercicios, personalizados, rutinas y plantillas, generador muscular local, ejecución y recuperación de entrenamientos, Dashboard y Progreso calculados desde las series realizadas. Los datos personales no incluyen estadísticas ficticias.
 
-Usa «Cambiar modo» para elegir un espacio o restablecer la demostración con confirmación. Los ejercicios base y las plantillas están disponibles en ambos modos; los personalizados, rutinas y entrenamientos pertenecen al ámbito activo. Las sesiones siguen una secuencia flexible, sin días obligatorios. Completar toda una sesión avanza el ciclo; guardar parcial o descartar conserva su posición. Las calculadoras, edición de perfil y respaldos JSON siguen pendientes.
+Usa «Cambiar modo» para elegir un espacio o restablecer la demostración con confirmación. Los ejercicios base y las plantillas están disponibles en ambos modos; los personalizados, rutinas y entrenamientos pertenecen al ámbito activo. Las sesiones siguen una secuencia flexible, sin días obligatorios. Completar toda una sesión avanza el ciclo; guardar parcial o descartar conserva su posición. Las calculadoras de 1RM y calorías ya funcionan localmente. Perfil permite editar alias, unidades kg/lb y objetivos semanales; también exportar, restaurar y restablecer datos personales con confirmación. La demostración permanece aislada.
 
 Los recursos visuales son SVG originales y las técnicas son textuales. «Añadir a rutina» permite elegir un destino existente o crear una rutina y sesión. Las plantillas son Full body básico (principiante), Torso / Pierna (intermedio) y Push · Pull · Legs (avanzado), guardadas como copias independientes.
 
@@ -16,7 +16,9 @@ Dashboard y Progreso muestran sesiones, volumen, ejercicio más trabajado, máxi
 
 La demostración incorpora 18 sesiones ficticias estructuradas cuando no existe historial previo y conserva los datos modificados. Sus fechas permanecen fijas después de inicializarla; se puede restablecer con confirmación. El ámbito personal comienza vacío.
 
-En Generador, selecciona músculos en el mapa frontal/posterior o en la lista y configura modalidad, nivel, objetivo, equipo, duración y prioridades. Puedes crear una sesión o un programa de 1–6 sesiones. El resultado se edita con el editor de rutinas antes de «Guardar en Mis rutinas». La generación respeta los filtros y explica cuando no hay una combinación viable. Los personalizados participan si tienen dificultad asignada; los anteriores permanecen como «Sin especificar». Las propuestas sin guardar se conservan temporalmente al navegar, separadas por ámbito; para recuperarlas tras recargar hay que guardarlas como rutinas. FT-008 espera la revisión de esta entrega.
+En Generador, selecciona músculos en el mapa frontal/posterior o en la lista y configura modalidad, nivel, objetivo, equipo, duración y prioridades. Puedes crear una sesión o un programa de 1–6 sesiones. El resultado se edita con el editor de rutinas antes de «Guardar en Mis rutinas». La generación respeta los filtros y explica cuando no hay una combinación viable. Los personalizados participan si tienen dificultad asignada; los anteriores permanecen como «Sin especificar». Las propuestas sin guardar se conservan temporalmente al navegar, separadas por ámbito; para recuperarlas tras recargar hay que guardarlas como rutinas. FT-008 añade herramientas, perfil y respaldo JSON. FT-009 queda pendiente de revisión.
+
+Los datos corporales de la calculadora de calorías son temporales y no se guardan en el perfil ni en los respaldos. El respaldo JSON siempre exporta el espacio personal, también desde demo. Restaurar muestra una vista previa y reemplaza todos los datos personales en una sola transacción; no modifica demo. Conserva la sesión pendiente y los snapshots del historial.
 
 ## Alcance del MVP
 
@@ -51,6 +53,8 @@ No requiere cuentas de usuario, backend ni servicios externos.
 - [`docs/FT-006.md`](./docs/FT-006.md): métricas compartidas, fórmulas, fechas locales, gráficos, historial y semilla demo.
 - [`docs/FT-007.md`](./docs/FT-007.md): mapa muscular, algoritmo local, duración, propuestas y guardado de rutinas generadas.
 
+- [`docs/FT-008.md`](./docs/FT-008.md): calculadoras y fórmulas, perfil, unidades, objetivos y contrato del respaldo JSON.
+
 ## Instalación y uso
 
 Requisitos: Node.js 22.12 o posterior y pnpm. En Windows, usar `pnpm.cmd` si PowerShell bloquea el script `pnpm.ps1`.
@@ -75,10 +79,11 @@ La compilación estática queda en `dist/`.
 pnpm build
 pnpm test:metrics
 pnpm test:generator
+pnpm test:tools-profile
 pnpm test:smoke
 ```
 
-Las pruebas de cálculo y generación usan el runner nativo de Node.js. Las de navegador usan Microsoft Edge instalado y arrancan la compilación bajo `http://127.0.0.1:4173/FitTracker/`. Comprueban métricas, generación, edición, aislamiento, entrenamiento y persistencia. Usan contextos aislados: no modifican datos reales. Guardan capturas locales en `.cache/`, excluida de Git. Para FT-007: `pnpm test:generator` y `pnpm test:smoke generator.spec.js`; para FT-006: `pnpm test:metrics` y `pnpm test:smoke progress.spec.js`.
+Las pruebas de cálculo y generación usan el runner nativo de Node.js. Las de navegador usan Microsoft Edge instalado y arrancan la compilación bajo `http://127.0.0.1:4173/FitTracker/`. Comprueban métricas, generación, edición, aislamiento, entrenamiento y persistencia. Usan contextos aislados: no modifican datos reales. Guardan capturas locales en `.cache/`, excluida de Git. Para FT-008: `pnpm test:tools-profile` y `pnpm exec playwright test tools-profile.spec.js`; para FT-007: `pnpm test:generator` y `pnpm test:smoke generator.spec.js`; para FT-006: `pnpm test:metrics` y `pnpm test:smoke progress.spec.js`.
 
 Si el puerto está ocupado, configurar `FITTRACKER_TEST_PORT`. Por ejemplo, en PowerShell: `$env:FITTRACKER_TEST_PORT='4181'` antes de ejecutar `pnpm.cmd test:smoke`.
 

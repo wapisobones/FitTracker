@@ -19,7 +19,7 @@ const brand = `<a href="#/inicio" class="brand" aria-label="FitTracker, Inicio">
 export function shell() {
   return `<aside class="sidebar">${brand}${navigation('Principal')}
     <div class="sidebar-art" aria-hidden="true"><svg viewBox="0 0 280 160" fill="none"><path d="m0 142 63-58 32 23 68-81 117 116" fill="#122a2b"/><path d="m0 142 63-58-17 39 49-16-12 21 80-102-17 57 27-16 107 75-117-55-53 59-47-33Z" fill="#1e4034"/><path d="m95 107 68-81 30 36-29-24-21 38 8-28Z" fill="#3e6443"/></svg><p>Cada serie cuenta.</p></div>
-    <div class="sidebar-stage">FitTracker <span>FT-007</span></div>
+    <div class="sidebar-stage">FitTracker <span>FT-008</span></div>
   </aside>
   <div class="workspace"><header class="topbar">
     <button class="icon-button mobile-menu-button" type="button" aria-label="Abrir navegación" aria-controls="mobile-menu" aria-haspopup="dialog">${icon('menu')}</button>

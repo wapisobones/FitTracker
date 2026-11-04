@@ -11,7 +11,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test:smoke": "playwright test",
     "test:metrics": "node --test tests/metrics.unit.js",
-    "test:generator": "node --test tests/generator.unit.js"
+    "test:generator": "node --test tests/generator.unit.js",
+    "test:tools-profile": "node --test tests/tools-profile.unit.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

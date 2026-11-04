@@ -1,3 +1,5 @@
+import { profileService } from '../profile/profile-service.js';
+import { toKg } from '../../utils/units.js';
 import { workoutService } from './workout-service.js';
 import { routineService } from '../routines/routine-service.js';
 import { createRoutineDialog } from '../../components/routine-dialog.js';
@@ -13,6 +15,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
   const { signal } = events;
   let alive = true;
   let workout = null;
+  let unit = 'kg';
   let routines = [];
   let ready = false;
   let reviewingPending = true;
@@ -37,7 +40,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
 
   function paint() {
     if (!alive || !ready) return;
-    content.innerHTML = workout ? reviewingPending ? pendingView(workout) : activeView(workout) : chooser(routines, routineId, sessionId);
+    content.innerHTML = workout ? reviewingPending ? pendingView(workout) : activeView(workout, unit) : chooser(routines, routineId, sessionId);
     content.classList.toggle('show-workout-register', mobileRegister);
     tick();
   }
@@ -48,6 +51,9 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
     root.querySelector('.workout-error').innerHTML = '';
     feedback('Cargando entrenamiento…');
     try {
+      const preferences = await profileService(mode).load();
+      if (!alive) return;
+      unit = preferences.weightUnit;
       if (params.get('registro') && params.get('ambito') === mode) {
         const result = await service.getResult(params.get('registro'));
         if (!alive) return;
@@ -55,7 +61,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
           const listed = await routineService(mode).list();
           if (!alive) return;
           const routine = listed.find((item) => item.id === result.workout.routineId);
-          content.innerHTML = resultView(result, routine?.sessions.find((session) => session.id === routine.nextSessionId), mode);
+          content.innerHTML = resultView(result, routine?.sessions.find((session) => session.id === routine.nextSessionId), mode, unit);
           feedback('Guardado en este navegador.');
           return;
         }
@@ -169,7 +175,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
   root.addEventListener('input', (event) => {
     const input = event.target.closest('[data-set-field]');
     if (!input || busy || !workout) return;
-    enqueue({ type: 'values', exercise: workout.currentExercise, position: Number(input.closest('[data-set-position]').dataset.setPosition), field: input.dataset.setField, value: input.value });
+    enqueue({ type: 'values', exercise: workout.currentExercise, position: Number(input.closest('[data-set-position]').dataset.setPosition), field: input.dataset.setField, value: input.dataset.setField === 'weightKg' && unit === 'lb' && input.value !== '' ? String(toKg(Number(input.value), unit)) : input.value });
   }, { signal });
 
   root.addEventListener('change', (event) => {
