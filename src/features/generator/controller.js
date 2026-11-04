@@ -7,6 +7,7 @@ import { escapeHTML as esc } from '../../utils/html.js';
 import { defaultConfig, generateRoutine, compatibleExercises, equipmentOptions, estimateMinutes } from './engine.js';
 import { generatorFrame, availableView, prioritiesView, proposalSummary, noProposal } from './views.js';
 import { bodyMap } from './body-map.js';
+import { MUSCLE_REGIONS, regionsForGroup, selectedRegions, groupSelection, toggleMuscleSelection } from '../../data/muscle-taxonomy.js';
 import { countText } from '../../utils/text.js';
 
 export function mountGenerator(root, mode, previousState) {
@@ -29,8 +30,13 @@ export function mountGenerator(root, mode, previousState) {
   }
   function selection({ rebuildPriorities = false } = {}) {
     if (!ready || !alive) return;
-    root.querySelectorAll('[data-generator-muscle], [data-map-muscle]').forEach((button) => {
-      button.setAttribute('aria-pressed', String(state.config.muscles.includes(button.dataset.generatorMuscle ?? button.dataset.mapMuscle)));
+    const regions = selectedRegions(state.config);
+    root.querySelectorAll('[data-generator-muscle], [data-generator-region], [data-map-muscle]').forEach((button) => {
+      button.setAttribute('aria-pressed', button.dataset.generatorMuscle ? groupSelection(regions, button.dataset.generatorMuscle) : String(regions.includes(button.dataset.generatorRegion ?? button.dataset.mapMuscle)));
+    });
+    root.querySelectorAll('[data-region-count]').forEach((count) => {
+      const group = regionsForGroup(count.dataset.regionCount);
+      count.textContent = `${group.filter((region) => regions.includes(region.id)).length}/${group.length}`;
     });
     if (rebuildPriorities) root.querySelector('.generator-priorities > div').innerHTML = prioritiesView(state.config);
     root.querySelector('.generator-available').innerHTML = availableView(catalog, state.config);
@@ -38,7 +44,7 @@ export function mountGenerator(root, mode, previousState) {
     frequency.disabled = state.config.modality === 'session';
     frequency.value = state.config.modality === 'session' ? '1' : String(state.config.frequency);
     root.querySelectorAll('.generator-steps li').forEach((step, index) => step.classList.toggle('current', index === (state.proposal || state.saved ? 2 : state.config.muscles.length ? 1 : 0)));
-    feedback(`${countText(state.config.muscles.length, 'grupo seleccionado', 'grupos seleccionados')}.${state.proposal && !state.saved ? ' Los cambios de preferencias se aplicarán al generar otra propuesta; la actual conserva su configuración original.' : ''}`);
+    feedback(`${countText(regions.length, 'región seleccionada', 'regiones seleccionadas')} en ${countText(state.config.muscles.length, 'grupo', 'grupos')}.${state.proposal && !state.saved ? ' Los cambios de preferencias se aplicarán al generar otra propuesta; la actual conserva su configuración original.' : ''}`);
   }
   function summary() {
     if (alive && state.proposal) root.querySelector('.generator-result-summary').innerHTML = proposalSummary(state.proposal, state.warnings);
@@ -112,19 +118,21 @@ export function mountGenerator(root, mode, previousState) {
     finally { busy = false; controls.forEach(([control, disabled]) => { control.disabled = disabled; }); if (!alive) window.removeEventListener('beforeunload', beforeUnload); }
   }
   root.addEventListener('click', (event) => {
+    const listLink = event.target.closest('.anatomy-list-link');
+    if (listLink) { event.preventDefault(); root.querySelector('#muscle-region-list').focus(); root.querySelector('#muscle-region-list').scrollIntoView({ block: 'start' }); return; }
     const button = event.target.closest('button, [data-map-muscle]');
     if (!button || busy || button.disabled) return;
     if (button.hasAttribute('data-generator-reload')) { void load(); return; }
     if (!ready) return;
-    const group = button.dataset.generatorMuscle ?? button.dataset.mapMuscle;
+    const group = button.dataset.generatorMuscle ?? button.dataset.generatorRegion ?? button.dataset.mapMuscle;
     if (group) {
-      state.config.muscles = state.config.muscles.includes(group) ? state.config.muscles.filter((item) => item !== group) : [...state.config.muscles, group];
-      state.config.priorities = state.config.priorities.filter((item) => state.config.muscles.includes(item));
+      state.config = toggleMuscleSelection(state.config, group, Boolean(button.dataset.generatorMuscle));
       selection({ rebuildPriorities: true });
     } else if (button.dataset.bodyView) {
       state.view = button.dataset.bodyView;
       root.querySelectorAll('button[data-body-view]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.bodyView === state.view)));
-      root.querySelector('.generator-map-slot').innerHTML = bodyMap(state.config.muscles, state.view);
+      root.querySelector('.generator-map-slot').innerHTML = bodyMap(selectedRegions(state.config), state.view);
+      root.querySelector('.anatomy-readout').textContent = 'Explora las regiones musculares';
     } else if (button.dataset.equipmentPreset) {
       state.config.equipment = button.dataset.equipmentPreset === 'all' ? equipmentOptions(catalog) : ['Peso corporal'];
       root.querySelectorAll('[name="equipment"]').forEach((input) => { input.checked = state.config.equipment.includes(input.value); });
@@ -133,9 +141,17 @@ export function mountGenerator(root, mode, previousState) {
     else if (button.hasAttribute('data-generator-cancel')) dialog.close();
     else if (button.hasAttribute('data-generator-replace')) { dialog.close(); accept(replacement); }
   }, { signal });
+  function describeRegion(event) {
+    const target = event.target.closest('[data-map-muscle]');
+    if (!target) return;
+    const region = MUSCLE_REGIONS.find((item) => item.id === target.dataset.mapMuscle);
+    root.querySelector('.anatomy-readout').textContent = `${region.name} · ${region.group}`;
+  }
+  root.addEventListener('pointerover', describeRegion, { signal });
+  root.addEventListener('focusin', describeRegion, { signal });
   root.addEventListener('keydown', (event) => {
     const group = event.target.closest('[data-map-muscle]');
-    if (group && ['Enter', ' '].includes(event.key)) { event.preventDefault(); group.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+    if (group && ['Enter', ' '].includes(event.key)) { event.preventDefault(); if (!event.repeat) group.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
   }, { signal });
   root.addEventListener('input', (event) => {
     if (event.target.matches('#generator-form [name="minutes"]')) state.config.minutes = event.target.value;

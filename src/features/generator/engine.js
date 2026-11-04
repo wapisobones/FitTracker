@@ -1,4 +1,5 @@
 import { MUSCLE_GROUPS } from '../../data/exercises.js';
+import { MUSCLE_REGIONS, legacyGroupsForRegions } from '../../data/muscle-taxonomy.js';
 import { UUID, newRoutine, newSession, prescription, validateRoutine } from '../routines/model.js';
 
 export const LEVELS = ['Principiante', 'Intermedio', 'Avanzado'];
@@ -14,11 +15,15 @@ export function equipmentOptions(exercises) {
 export function validateConfig(input, exercises) {
   if (!input || !['session', 'program'].includes(input.modality) || !LEVELS.includes(input.level) || !Object.hasOwn(GOALS, input.goal)) throw new Error('Selecciona una modalidad, nivel y objetivo válidos.');
   if (!Array.isArray(input.muscles) || !input.muscles.length || input.muscles.some((group) => !MUSCLE_GROUPS.includes(group))) throw new Error('Selecciona al menos un grupo muscular en el mapa o la lista.');
+  // Optional FT-010A metadata; keep the existing six-group generation rules.
+  // Old configurations have no regions and remain valid without mutation.
+  if (input.regions !== undefined && (!Array.isArray(input.regions) || !input.regions.length || input.regions.some((id) => !MUSCLE_REGIONS.some((region) => region.id === id)) ||
+    MUSCLE_GROUPS.some((group) => input.muscles.includes(group) !== legacyGroupsForRegions(input.regions).includes(group)))) throw new Error('Las regiones deben corresponder a los grupos seleccionados. Vuelve a seleccionarlas en el mapa o la lista.');
   if (!Array.isArray(input.priorities) || input.priorities.some((group) => !input.muscles.includes(group))) throw new Error('Los grupos prioritarios deben estar seleccionados.');
   if (!Array.isArray(input.equipment) || !input.equipment.length || input.equipment.some((item) => !equipmentOptions(exercises).includes(item))) throw new Error('Selecciona el equipamiento que tienes disponible.');
   if (!Number.isInteger(Number(input.minutes)) || Number(input.minutes) < 15 || Number(input.minutes) > 120) throw new Error('La duración debe ser un entero entre 15 y 120 minutos.');
   if (!Number.isInteger(Number(input.frequency)) || Number(input.frequency) < 1 || Number(input.frequency) > 6) throw new Error('La frecuencia debe estar entre 1 y 6 sesiones.');
-  return { ...input, frequency: Number(input.frequency), minutes: Number(input.minutes), muscles: MUSCLE_GROUPS.filter((group) => input.muscles.includes(group)), priorities: MUSCLE_GROUPS.filter((group) => input.priorities.includes(group)), equipment: [...new Set(input.equipment)].sort() };
+  return { ...input, ...(input.regions !== undefined ? { regions: MUSCLE_REGIONS.filter((region) => input.regions.includes(region.id)).map((region) => region.id) } : {}), frequency: Number(input.frequency), minutes: Number(input.minutes), muscles: MUSCLE_GROUPS.filter((group) => input.muscles.includes(group)), priorities: MUSCLE_GROUPS.filter((group) => input.priorities.includes(group)), equipment: [...new Set(input.equipment)].sort() };
 }
 
 export function compatibleExercises(exercises, config) {

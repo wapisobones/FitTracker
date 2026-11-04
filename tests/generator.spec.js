@@ -17,7 +17,7 @@ async function generate(page) {
 
 test('Mapa/lista, sesión editable sin escrituras, guardado atómico e integración con entrenamiento', async ({ page }) => {
   await start(page);
-  const map = page.getByRole('button', { name: 'Pecho, vista frontal', exact: true });
+  const map = page.getByRole('button', { name: 'Pectorales, vista frontal, ambos lados', exact: true });
   await map.focus(); await page.keyboard.press('Enter');
   await expect(group(page, 'Pecho')).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('Space');
@@ -154,11 +154,11 @@ test('Personalizados con nivel, equipo incompatible, propuesta conservada y mapa
   await page.getByText('Equipamiento disponible', { exact: true }).click();
   await page.getByRole('button', { name: 'Solo peso corporal', exact: true }).click();
   await page.getByLabel('Vista del cuerpo', { exact: true }).getByRole('button', { name: 'Espalda', exact: true }).click();
-  await page.getByRole('button', { name: 'Espalda, vista posterior', exact: true }).click();
-  await expect(group(page, 'Espalda')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#anatomy-back-latissimus-left-1').click();
+  await expect(group(page, 'Espalda')).toHaveAttribute('aria-pressed', 'mixed');
   await page.getByRole('button', { name: 'Generar propuesta', exact: true }).click();
   await expect(page.locator('.generator-error')).toContainText('No hay ejercicios compatibles para: Espalda');
-  await group(page, 'Espalda').click();
+  await page.locator('#anatomy-back-latissimus-left-1').click();
   await generate(page);
   await expect(page.locator('.prescription-name')).toHaveCount(2);
   await expect(page.locator('.generator-editor')).toContainText('Flexiones');
