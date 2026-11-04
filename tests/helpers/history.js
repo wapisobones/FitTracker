@@ -2,6 +2,8 @@ import { BASE_EXERCISES } from '../../src/data/exercises.js';
 
 export const FIXED_NOW = '2026-11-04T15:00:00.000Z';
 export const benchId = BASE_EXERCISES[0].id;
+export const highRepId = BASE_EXERCISES[1].id;
+export const rowId = BASE_EXERCISES[5].id;
 export function knownHistory() {
   const workouts = [];
   const setRecords = [];
@@ -23,4 +25,24 @@ export function knownHistory() {
   workout('Parcial conocida', '2026-11-04T14:00:00.000Z', 'partial', [[0, [[60, 5], [999, 99, false]]]]);
   workout('Mes anterior', '2026-10-15T15:00:00.000Z', 'complete', [[0, [[80, 12]]]]);
   return { workouts, setRecords, settings: [{ id: 'weekly-goals', sessions: 3, volumeKg: 2000 }] };
+}
+
+// Three bodyweight sets this month, two loaded sets outside the 1RM range,
+// one compatible loaded observation, and a loaded bodyweight exercise last month.
+export function chartHistory() {
+  const source = knownHistory();
+  for (const workout of source.workouts) {
+    for (const entry of workout.entries) if (entry.exercise.id === benchId) entry.exercise.name = 'Crunch histórico';
+  }
+  for (const set of source.setRecords) if (set.exerciseId === benchId && set.workoutId !== 'Mes anterior') set.weightKg = 0;
+  const loaded = structuredClone(source.workouts[0]);
+  loaded.id = 'Carga de doce repeticiones';
+  loaded.entries = [loaded.entries[0]];
+  const entry = loaded.entries[0];
+  entry.exercise = structuredClone(BASE_EXERCISES[1]);
+  entry.prescription = { ...entry.prescription, id: 'high-reps-prescription', exerciseId: highRepId };
+  entry.sets.forEach((set, index) => Object.assign(set, { id: `high-reps-${index}`, workoutId: loaded.id, exerciseId: highRepId, prescriptionId: entry.prescription.id, weightKg: 70, reps: 12 }));
+  source.workouts.push(loaded);
+  source.setRecords.push(...entry.sets);
+  return source;
 }

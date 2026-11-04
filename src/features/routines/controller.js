@@ -121,6 +121,13 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
   root.addEventListener('click', (event) => {
     const button = event.target.closest('button');
     if (!button || busy) return;
+    if (button.hasAttribute('data-toggle-options')) {
+      const group = button.closest('.mobile-options');
+      const expanded = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(expanded));
+      group.dataset.expanded = String(expanded);
+      return;
+    }
     if (button.hasAttribute('data-close-routine-dialog')) { dialog.close(); return; }
     if (button.hasAttribute('data-confirm-routine-action')) { void pending?.(); return; }
     if (button.dataset.routineAction === 'reload') { if (proposal) { root.querySelector('.routine-error').innerHTML = ''; paint(); } else void load(); return; }

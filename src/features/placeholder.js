@@ -2,9 +2,9 @@ import { icon } from '../components/icons.js';
 import { routes } from '../app/routes.js';
 
 export function placeholder(route, mode) {
-  const heading = `<section class="page-heading"><div><h1>${icon(route.icon)}${route.title}</h1><p>${route.description}</p></div><span class="stage-pill">Próximamente</span></section>`;
+  const heading = `<section class="page-heading"><div><h1>${icon(route.icon)}${route.title}</h1><p>${route.description}</p></div>${route.id === 'herramientas' ? '' : '<span class="stage-pill">En preparación</span>'}</section>`;
   if (route.id === 'herramientas') {
-    return `${heading}<div class="tool-grid">${routes.filter((r) => r.group === 'Herramientas').map((tool) => `<a class="card tool-card" href="#/${tool.id}">${icon(tool.icon)}<h2>${tool.title}</h2><p>${tool.description}</p><span class="text-link">Ver sección ${icon('arrow')}</span></a>`).join('')}</div><p class="availability-note">Puedes explorar las secciones. Los cálculos estarán disponibles en una próxima etapa.</p>`;
+    return `${heading}<div class="tool-grid">${routes.filter((r) => r.group === 'Herramientas').map((tool) => `<a class="card tool-card" href="#/${tool.id}">${icon(tool.icon)}<h2>${tool.title}</h2><p>${tool.description}</p><span class="text-link">Ver sección ${icon('arrow')}</span></a>`).join('')}</div><p class="availability-note">Las calculadoras de 1RM y calorías funcionan localmente, sin conexión a servicios externos.</p>`;
   }
   return `${heading}<section class="card empty-state"><span class="empty-icon">${icon(route.icon)}</span><span class="stage-pill">En preparación</span><h2>${route.empty}</h2><p>${route.detail}</p><button class="button button-primary" type="button" disabled aria-describedby="feature-status">${icon(route.icon)}${route.action}</button><p id="feature-status" class="availability-note">Esta función aún no está implementada.</p><a class="text-link" href="#/inicio">${mode === 'demo' ? 'Explorar el Dashboard de ejemplo' : 'Volver a Inicio'} ${icon('arrow')}</a></section>`;
 }

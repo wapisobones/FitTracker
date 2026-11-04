@@ -149,7 +149,7 @@ test('Inicio desde rutina, validación, persistencia, snapshots y ciclo completo
   await expect(weight(page, 1)).toHaveValue('');
   await expect(reps(page, 1)).toHaveValue('');
   await page.getByRole('button', { name: 'Completar serie 1', exact: true }).click();
-  await expect(page.locator('.workout-error')).toContainText('Introduce un peso');
+  await expect(page.locator('.set-validation')).toContainText('Introduce un peso');
   await complete(page, 1);
   await expect(page.locator('#register-heading')).toHaveText('Press de banca');
   await mkdir('.cache', { recursive: true });
@@ -212,7 +212,7 @@ test('Elección manual, parcial con solo series realizadas, descarte confirmado 
   await weight(page, 1).fill('25');
   await reps(page, 1).fill('0');
   await page.getByRole('button', { name: 'Completar serie 1', exact: true }).click();
-  await expect(page.locator('.workout-error')).toContainText('repeticiones enteras');
+  await expect(page.locator('.set-validation')).toContainText('repeticiones enteras');
   await complete(page, 1, '25', '9');
   await weight(page, 2).fill('99');
   await reps(page, 2).fill('9');

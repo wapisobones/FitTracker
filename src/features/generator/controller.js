@@ -7,6 +7,7 @@ import { escapeHTML as esc } from '../../utils/html.js';
 import { defaultConfig, generateRoutine, compatibleExercises, equipmentOptions, estimateMinutes } from './engine.js';
 import { generatorFrame, availableView, prioritiesView, proposalSummary, noProposal } from './views.js';
 import { bodyMap } from './body-map.js';
+import { countText } from '../../utils/text.js';
 
 export function mountGenerator(root, mode, previousState) {
   const state = previousState ?? { config: defaultConfig(), view: matchMedia('(max-width: 700px)').matches ? 'front' : 'both', proposal: null, warnings: [], token: null, saved: null };
@@ -33,9 +34,11 @@ export function mountGenerator(root, mode, previousState) {
     });
     if (rebuildPriorities) root.querySelector('.generator-priorities > div').innerHTML = prioritiesView(state.config);
     root.querySelector('.generator-available').innerHTML = availableView(catalog, state.config);
-    root.querySelector('[name="frequency"]').disabled = state.config.modality === 'session';
+    const frequency = root.querySelector('[name="frequency"]');
+    frequency.disabled = state.config.modality === 'session';
+    frequency.value = state.config.modality === 'session' ? '1' : String(state.config.frequency);
     root.querySelectorAll('.generator-steps li').forEach((step, index) => step.classList.toggle('current', index === (state.proposal || state.saved ? 2 : state.config.muscles.length ? 1 : 0)));
-    feedback(`${state.config.muscles.length} grupos seleccionados.${state.proposal && !state.saved ? ' Los cambios de preferencias se aplicarán al generar otra propuesta; la actual conserva su configuración original.' : ''}`);
+    feedback(`${countText(state.config.muscles.length, 'grupo seleccionado', 'grupos seleccionados')}.${state.proposal && !state.saved ? ' Los cambios de preferencias se aplicarán al generar otra propuesta; la actual conserva su configuración original.' : ''}`);
   }
   function summary() {
     if (alive && state.proposal) root.querySelector('.generator-result-summary').innerHTML = proposalSummary(state.proposal, state.warnings);
@@ -47,7 +50,7 @@ export function mountGenerator(root, mode, previousState) {
     const save = root.querySelector('.generator-save');
     if (state.saved) {
       root.querySelector('.generator-result-summary').innerHTML = '';
-      content.innerHTML = `<section class="card generator-saved" role="status"><h3>Rutina guardada en ${mode === 'demo' ? 'demostración' : 'tu espacio personal'}</h3><p>${esc(state.saved.name)} · ${state.saved.sessions.length} sesiones. Ya puedes editarla o entrenar desde Mis rutinas.</p><a class="button button-primary" href="${routineLink(state.saved.id, state.saved.sessions[0]?.id, mode)}">Ver en Mis rutinas</a></section>`;
+      content.innerHTML = `<section class="card generator-saved" role="status"><h3>Rutina guardada en ${mode === 'demo' ? 'demostración' : 'tu espacio personal'}</h3><p>${esc(state.saved.name)} · ${countText(state.saved.sessions.length, 'sesión', 'sesiones')}. Ya puedes editarla o entrenar desde Mis rutinas.</p><a class="button button-primary" href="${routineLink(state.saved.id, state.saved.sessions[0]?.id, mode)}">Ver en Mis rutinas</a></section>`;
       save.innerHTML = '';
       return;
     }

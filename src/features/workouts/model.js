@@ -1,10 +1,14 @@
 export const ACTIVE_STATUSES = ['active', 'paused'];
 export const FINAL_STATUSES = ['complete', 'partial'];
 
+export class SetValidationError extends Error {
+  constructor(field, message) { super(message); this.name = 'SetValidationError'; this.field = field; }
+}
+
 export function realValues(weightKg, reps) {
-  if (![weightKg, reps].every((value) => typeof value === 'string' || typeof value === 'number')) throw new Error('Introduce peso y repeticiones válidos.');
-  if (String(weightKg ?? '').trim() === '' || !Number.isFinite(Number(weightKg)) || Number(weightKg) < 0 || Number(weightKg) > 2000) throw new Error('Introduce un peso entre 0 y 2000 kg. Para peso corporal puedes registrar 0 kg.');
-  if (String(reps ?? '').trim() === '' || !Number.isInteger(Number(reps)) || Number(reps) < 1 || Number(reps) > 1000) throw new Error('Introduce repeticiones enteras entre 1 y 1000.');
+  if (![weightKg, reps].every((value) => typeof value === 'string' || typeof value === 'number')) throw new SetValidationError(['string', 'number'].includes(typeof weightKg) ? 'reps' : 'weightKg', 'Introduce peso y repeticiones válidos.');
+  if (String(weightKg ?? '').trim() === '' || !Number.isFinite(Number(weightKg)) || Number(weightKg) < 0 || Number(weightKg) > 2000) throw new SetValidationError('weightKg', 'Introduce un peso entre 0 y 2000 kg. Para peso corporal puedes registrar 0 kg.');
+  if (String(reps ?? '').trim() === '' || !Number.isInteger(Number(reps)) || Number(reps) < 1 || Number(reps) > 1000) throw new SetValidationError('reps', 'Introduce repeticiones enteras entre 1 y 1000.');
   return { weightKg: Number(weightKg), reps: Number(reps) };
 }
 

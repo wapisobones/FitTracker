@@ -52,7 +52,7 @@ export function normalizeHistory({ workouts = [], setRecords = [], settings = []
   return { rows, ignored, exercises: [...exercises.values()].sort((a, b) => a.name.localeCompare(b.name, 'es')), goals: settings.find((item) => item.id === 'weekly-goals') ?? null };
 }
 
-export function calculate(history, { period = 'month', exerciseId = '', chartExerciseId = '', now = new Date() } = {}) {
+export function calculate(history, { period = 'month', exerciseId = '', chartExerciseId = '', strengthMetric = 'weight', now = new Date() } = {}) {
   const bounds = periodBounds(period, now);
   const inPeriod = (row) => (!bounds.start || row.date >= bounds.start) && row.date < bounds.end;
   const rows = history.rows.filter((row) => inPeriod(row) && (!exerciseId || row.exerciseId === exerciseId));
@@ -73,7 +73,9 @@ export function calculate(history, { period = 'month', exerciseId = '', chartExe
     sessions.set(row.workoutId, session);
   }
   const records = [...exercises.values()].sort((a, b) => b.sets - a.sets || a.name.localeCompare(b.name, 'es'));
-  const selectedExerciseId = exerciseId || chartExerciseId || records[0]?.id || '';
+  const positiveLoad = records.find((record) => record.maxLoad.weightKg > 0);
+  const automaticExercise = strengthMetric === 'estimated1RM' ? records.find((record) => record.max1RM !== null) ?? positiveLoad : positiveLoad;
+  const selectedExerciseId = exerciseId || chartExerciseId || automaticExercise?.id || records[0]?.id || '';
   const chartRows = rows.filter((row) => row.exerciseId === selectedExerciseId);
   const days = new Map();
   for (const row of chartRows) {

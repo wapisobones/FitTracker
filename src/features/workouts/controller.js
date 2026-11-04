@@ -1,10 +1,11 @@
 import { profileService } from '../profile/profile-service.js';
-import { toKg } from '../../utils/units.js';
+import { toKg, weightText } from '../../utils/units.js';
+import { StorageError } from '../../db/indexed-db.js';
 import { workoutService } from './workout-service.js';
 import { routineService } from '../routines/routine-service.js';
 import { createRoutineDialog } from '../../components/routine-dialog.js';
 import { escapeHTML as esc } from '../../utils/html.js';
-import { restRemaining } from './model.js';
+import { restRemaining, SetValidationError } from './model.js';
 import { heading, chooser, pendingView, activeView, finishDialog, discardDialog, resultView, timeText } from './views.js';
 
 export function mountWorkout(root, mode, params = new URLSearchParams()) {
@@ -33,9 +34,31 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
 
   function errorView(error) {
     if (!alive) return;
-    root.querySelector('.workout-error').innerHTML = `<div class="card workout-error-card"><p>${esc(error.message)}</p><button type="button" class="button button-secondary" data-workout-action="retry">Reintentar guardado</button><button type="button" class="button button-secondary" data-workout-action="reload">Recargar entrenamiento</button></div>`;
+    const storage = error instanceof StorageError;
+    root.querySelector('.workout-error').innerHTML = `<div class="card workout-error-card"><p>${esc(error.message)}</p>${storage || !ready ? `<button type="button" class="button button-secondary" data-workout-action="retry">${ready ? 'Reintentar guardado' : 'Reintentar carga'}</button>` : ''}<button type="button" class="button button-secondary" data-workout-action="reload">Recargar entrenamiento</button></div>`;
     dialog.querySelector('.routine-form-error')?.replaceChildren(document.createTextNode(error.message));
-    feedback('No se ha confirmado el guardado. Conserva esta pestaña y reintenta.');
+    feedback(storage ? 'No se ha confirmado el guardado. Conserva esta pestaña y reintenta.' : error.message);
+  }
+
+  function clearValidation() {
+    root.querySelectorAll('.set-validation').forEach((message) => message.remove());
+    root.querySelectorAll('[data-set-field][aria-invalid]').forEach((input) => { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); });
+  }
+
+  function setValidation(error, position) {
+    if (!alive) return;
+    clearValidation();
+    const row = root.querySelector(`[data-set-position="${position}"]`);
+    const input = row?.querySelector(`[data-set-field="${error.field}"]`);
+    if (!input) return;
+    const message = document.createElement('p');
+    message.id = 'set-validation'; message.className = 'set-validation'; message.setAttribute('role', 'alert');
+    message.textContent = error.field === 'weightKg' ? `Introduce un peso entre 0 y ${weightText(2000, unit, 4)}. Para peso corporal puedes registrar 0 ${unit}.` : error.message;
+    row.append(message);
+    input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', message.id);
+    feedback('Revisa el campo indicado antes de completar la serie.');
+    input.focus();
+    row.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }
 
   function paint() {
@@ -111,12 +134,13 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
     return !failed && !commands.length;
   }
 
-  async function perform(operation, success) {
+  async function perform(operation, success, onFailure = errorView) {
     if (busy) return;
     busy = true;
     dialog.dataset.busy = 'true';
     const controls = [...root.querySelectorAll('button, input, select')].map((control) => [control, control.disabled]);
     controls.forEach(([control]) => { control.disabled = true; });
+    let failure;
     try {
       if (!await flush()) return;
       const result = await operation();
@@ -125,13 +149,14 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
       dialog.close();
       root.querySelector('.workout-error').innerHTML = '';
       success(result);
-    } catch (error) { errorView(error); }
+    } catch (error) { failure = error; }
     finally {
       busy = false;
       dialog.dataset.busy = 'false';
       controls.forEach(([control, disabled]) => { control.disabled = disabled; });
       if (!alive && !commands.length && !running) window.removeEventListener('beforeunload', beforeUnload);
     }
+    if (failure) onFailure(failure);
   }
 
   function update(command) {
@@ -146,7 +171,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
         const actions = matchMedia('(max-width: 700px)').matches && mobileRegister ? '.workout-register-actions' : '.workout-session-actions';
         root.querySelector(`${actions} [data-workout-action="${command.type === 'pause' ? 'resume' : 'pause'}"]`)?.focus({ preventScroll: true });
       }
-    });
+    }, (error) => error instanceof SetValidationError && command.type === 'complete-set' ? setValidation(error, command.position) : errorView(error));
   }
 
   function show(html, trigger) {
@@ -178,6 +203,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
   root.addEventListener('input', (event) => {
     const input = event.target.closest('[data-set-field]');
     if (!input || busy || !workout) return;
+    if (input.hasAttribute('aria-invalid')) clearValidation();
     enqueue({ type: 'values', exercise: workout.currentExercise, position: Number(input.closest('[data-set-position]').dataset.setPosition), field: input.dataset.setField, value: input.dataset.setField === 'weightKg' && unit === 'lb' && input.value !== '' ? String(toKg(Number(input.value), unit)) : input.value });
   }, { signal });
 

@@ -8,7 +8,7 @@
 .calculator-form label, .profile-settings label { display: grid; gap: 8px; font-weight: 600; min-width: 0; }
 .calculator-form input, .calculator-form select, .profile-settings input, .profile-settings select { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #465765; border-radius: 10px; color: var(--text); background: #101c26; font: inherit; }
 .calculator-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.calculator-form form > .calculator-fields:has([name="height"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.calorie-data .calculator-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .energy-goals { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
 .energy-goals legend { margin-bottom: 12px; font-weight: 600; }
 .energy-goals label { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
@@ -20,6 +20,8 @@
 .backup-error { color: #ffb6aa; overflow-wrap: anywhere; width: 100%; }
 .backup-error:empty { display: none; }
 #rm-result-heading { scroll-margin-top: 20px; }
+#calorie-result-heading { scroll-margin-top: 20px; }
+.calorie-data, .calorie-activity { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 18px; }
 .calculation-empty { color: var(--muted); padding: 35px 0; line-height: 1.8; }
 .calculator-result { border-color: #9bf45c88; }
 .calculation-value { display: block; text-align: center; font: 700 clamp(34px, 3.5vw, 58px)/1.3 'Bahnschrift', 'Segoe UI', sans-serif; margin: 22px 0; overflow-wrap: anywhere; }
@@ -70,6 +72,8 @@
 .profile-settings > p { margin-bottom: 22px; }
 .profile-feedback { color: var(--lime); overflow-wrap: anywhere; margin: 14px 0; }
 .profile-feedback:empty { display: none; }
+.profile-dirty { color: var(--muted); }
+.profile-dirty:empty { display: none; }
 .backup-scope { margin-top: 18px; padding-left: 14px; border-left: 3px solid var(--lime); color: var(--muted); }
 .profile-actions { display: flex; flex-wrap: wrap; align-items: start; gap: 12px; margin: 22px 0; }
 .profile-actions .button { font-size: 13px; }
@@ -79,7 +83,10 @@
 .danger-button { color: #ffb6aa; border-color: #b3665966; }
 .profile-reset > .text-link { min-height: 44px; padding: 0; border: 0; background: transparent; text-align: left; }
 .backup-preview { table-layout: fixed; margin: 20px 0; }
-.backup-preview th:first-child { width: 56%; }
+.backup-preview th:first-child { width: 44%; }
+.backup-preview thead th { white-space: nowrap; overflow-wrap: normal; }
+.backup-preview th, .backup-preview td { padding: 9px 6px; }
+.backup-preview th:not(:first-child), .backup-preview td { text-align: right; font-variant-numeric: tabular-nums; }
 .tool-error .button { margin-top: 18px; }
 @media (max-width: 1220px) { .calculator-grid { grid-template-columns: 1fr 1fr; } .calculator-reference { grid-column: 2; } .calculator-form { grid-row: span 2; } .energy-scenarios { grid-template-columns: 1fr; } .energy-scenarios > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; } .energy-scenarios strong { margin: 0; } }
 @media (max-width: 700px) {
@@ -88,7 +95,6 @@
   .calculator-form { grid-row: auto; }
   .calculator-form, .calculator-result, .calculator-reference, .profile-settings, .profile-backup, .profile-reset { padding: 20px; }
   .calculator-fields { grid-template-columns: minmax(0, 1fr); }
-  .calculator-form form > .calculator-fields:has([name="height"]) { grid-template-columns: minmax(0, 1fr); }
   .profile-banner { flex-direction: column; padding: 22px; text-align: center; gap: 16px; }
   .profile-banner h2 { font-size: 26px; }
   .profile-banner-mark { display: none; }
@@ -96,4 +102,18 @@
   .calculation-value { font-size: 44px; }
   .calculation-links { gap: 8px; }
   .calculation-links .button { padding: 10px 13px; }
+  .calorie-calculator .calculator-form { padding: 16px; }
+  .calorie-calculator .calculator-form h2 { margin-bottom: 14px; }
+  .calorie-calculator form { gap: 14px; }
+  .calorie-data, .calorie-activity { gap: 10px; }
+  .calorie-data .calculator-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .calorie-calculator label { font-size: 13px; gap: 6px; }
+  .calorie-calculator input, .calorie-calculator select { font-size: 16px; padding-inline: 8px; }
+  .calorie-data .calculator-fields label { grid-template-rows: 1fr auto; }
+  .calorie-calculator .energy-goals { gap: 6px; }
+  .calorie-calculator .energy-goals legend { margin-bottom: 8px; }
+  .calorie-calculator .energy-goals label { min-height: 44px; padding: 8px 10px; }
+  .calorie-calculator .availability-note { font-size: 12px; line-height: 1.5; }
+  .calorie-calculator .calculation-value { margin-block: 14px; }
+  .calorie-calculator .calculation-summary { margin-block: 16px; }
 }

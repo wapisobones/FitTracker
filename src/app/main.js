@@ -79,6 +79,12 @@ function focusContent() {
   window.scrollTo(0, 0);
 }
 
+function clearOperationNotice() {
+  modes.clearMessage();
+  document.querySelector('.operation-status').textContent = '';
+  document.querySelector('.operation-notice').hidden = true;
+}
+
 function render({ focus = false } = {}) {
   if (exerciseCatalog) exerciseFilters.set(exerciseCatalogMode, exerciseCatalog.getFilters());
   exerciseCatalog?.destroy();
@@ -115,6 +121,7 @@ function render({ focus = false } = {}) {
   document.querySelector('.current-mode').textContent = `${modeLabel(state.mode)}${state.status === 'loading' ? ' · Cargando' : ''}`;
   document.querySelector('[data-open-modes]').disabled = state.status === 'loading';
   document.querySelector('.operation-status').textContent = state.message;
+  document.querySelector('.operation-notice').hidden = !state.message;
   document.querySelector('.page-footer').textContent = state.mode === 'demo' ? 'Demostración · Datos ficticios guardados en este navegador.' : state.mode === 'personal' ? 'Modo personal · Tus datos se guardan solo en este navegador.' : 'Datos locales en este navegador · Sin cuentas ni nube.';
   document.querySelectorAll('[data-page]').forEach((link) => {
     const active = link.dataset.page === id;
@@ -141,31 +148,39 @@ window.addEventListener('hashchange', async () => {
   const canLeave = await (workoutView?.prepareLeave() ?? generatorView?.prepareLeave() ?? profileView?.prepareLeave() ?? true);
   if (version !== navigationVersion) return;
   if (!canLeave) { history.replaceState(null, '', renderedHash); return; }
+  clearOperationNotice();
   render({ focus: true });
 });
 
 document.addEventListener('click', async (event) => {
   const target = event.target.closest('button');
   if (!target) return;
-  if (target.hasAttribute('data-open-modes')) {
+  if (target.hasAttribute('data-dismiss-operation')) {
+    clearOperationNotice();
+    document.querySelector('[data-open-modes]').focus({ preventScroll: true });
+  } else if (target.hasAttribute('data-open-modes')) {
     modeSelector.innerHTML = modeDialog(modes.state);
     modeSelector.showModal();
   } else if (target.hasAttribute('data-close-dialog')) target.closest('dialog').close();
   else if (target.hasAttribute('data-select-mode')) {
+    const version = ++navigationVersion;
     if (modeSelector.open) modeSelector.close();
     if (workoutView && !await workoutView.prepareLeave()) return;
     if (generatorView && !await generatorView.prepareLeave()) return;
     if (profileView && !await profileView.prepareLeave()) return;
+    if (version !== navigationVersion) return;
     modes.select(target.dataset.selectMode).then(focusContent);
   } else if (target.hasAttribute('data-request-reset')) {
     modeSelector.close();
     resetConfirmation.innerHTML = resetDialog();
     resetConfirmation.showModal();
   } else if (target.hasAttribute('data-confirm-reset')) {
+    const version = ++navigationVersion;
     resetConfirmation.close();
     if (workoutView && !await workoutView.prepareLeave()) return;
     if (generatorView && !await generatorView.prepareLeave()) return;
     if (profileView && !await profileView.prepareLeave()) return;
+    if (version !== navigationVersion) return;
     modes.resetDemo().then(() => {
       if (modes.state.status === 'ready') {
         generatorStates.delete('demo');

@@ -35,6 +35,7 @@ export function createModeController(onChange) {
 
   return {
     get state() { return state; },
+    clearMessage() { state = { ...state, message: '' }; },
     initialize,
     retry: () => retry(),
     select: (mode) => run(async () => {

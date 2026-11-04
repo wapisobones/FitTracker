@@ -22,14 +22,21 @@
 .focused-view { grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); }
 .focused-view > :only-child { grid-column: 1 / -1; }
 .focused-view .stats-muscles { max-width: 900px; width: 100%; justify-self: center; }
-.stats-chart-mode { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: 11px; margin-top: 12px; }
+.stats-chart-mode { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: var(--text-small); margin-top: 12px; }
 .stats-chart-mode select { min-height: 36px; padding-block: 5px; }
 .stats-strength .stats-filter { max-width: 100%; }
 .stats-strength .stats-filter select { width: 100%; max-width: 245px; }
-.history-chart { margin-top: 12px; }
-.history-chart .load-chart { overflow: hidden; }
-.history-chart .chart-label { font-size: 14px; }
-.history-chart figcaption { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.history-chart { --plot-height: 210px; display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 10px; margin-top: 12px; color: #bdcbd9; font-size: 12px; font-variant-numeric: tabular-nums; }
+.history-chart-unit { grid-column: 2; margin-bottom: 10px; }
+.history-y-axis, .history-plot { position: relative; height: var(--plot-height); }
+.history-y-axis span { position: absolute; right: 0; transform: translateY(-50%); white-space: nowrap; }
+.history-chart .load-chart { height: 100%; overflow: hidden; }
+.history-point { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); transform: translate(-50%, -50%); }
+.history-x-axis { position: relative; grid-column: 2; height: 28px; margin-top: 10px; }
+.history-x-axis span { position: absolute; white-space: nowrap; transform: translateX(var(--tick-shift)); }
+.history-chart figcaption { grid-column: 1 / -1; font-size: var(--text-small); color: var(--muted); line-height: 1.6; }
+.focused-view .history-chart { --plot-height: clamp(220px, 22vw, 300px); }
+.summary-view .stats-volume .history-chart { --plot-height: 180px; }
 .stats-chart-empty { min-height: 160px; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 24px 0; }
 .stats-chart-empty p { font-size: 14px; }
 .stats-chart-empty small { font-size: 12px; line-height: 1.8; color: var(--muted); }
@@ -39,14 +46,21 @@
 .donut-count { fill: var(--text); font: 700 25px 'Bahnschrift', sans-serif; }
 .donut-label { fill: var(--muted); font-size: 14px; }
 .stats-distribution .muscle-list { flex: 1; min-width: 0; }
-.stats-distribution .muscle-list li > div:first-child { font-size: 11px; flex-wrap: wrap; gap: 4px; }
+.stats-distribution .muscle-list li > div:first-child { font-size: var(--text-small); flex-wrap: wrap; gap: 4px; }
 .stats-distribution .muscle-list li > div:first-child > span { display: flex; align-items: center; gap: 6px; }
 .stats-distribution .muscle-list i { width: 9px; height: 9px; display: inline-block; border-radius: 2px; }
-.stats-distribution .muscle-list small { font-size: 10px; color: var(--muted); }
+.stats-distribution .muscle-list small { font-size: var(--text-small); color: var(--muted); }
 .stats-distribution .muscle-list li + li { margin-top: 9px; }
 .summary-view .stats-distribution { flex-direction: column; gap: 10px; }
 .summary-view .stats-donut { width: 70%; max-width: 180px; }
 .summary-view .muscle-list { width: 100%; }
+@media (min-width: 901px) {
+  .summary-view .stats-strength, .summary-view .stats-muscles, .summary-view .stats-records { align-self: stretch; }
+  .summary-view .stats-distribution { flex-direction: row; }
+  .summary-view .stats-donut { width: 44%; max-width: 150px; }
+  .summary-view .stats-muscles { display: flex; flex-direction: column; }
+  .summary-view .stats-muscles .stats-distribution { flex: 1; }
+}
 .stats-records { padding: 18px; min-width: 0; }
 .stats-record-list > li { display: flex; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
 .stats-record-list > li:last-child { border: 0; padding-bottom: 0; }
@@ -54,9 +68,9 @@
 .stats-record-thumb svg { display: block; width: 100%; }
 .stats-record-list > li > div { flex: 1; min-width: 0; }
 .stats-record-list h3 { font-size: 14px; overflow-wrap: anywhere; }
-.stats-record-list p { font-size: 11px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 9px; }
+.stats-record-list p { font-size: var(--text-small); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 9px; }
 .stats-record-list p strong { color: var(--lime); font-size: 14px; }
-.stats-record-list small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+.stats-record-list small { display: block; color: var(--muted); font-size: var(--text-small); margin-top: 3px; }
 .summary-view .stats-record-thumb { width: 40px; }
 .stats-session-list > li + li { border-top: 1px solid var(--line); }
 .stats-session summary { display: flex; align-items: center; gap: 13px; min-height: 94px; padding: 15px 0; list-style: none; }
@@ -65,7 +79,7 @@
 .stats-session[open] summary > .icon { transform: rotate(180deg); }
 .stats-session .workout-copy { min-width: 0; }
 .stats-session .workout-copy strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
-.stats-session .workout-copy small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; }
+.stats-session .workout-copy small { display: block; color: var(--muted); font-size: var(--text-small); margin-top: 4px; overflow-wrap: anywhere; }
 .stats-session-detail { padding: 4px 14px 20px; }
 .stats-session-detail > p { color: var(--muted); font-size: 12px; }
 .stats-session-detail section { padding-top: 16px; }
@@ -75,13 +89,14 @@
 .stats-goal-progress::-webkit-progress-value { background: var(--lime); border-radius: 20px; }
 @media (max-width: 1350px) {
   .progress-layout.summary-view { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
-  .summary-view .stats-records { grid-column: 2; grid-row: 1 / 3; }
+  .summary-view .stats-records { grid-column: 2; grid-row: 1; }
   .summary-view .stats-muscles { grid-column: 1; }
-  .summary-view .stats-history { grid-column: 2; }
+  .summary-view .stats-volume { grid-column: 2; grid-row: 2; align-self: stretch; }
+  .summary-view .stats-history { grid-column: 1 / -1; }
 }
 @media (max-width: 900px) {
   .progress-layout.summary-view, .progress-layout.focused-view { grid-template-columns: 1fr; }
-  .summary-view .stats-records, .summary-view .stats-muscles, .summary-view .stats-history { grid-column: auto; grid-row: auto; }
+  .summary-view .stats-records, .summary-view .stats-muscles, .summary-view .stats-history, .summary-view .stats-volume { grid-column: auto; grid-row: auto; }
   .summary-view .stats-distribution { flex-direction: row; }
   .summary-view .stats-donut { width: 43%; }
 }
@@ -99,13 +114,13 @@
   .stats-strength .stats-filter select { max-width: 100%; }
   .stats-chart-mode { align-items: start; flex-direction: column; gap: 5px; }
   .stats-chart-mode select { min-height: 44px; width: 100%; font-size: 16px; }
-  .history-chart .chart-label { font-size: 20px; }
+  .history-chart, .focused-view .history-chart, .summary-view .stats-volume .history-chart { --plot-height: 200px; grid-template-columns: 48px minmax(0, 1fr); column-gap: 8px; }
   .stats-records { padding: 16px; }
   .stats-distribution { gap: 12px; }
-  .stats-distribution .muscle-list li > div:first-child { font-size: 11px; }
+  .stats-distribution .muscle-list li > div:first-child { font-size: var(--text-small); }
   .stats-session summary { gap: 9px; }
   .stats-session .date-tile { width: 48px; }
-  .stats-session .date-tile strong { font-size: 10px; }
+  .stats-session .date-tile strong { font-size: var(--text-small); }
   .stats-session .workout-copy strong { font-size: 14px; }
-  .stats-session .workout-copy small { font-size: 10px; }
+  .stats-session .workout-copy small { font-size: var(--text-small); }
 }

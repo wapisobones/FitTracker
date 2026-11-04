@@ -1,5 +1,5 @@
 .mode-switcher { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-shrink: 0; }
-.current-mode { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+.current-mode { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: var(--text-small); }
 .current-mode::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
 .mode-switcher button { border: 0; background: none; padding: 4px 0; min-height: 28px; }
 .mode-switcher button:disabled { color: var(--muted); }
@@ -30,7 +30,8 @@
 .storage-error > div { display: flex; align-items: center; gap: 12px; color: var(--amber); }
 .storage-error > p { color: var(--muted); margin-top: 14px; max-width: 70ch; }
 .storage-error > button { margin-top: 18px; }
-.operation-status:not(:empty) { margin-top: 16px; padding: 12px 16px; border: 1px solid #9bf45c40; border-radius: 10px; color: var(--lime); font-size: 13px; }
+.operation-notice:not([hidden]) { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 12px 8px 16px; border: 1px solid #9bf45c40; border-radius: 10px; color: var(--lime); font-size: 13px; }
+.operation-status { flex: 1; overflow-wrap: anywhere; }
 .personal-empty { padding: 30px 24px; margin: 22px 0; min-height: 0; gap: 16px; }
 .personal-empty h2 { font-size: 24px; }
 .empty-chart { padding: 26px; min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 16px; }

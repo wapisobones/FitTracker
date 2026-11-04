@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
-import { knownHistory, FIXED_NOW, benchId } from './helpers/history.js';
+import { knownHistory, chartHistory, FIXED_NOW, benchId, highRepId, rowId } from './helpers/history.js';
 import { readDatabase, writeRecords, selectMode, requestReset } from './helpers/storage.js';
 
 test.use({ timezoneId: 'America/Santiago' });
@@ -11,6 +11,141 @@ async function personal(page) {
   await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Aún no tienes entrenamientos guardados', exact: true })).toBeVisible();
 }
+
+test('Selección automática por métrica, filtros y elección explícita sin modificar historial', async ({ page }) => {
+  await personal(page);
+  for (const width of [320, 390, 1536]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(page.getByRole('heading', { name: 'Aún no tienes entrenamientos guardados', exact: true })).toBeVisible();
+    await expect(page.locator('.history-chart')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  const source = chartHistory();
+  await writeRecords(page, 'personal', source);
+  const before = await readDatabase(page, 'personal');
+  await page.reload();
+  const exercise = page.getByRole('combobox', { name: 'Ejercicio del gráfico', exact: true });
+  const metric = page.getByRole('combobox', { name: 'Métrica de fuerza', exact: true });
+  await expect(value(page, 'top')).toHaveText('Crunch histórico');
+  await expect(exercise).toHaveValue(highRepId);
+  await metric.selectOption('estimated1RM');
+  await expect(exercise).toHaveValue(rowId);
+  await expect(page.locator('.history-chart figcaption')).toContainText('Un único registro');
+  await expect(page.locator('.history-point')).toHaveCount(1);
+  for (const width of [320, 390, 1536]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(page.locator('.history-point')).toHaveCount(1);
+    const plot = await page.locator('.history-plot').boundingBox();
+    const point = await page.locator('.history-point').boundingBox();
+    expect(point.x).toBeGreaterThan(plot.x);
+    expect(point.x + point.width).toBeLessThan(plot.x + plot.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.locator('.chart-data summary').click();
+  await expect(page.getByRole('table')).toContainText('53,3');
+  await exercise.selectOption(benchId);
+  await expect(page.locator('.stats-strength')).toContainText('No hay registros para este gráfico');
+  await metric.selectOption('weight');
+  await expect(exercise).toHaveValue(benchId);
+  await expect(page.locator('.history-point')).toHaveCount(2);
+  await page.locator('.chart-data summary').click();
+  await expect(page.getByRole('table').locator('tbody td')).toHaveText(['0', '0']);
+  for (const period of ['all', 'week', 'month']) {
+    await page.getByRole('combobox', { name: 'Período', exact: true }).selectOption(period);
+    await expect(exercise).toHaveValue(benchId);
+  }
+  await page.reload();
+  await expect(exercise).toHaveValue(benchId);
+  await metric.selectOption('estimated1RM');
+  await expect(exercise).toHaveValue(benchId);
+  await expect(page.locator('.stats-strength')).toContainText('No hay registros para este gráfico');
+  await page.goto('./#/progreso?ambito=personal&periodo=month');
+  await expect(exercise).toHaveValue(highRepId);
+  await metric.selectOption('estimated1RM');
+  await expect(exercise).toHaveValue(rowId);
+  await page.getByRole('combobox', { name: 'Ejercicio', exact: true }).selectOption(benchId);
+  await expect(value(page, 'sets')).toHaveText('3');
+  await expect(value(page, 'volume')).toHaveText('0 kg');
+  await expect(page.locator('.stats-strength')).toContainText('No hay registros para este gráfico');
+  expect(await readDatabase(page, 'personal')).toEqual(before);
+  // A history made entirely of bodyweight sets still has real series and tables.
+  source.setRecords.forEach(set => { set.weightKg = 0; });
+  await writeRecords(page, 'personal', source);
+  const bodyweight = await readDatabase(page, 'personal');
+  await page.goto('./#/inicio?ambito=personal&periodo=month');
+  await expect(exercise).toHaveValue(benchId);
+  await expect(value(page, 'top')).toHaveText('Crunch histórico');
+  await expect(value(page, 'week-volume')).toHaveText('0 kg');
+  await page.locator('.chart-data summary').click();
+  await expect(page.getByRole('table').locator('tbody td')).toHaveText(['0', '0']);
+  await metric.selectOption('estimated1RM');
+  await expect(exercise).toHaveValue(benchId);
+  await expect(page.locator('.stats-strength')).toContainText('requiere carga positiva');
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await metric.selectOption('weight');
+    await expect(page.locator('.history-point')).toHaveCount(2);
+    await expect(page.locator('.stats-strength')).toContainText('peso corporal sin carga externa');
+    await metric.selectOption('estimated1RM');
+    await expect(page.locator('.stats-strength')).toContainText('requiere carga positiva');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  expect(await readDatabase(page, 'personal')).toEqual(bodyweight);
+});
+
+test('Gráficos compactos, ejes legibles y tablas a 320/390 px y escritorio', async ({ page }) => {
+  await personal(page);
+  await selectMode(page, 'demo');
+  const before = await readDatabase(page, 'demo');
+  await mkdir('.cache', { recursive: true });
+  for (const width of [1536, 1024, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const route of ['inicio', 'progreso']) {
+      await page.goto(`./#/${route}`);
+      await expect(page.locator('.history-chart').first()).toBeVisible();
+      for (const section of route === 'inicio' ? ['summary'] : ['summary', 'strength', 'volume']) {
+        if (route === 'progreso') await page.locator(`[data-stats-section="${section}"]`).click();
+        const charts = page.locator('.history-chart');
+        for (const chart of await charts.all()) {
+          const plot = await chart.locator('.history-plot').boundingBox();
+          expect(plot.height).toBeGreaterThanOrEqual(180);
+          expect(plot.height).toBeLessThanOrEqual(300);
+          const labels = chart.locator('.history-x-axis span');
+          const boxes = await labels.evaluateAll(elements => elements.map(element => {
+            const box = element.getBoundingClientRect();
+            return { left: box.left, right: box.right, size: parseFloat(getComputedStyle(element).fontSize) };
+          }));
+          for (let i = 0; i < boxes.length; i++) {
+            expect(boxes[i].size).toBeGreaterThanOrEqual(11);
+            expect(boxes[i].size).toBeLessThanOrEqual(14);
+            expect(boxes[i].left).toBeGreaterThanOrEqual(0);
+            expect(boxes[i].right).toBeLessThanOrEqual(width);
+            if (i) expect(boxes[i].left).toBeGreaterThanOrEqual(boxes[i - 1].right);
+          }
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        if (section === 'summary' && (width === 1536 || (width === 1024 && route === 'progreso'))) {
+          const cards = route === 'inicio' ? page.locator('.charts-grid > section') : width === 1536 ? page.locator('.summary-view > .stats-strength, .summary-view > .stats-muscles, .summary-view > .stats-records') : page.locator('.summary-view > .stats-strength, .summary-view > .stats-records');
+          const boxes = await cards.evaluateAll(elements => elements.map(element => { const r = element.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; }));
+          expect(Math.max(...boxes.map(b => b.top)) - Math.min(...boxes.map(b => b.top))).toBeLessThan(1);
+          expect(Math.max(...boxes.map(b => b.bottom)) - Math.min(...boxes.map(b => b.bottom))).toBeLessThan(1);
+        }
+        if (route === 'progreso' && section === 'volume' && width === 1536) expect((await page.locator('.stats-volume').boundingBox()).height).toBeLessThan(550);
+        const summary = page.locator('.chart-data summary').first();
+        await summary.focus();
+        await page.keyboard.press('Enter');
+        await expect(page.getByRole('table').first()).toBeVisible();
+        await expect(page.getByRole('table').first().locator('tbody tr')).not.toHaveCount(0);
+        await page.keyboard.press('Enter');
+        const target = route === 'inicio' ? page.locator('.charts-grid') : page.locator('.progress-layout');
+        await page.evaluate(() => document.activeElement.blur());
+        await target.evaluate(element => element.scrollIntoView({ block: 'start' }));
+        await page.screenshot({ path: `.cache/ft009c-${route}-${section}-${width}.png` });
+      }
+    }
+  }
+  expect(await readDatabase(page, 'demo')).toEqual(before);
+});
 
 test('Dashboard y Progreso comparten cálculos, filtros, snapshots e historial accesible', async ({ page }) => {
   await personal(page);

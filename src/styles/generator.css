@@ -23,7 +23,7 @@
 .generator-muscles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
 .generator-muscles button { min-height: 44px; border-radius: 10px; padding: 8px 5px; font-size: 12px; background: #1b2834; }
 .generator-muscles [aria-pressed="true"] { background: var(--lime); color: #12200b; border-color: var(--lime); font-weight: 650; }
-.generator-help { color: var(--muted); font-size: 11px; line-height: 1.8; margin-top: 12px; }
+.generator-help { color: var(--muted); font-size: var(--text-small); line-height: 1.8; margin-top: 12px; }
 .generator-catalog-empty { min-height: 320px; display: flex; flex-direction: column; justify-content: center; gap: 16px; text-align: center; padding: 25px 0; }
 .generator-catalog-empty > .icon { width: 44px; height: 44px; color: var(--lime); align-self: center; }
 .generator-catalog-empty p { font-size: 13px; color: var(--muted); line-height: 1.8; }
@@ -33,19 +33,19 @@
 .generator-available-list li > span { flex: 0 0 57px; border-radius: 7px; background: #142730; overflow: hidden; }
 .generator-available-list svg { display: block; width: 100%; }
 .generator-available-list strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
-.generator-available-list small { display: block; margin-top: 5px; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.generator-available-list small { display: block; margin-top: 5px; font-size: var(--text-small); color: var(--muted); overflow-wrap: anywhere; }
 .generator-config form > label, .generator-fields > label { display: grid; gap: 7px; margin-top: 16px; font-size: 12px; }
 .generator-config select, .generator-config input[type="number"] { min-width: 0; width: 100%; min-height: 44px; font: inherit; color: var(--text); border: 1px solid #465765; border-radius: 9px; padding: 9px 11px; background: #1b2834; }
 .generator-config fieldset { min-width: 0; border: 0; padding: 0; margin: 16px 0 0; }
 .generator-config legend { font-size: 12px; margin-bottom: 7px; }
-.generator-config fieldset label { display: flex; align-items: center; gap: 9px; min-height: 44px; padding-block: 4px; font-size: 11px; }
+.generator-config fieldset label { display: flex; align-items: center; gap: 9px; min-height: 44px; padding-block: 4px; font-size: var(--text-small); }
 .generator-config input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--lime); flex: 0 0 auto; }
 .generator-priorities > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .generator-priorities .generator-help { grid-column: 1 / -1; margin: 0; }
 .generator-equipment { padding: 8px 0; margin-top: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .generator-equipment summary { padding: 8px 0; font-size: 12px; min-height: 44px; }
 .generator-equipment-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-.generator-equipment-actions button { background: transparent; border: 0; min-height: 44px; padding: 5px 0; font-size: 11px; }
+.generator-equipment-actions button { background: transparent; border: 0; min-height: 44px; padding: 5px 0; font-size: var(--text-small); }
 .generator-equipment fieldset { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; }
 .generator-generate { width: 100%; margin-top: 18px; padding-inline: 10px; }
 .generator-error:empty { display: none; }
@@ -82,7 +82,7 @@
   .generator-map { min-height: 300px; }
   .generator-body { max-height: 340px; }
   .generator-steps { gap: 6px; }
-  .generator-steps li { padding: 10px 7px; font-size: 10px; }
+  .generator-steps li { padding: 10px 7px; font-size: var(--text-small); }
   .generator-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
   .generator-config select, .generator-config input[type="number"] { font-size: 16px; }
   .generator-equipment fieldset label { font-size: 12px; }

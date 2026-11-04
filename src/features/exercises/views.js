@@ -6,8 +6,8 @@ import { escapeHTML as esc } from '../../utils/html.js';
 const options = (items, selected = '') => items.map((value) => `<option value="${esc(value)}"${value === selected ? ' selected' : ''}>${esc(value)}</option>`).join('');
 
 export function catalogFrame(mode) {
-  return `<section class="page-heading"><div><h1>${icon('dumbbell')}Ejercicios</h1><p>Explora la biblioteca, encuentra tu ejercicio y aprende la técnica.</p></div><button class="button button-primary" type="button" data-create-exercise disabled>${icon('plus')}Crear ejercicio</button></section>
-  <p class="catalog-scope-note">Biblioteca base compartida · Tus ejercicios personalizados se guardan solo en ${mode === 'demo' ? 'demostración' : 'modo personal'}.</p>
+  return `<section class="page-heading catalog-heading"><div><h1>${icon('dumbbell')}Ejercicios</h1><p>Encuentra ejercicios y consulta su técnica.</p></div><button class="button button-primary" type="button" data-create-exercise disabled>${icon('plus')}Crear ejercicio</button></section>
+  <p class="catalog-scope-note">Base compartida · Personalizados solo en ${mode === 'demo' ? 'demostración' : 'modo personal'}.</p>
   <form class="catalog-filters" role="search" aria-label="Buscar y filtrar ejercicios"><label class="exercise-search">${icon('search')}<span class="sr-only">Buscar por nombre</span><input type="search" name="search" maxlength="80" placeholder="Buscar ejercicio…" autocomplete="off" /></label>
     <button class="button button-secondary filter-toggle" type="button" aria-expanded="false" aria-controls="exercise-filter-fields">${icon('filter')}Filtros</button>
     <div id="exercise-filter-fields" class="exercise-filter-fields" data-expanded="false"><label>Grupo muscular<select name="muscle"><option value="">Todos</option>${options(MUSCLE_GROUPS)}</select></label><label>Equipamiento<select name="equipment"><option value="">Todos</option></select></label><label>Dificultad<select name="difficulty"><option value="">Todas</option>${options(DIFFICULTIES)}</select></label></div>

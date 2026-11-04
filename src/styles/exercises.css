@@ -6,7 +6,7 @@
 .exercise-search input:focus-visible { outline-offset: 0; }
 .exercise-search input::placeholder { color: var(--muted); }
 .exercise-filter-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.exercise-filter-fields label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 11px; }
+.exercise-filter-fields label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: var(--text-small); }
 .exercise-filter-fields select, .exercise-editor input, .exercise-editor select, .exercise-editor textarea { width: 100%; min-width: 0; border: 1px solid #465868; border-radius: 10px; background: #18232e; color: var(--text); min-height: 46px; padding: 10px 12px; font: inherit; }
 .exercise-filter-fields select { font-size: 13px; }
 .filter-toggle { display: none; }
@@ -24,8 +24,8 @@
 .exercise-preview:hover { background: linear-gradient(145deg, #233d43, #122429); }
 .exercise-preview:focus-visible { outline-offset: -4px; }
 .exercise-visual { display: block; width: 100%; height: auto; }
-.preview-caption { position: absolute; bottom: 9px; left: 10px; font-size: 9px; color: #b4c8d0; }
-.technique-badge { position: absolute; right: 9px; top: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 7px; color: var(--lime); background: #0d1921ed; border: 1px solid #9bf45c30; border-radius: 7px; font-size: 10px; }
+.preview-caption { display: block; padding: 4px 8px; text-align: left; font-size: 12px; color: #b4c8d0; }
+.technique-badge { position: absolute; right: 9px; top: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 7px; color: var(--lime); background: #0d1921ed; border: 1px solid #9bf45c30; border-radius: 7px; font-size: 12px; }
 .technique-badge .icon { width: 13px; height: 13px; }
 .exercise-card-body { padding: 15px; display: flex; flex: 1; flex-direction: column; }
 .exercise-card-body h2 { font-size: 18px; margin-bottom: 13px; overflow-wrap: anywhere; }
@@ -36,7 +36,7 @@
 .exercise-attribute.difficulty-beginner { color: var(--lime); }
 .exercise-attribute.difficulty-unknown .icon { color: var(--muted); }
 .custom-exercise-actions { display: flex; align-items: center; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: auto; }
-.custom-exercise-actions > span { color: var(--muted); font-size: 10px; margin-right: auto; }
+.custom-exercise-actions > span { color: var(--muted); font-size: 12px; margin-right: auto; }
 .custom-exercise-actions .icon-button { width: 38px; height: 44px; padding: 9px; }
 .custom-exercise-actions .icon { width: 19px; height: 19px; }
 .catalog-empty { grid-column: 1 / -1; padding: 38px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 17px; }
@@ -49,7 +49,7 @@
 .exercise-dialog .dialog-heading { margin-bottom: 20px; position: sticky; top: 0; z-index: 1; background: var(--card); }
 .technique-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 24px; align-items: start; }
 .technique-illustration { background: #10212b; border-radius: 13px; border: 1px solid var(--line); padding: 12px; }
-.technique-illustration p { color: var(--muted); text-align: center; font-size: 11px; padding-bottom: 8px; }
+.technique-illustration p { color: var(--muted); text-align: center; font-size: var(--text-small); padding-bottom: 8px; }
 .video-unavailable { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
 .video-unavailable .icon { color: var(--lime); width: 18px; height: 18px; }
 .technique-copy h3 { display: flex; align-items: center; gap: 9px; font-size: 19px; margin-bottom: 16px; }
@@ -78,28 +78,36 @@
   .exercise-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
-  .catalog-scope-note { font-size: 11px; line-height: 1.7; }
-  .catalog-filters { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
-  .exercise-search { grid-column: 1 / -1; }
-  .filter-toggle { display: inline-flex; min-height: 44px; padding: 9px 16px; }
+  .catalog-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .catalog-heading > div { display: contents; }
+  .catalog-heading h1 { grid-column: 1; grid-row: 1; gap: 8px; }
+  .catalog-heading h1 > .icon { width: 24px; }
+  .catalog-heading p { grid-column: 1 / -1; margin: 0; }
+  .catalog-heading > .button { grid-column: 2; grid-row: 1; padding: 8px 10px; font-size: 12px; gap: 5px; }
+  .catalog-heading > .button .icon { width: 18px; }
+  .catalog-scope-note { font-size: 12px; line-height: 1.5; margin: 8px 0 12px; }
+  .catalog-filters { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .exercise-search { min-width: 0; min-height: 48px; padding-inline: 10px; gap: 6px; }
+  .exercise-search input { min-height: 46px; }
+  .filter-toggle { display: inline-flex; min-height: 48px; padding: 9px 10px; gap: 5px; }
   .exercise-filter-fields { grid-column: 1 / -1; grid-template-columns: 1fr; gap: 12px; }
   .exercise-filter-fields[data-expanded="false"] { display: none; }
   .exercise-filter-fields label { font-size: 13px; }
   .exercise-filter-fields select { font-size: 16px; }
   .exercise-search input, .exercise-editor input, .exercise-editor select, .exercise-editor textarea { font-size: 16px; }
-  .muscle-chips { margin-top: 15px; gap: 8px; }
+  .catalog-filters + .muscle-chips { margin-top: 10px; gap: 8px; padding-bottom: 4px; }
   .muscle-chips button { padding: 9px 17px; font-size: 13px; }
   .catalog-count { font-size: 12px; }
-  .catalog-results-heading { margin-bottom: 13px; }
+  .catalog-results-heading { margin: 2px 0 8px; }
   .exercise-grid { gap: 12px; }
   .exercise-card { border-radius: 13px; }
   .exercise-card-body { padding: 12px 10px; }
   .exercise-card-body h2 { font-size: 16px; line-height: 1.4; margin-bottom: 12px; }
   .exercise-attribute { font-size: 12px; gap: 6px; }
   .exercise-attribute .icon { width: 16px; height: 18px; }
-  .technique-badge { font-size: 9px; padding: 3px 5px; right: 6px; top: 6px; }
+  .technique-badge { font-size: 12px; padding: 3px 5px; right: 6px; top: 6px; }
   .technique-badge .icon { display: none; }
-  .preview-caption { font-size: 8px; left: 7px; bottom: 6px; }
+  .preview-caption { padding: 4px 7px; }
   .custom-exercise-actions { flex-wrap: wrap; }
   .custom-exercise-actions > span { flex-basis: 100%; }
   .exercise-dialog, .exercise-dialog[data-kind="editor"], .exercise-dialog[data-kind="delete"] { margin: auto 0 0; width: 100%; max-height: 93dvh; border-radius: 22px 22px 0 0; padding: 16px 20px calc(24px + env(safe-area-inset-bottom)); }
