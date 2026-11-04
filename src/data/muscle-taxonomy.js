@@ -28,6 +28,22 @@ export const MUSCLE_REGIONS = Object.freeze([
 ].map((region) => Object.freeze({ ...region, views: Object.freeze(region.views) })));
 
 export const regionsForGroup = (group) => MUSCLE_REGIONS.filter((region) => region.group === group);
+export const regionName = (id) => MUSCLE_REGIONS.find((region) => region.id === id)?.name ?? 'Sin región específica';
+
+// Optional additive exercise fields: absence is valid for old/custom snapshots.
+export function validateExerciseAnatomy(input) {
+  const fields = {};
+  if (input.mainRegion !== undefined) {
+    if (input.mainRegion !== null && !MUSCLE_REGIONS.some((region) => region.id === input.mainRegion && region.group === input.mainMuscle)) throw new Error('La región principal debe pertenecer al grupo muscular del ejercicio.');
+    fields.mainRegion = input.mainRegion;
+  }
+  if (input.secondaryRegions !== undefined) {
+    if (!Array.isArray(input.secondaryRegions) || input.secondaryRegions.length > MUSCLE_REGIONS.length || new Set(input.secondaryRegions).size !== input.secondaryRegions.length ||
+      input.secondaryRegions.some((id) => id === input.mainRegion || !MUSCLE_REGIONS.some((region) => region.id === id))) throw new Error('Las regiones secundarias deben ser válidas, únicas y distintas de la principal.');
+    fields.secondaryRegions = [...input.secondaryRegions];
+  }
+  return fields;
+}
 export const legacyGroupsForRegions = (ids) => MUSCLE_GROUPS.filter((group) => regionsForGroup(group).some((region) => ids.includes(region.id)));
 
 // Expand old broad selections in memory; never rewrite plans or snapshots.

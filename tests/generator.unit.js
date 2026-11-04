@@ -35,13 +35,14 @@ test('Programa de cuatro sesiones alterna torso y pierna/core, sin días impuest
   assert.equal(routine.nextSessionId, routine.sessions[0].id);
 });
 test('Equipo compuesto y nivel: un banco también es necesario, sin dificultad inferida', () => {
+  const presses = BASE_EXERCISES.slice(0, 4); // Original bench exercises; floor press does not require a bench.
   const input = config({ level: 'Intermedio', muscles: ['Pecho'], equipment: ['Mancuernas'] });
-  assert.equal(compatibleExercises(BASE_EXERCISES, input).length, 0);
+  assert.equal(compatibleExercises(presses, input).length, 0);
   input.equipment.push('Banco');
-  assert.equal(compatibleExercises(BASE_EXERCISES, input).length, 2);
+  assert.equal(compatibleExercises(presses, input).length, 2);
   input.level = 'Principiante';
-  assert.equal(compatibleExercises(BASE_EXERCISES, input).length, 0);
-  assert.throws(() => generateRoutine(input, BASE_EXERCISES), /No hay ejercicios compatibles/);
+  assert.equal(compatibleExercises(presses, input).length, 0);
+  assert.throws(() => generateRoutine(input, presses), /No hay ejercicios compatibles/);
 });
 test('Validaciones e incompatibilidades no producen propuestas incompletas', () => {
   assert.throws(() => generateRoutine(config({ muscles: [] }), BASE_EXERCISES), /Selecciona al menos/);

@@ -41,12 +41,14 @@ test('Grupos completos, parciales y retirada de última región mantienen priori
   assert.deepEqual(original.regions, undefined);
 });
 
-test('Regiones adaptan a los grupos FT-007 sin alterar selección de ejercicios ni catálogo', () => {
+test('Regiones conservan grupos FT-007 y ahora centran la selección sin modificar el catálogo', () => {
   const before = structuredClone(BASE_EXERCISES);
   const oldConfig = { ...defaultConfig(), muscles: ['Brazos', 'Espalda'], priorities: ['Brazos'] };
   const newConfig = { ...oldConfig, regions: ['biceps', 'rhomboids'] };
   const shape = (input) => generateRoutine(input, BASE_EXERCISES).routine.sessions.map((session) => session.prescriptions.map(({ id, ...item }) => item));
-  assert.deepEqual(shape(newConfig), shape(oldConfig));
+  assert.deepEqual(shape(oldConfig), shape({ ...oldConfig }));
+  const selected = shape(newConfig).flat().map((item) => BASE_EXERCISES.find((exercise) => exercise.id === item.exerciseId));
+  assert.ok(selected.every((exercise) => ['biceps', 'rhomboids'].includes(exercise.mainRegion)));
   assert.deepEqual(validateConfig(newConfig, BASE_EXERCISES).regions, ['rhomboids', 'biceps']);
   for (const regions of [null, [], ['unknown'], ['quadriceps']]) assert.throws(() => validateConfig({ ...oldConfig, regions }, BASE_EXERCISES), /regiones/);
   assert.deepEqual(BASE_EXERCISES, before);

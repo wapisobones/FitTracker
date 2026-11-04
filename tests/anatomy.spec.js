@@ -46,7 +46,7 @@ test('Anatomía: teclado, selección bilateral, lista y grupos parciales sincron
   await expect(group(page, 'Espalda')).toHaveAttribute('aria-pressed', 'mixed');
   await expect(page.locator('[data-map-muscle="rhomboids"], [data-map-muscle="spinal-erectors"]')).toHaveCount(0);
   await expect(region(page, 'rhomboids')).toHaveAccessibleDescription('Profundos al trapecio; selección solo por lista.');
-  await expect(page.locator('.anatomy-compatibility')).toContainText('por grupo general');
+  await expect(page.locator('.anatomy-compatibility')).toContainText('centra la propuesta');
   await mkdir('.cache', { recursive: true });
   await page.locator('.generator-map-card').screenshot({ path: '.cache/ft010a-desktop.png' });
   await page.evaluate(() => window.scrollTo(0, 0));

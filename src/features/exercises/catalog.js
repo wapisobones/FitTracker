@@ -1,7 +1,8 @@
 import { BASE_EXERCISES } from '../../data/exercises.js';
 import { escapeHTML } from '../../utils/html.js';
 import { exerciseService } from './exercise-service.js';
-import { catalogFrame, equipmentOptions, exerciseCard, noMatches, techniqueView, editorView, deleteView } from './views.js';
+import { catalogFrame, equipmentOptions, regionOptions, exerciseCard, noMatches, techniqueView, editorView, deleteView } from './views.js';
+import { MUSCLE_REGIONS } from '../../data/muscle-taxonomy.js';
 import { openRoutineAssignment } from '../routines/add-from-catalog.js';
 
 const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
@@ -18,7 +19,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   const errorPanel = root.querySelector('.catalog-error');
   const dialog = root.querySelector('.exercise-dialog');
   let exercises = [...BASE_EXERCISES];
-  let filters = { search: '', muscle: '', equipment: '', difficulty: '', ...previousFilters };
+  let filters = { search: '', muscle: '', region: '', equipment: '', difficulty: '', ...previousFilters };
   let alive = true;
   let ready = false;
   let busy = false;
@@ -30,6 +31,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   function renderResults() {
     const matches = exercises.filter((exercise) => normalize(exercise.name).includes(normalize(filters.search.trim()))
       && (!filters.muscle || exercise.mainMuscle === filters.muscle)
+      && (!filters.region || exercise.mainRegion === filters.region)
       && (!filters.equipment || exercise.equipment === filters.equipment)
       && (!filters.difficulty || exercise.difficulty === filters.difficulty));
     grid.innerHTML = matches.length ? matches.map(exerciseCard).join('') : noMatches();
@@ -44,10 +46,15 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   }
 
   function clearFilters() {
-    filters = { search: '', muscle: '', equipment: '', difficulty: '' };
+    filters = { search: '', muscle: '', region: '', equipment: '', difficulty: '' };
     form.reset();
     updateEquipment();
+    updateRegions();
     renderResults();
+  }
+  function updateRegions() {
+    if (!MUSCLE_REGIONS.some((region) => region.id === filters.region && (!filters.muscle || region.group === filters.muscle))) filters.region = '';
+    form.elements.region.innerHTML = regionOptions(filters.muscle, filters.region);
   }
 
   async function load() {
@@ -141,6 +148,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   root.addEventListener('change', (event) => {
     if (form.contains(event.target) && event.target.tagName === 'SELECT') {
       filters[event.target.name] = event.target.value;
+      if (event.target.name === 'muscle') updateRegions();
       feedback.textContent = '';
       renderResults();
     }
@@ -164,6 +172,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
     else if (button.hasAttribute('data-muscle')) {
       filters.muscle = button.dataset.muscle;
       form.elements.muscle.value = filters.muscle;
+      updateRegions();
       renderResults();
     } else if (button.classList.contains('filter-toggle')) {
       const expanded = button.getAttribute('aria-expanded') !== 'true';
@@ -198,6 +207,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   dialog.addEventListener('close', () => { if (alive) focusTarget()?.focus(); }, { signal });
   for (const name of ['search', 'muscle', 'difficulty']) form.elements[name].value = filters[name];
   updateEquipment();
+  updateRegions();
   renderResults();
   void load();
 

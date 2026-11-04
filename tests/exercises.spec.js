@@ -10,29 +10,29 @@ async function openLibrary(page) {
 
 test('Biblioteca base, búsqueda por nombre y filtros combinados sin duplicados', async ({ page }) => {
   await openLibrary(page);
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   expect((await readDatabase(page, 'personal')).exercises).toHaveLength(0);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Crear ejercicio', exact: true })).toBeEnabled();
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   const filters = page.getByRole('search', { name: 'Buscar y filtrar ejercicios' });
   await filters.getByRole('searchbox', { name: 'Buscar por nombre' }).fill('PRESS');
-  await expect(page.locator('.exercise-card')).toHaveCount(3);
+  await expect(page.locator('.exercise-card')).toHaveCount(10);
   await filters.getByLabel('Grupo muscular').selectOption('Pecho');
-  await expect(page.locator('.exercise-card')).toHaveCount(2);
+  await expect(page.locator('.exercise-card')).toHaveCount(5);
   await filters.getByLabel('Equipamiento').selectOption('Barra y banco');
   await filters.getByLabel('Dificultad').selectOption('Intermedio');
   await expect(page.locator('.exercise-card h2')).toHaveText(['Press de banca']);
   await filters.getByLabel('Dificultad').selectOption('Principiante');
   await expect(page.getByRole('heading', { name: 'No hay ejercicios que coincidan' })).toBeVisible();
   await page.locator('.clear-filters').click();
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   await filters.getByRole('searchbox').fill('biceps');
-  await expect(page.locator('.exercise-card h2')).toHaveText(['Curl de bíceps']);
+  await expect(page.locator('.exercise-card h2')).toHaveText(['Curl de bíceps', 'Curl de bíceps con barra', 'Curl de bíceps en polea']);
   await page.locator('.clear-filters').click();
   await page.locator('[data-muscle="Espalda"]').click();
   await filters.getByLabel('Equipamiento').selectOption('Polea');
-  await expect(page.locator('.exercise-card')).toHaveCount(2);
+  await expect(page.locator('.exercise-card')).toHaveCount(3);
   await page.locator('.clear-filters').click();
   await expect(page.locator('.exercise-card [data-edit-exercise], .exercise-card [data-delete-exercise]')).toHaveCount(0);
   await mkdir('.cache', { recursive: true });
@@ -91,7 +91,7 @@ test('Personalizados: validación, escritura fallida recuperable, CRUD persisten
 
   await selectMode(page, 'demo');
   await expect(page.getByRole('button', { name: 'Crear ejercicio', exact: true })).toBeEnabled();
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   await expect(page.getByRole('heading', { name: 'Remo con banda propio', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Crear ejercicio', exact: true }).click();
   const demoEditor = page.getByRole('dialog', { name: 'Crear ejercicio personalizado', exact: true });
@@ -113,7 +113,7 @@ test('Personalizados: validación, escritura fallida recuperable, CRUD persisten
   await page.getByRole('button', { name: 'Eliminar Remo con banda propio', exact: true }).click();
   await confirm.getByRole('button', { name: 'Eliminar ejercicio', exact: true }).click();
   await expect(confirm).not.toBeVisible();
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   expect((await readDatabase(page, 'personal')).exercises).toHaveLength(0);
   expect((await readDatabase(page, 'demo')).exercises).toEqual(demoBefore);
 });
@@ -131,7 +131,7 @@ test('Catálogo móvil y técnica accesible, con recuperación de lectura de per
   await page.goto('./#/ejercicios');
   await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('La biblioteca base sigue disponible');
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   await expect(page.getByRole('button', { name: 'Crear ejercicio', exact: true })).toBeDisabled();
   await page.evaluate(() => { window.denyExerciseRead = false; });
   await page.getByRole('button', { name: 'Reintentar carga', exact: true }).click();

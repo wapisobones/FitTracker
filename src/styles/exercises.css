@@ -5,7 +5,7 @@
 .exercise-search input { width: 100%; border: 0; background: transparent; min-height: 50px; color: var(--text); }
 .exercise-search input:focus-visible { outline-offset: 0; }
 .exercise-search input::placeholder { color: var(--muted); }
-.exercise-filter-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.exercise-filter-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .exercise-filter-fields label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: var(--text-small); }
 .exercise-filter-fields select, .exercise-editor input, .exercise-editor select, .exercise-editor textarea { width: 100%; min-width: 0; border: 1px solid #465868; border-radius: 10px; background: #18232e; color: var(--text); min-height: 46px; padding: 10px 12px; font: inherit; }
 .exercise-filter-fields select { font-size: 13px; }
@@ -19,6 +19,7 @@
 .catalog-feedback:not(:empty) { padding: 12px 16px; background: #9bf45c09; border: 1px solid #9bf45c30; border-radius: 10px; color: var(--muted); margin-bottom: 18px; }
 .exercise-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .exercise-card { overflow: hidden; display: flex; flex-direction: column; border-radius: 15px; }
+.exercise-card { content-visibility: auto; contain-intrinsic-size: auto 350px; }
 .exercise-card:focus-within { border-color: var(--lime); }
 .exercise-preview { position: relative; width: 100%; background: linear-gradient(145deg, #1b303b, #0d1b24); border: 0; border-bottom: 1px solid var(--line); padding: 0; color: var(--text); }
 .exercise-preview:hover { background: linear-gradient(145deg, #233d43, #122429); }
@@ -72,6 +73,11 @@
 .exercise-dialog[data-kind="delete"] > p { color: var(--muted); line-height: 1.8; overflow-wrap: anywhere; }
 .button-danger { color: #ffd1ce; background: #652f30; border-color: #ad5b5d; }
 .exercise-notes { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); line-height: 1.8; }
+.exercise-anatomy { border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 22px; }
+.exercise-anatomy dl { margin: 0; display: grid; gap: 12px; }
+.exercise-anatomy dt { color: var(--muted); font-size: 12px; }
+.exercise-anatomy dd { margin: 3px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+.exercise-anatomy > p { color: var(--muted); margin-top: 12px; font-size: 12px; line-height: 1.7; }
 @media (max-width: 1350px) { .exercise-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
 @media (max-width: 1100px) {
   .catalog-filters { grid-template-columns: 1fr; }

@@ -1,11 +1,11 @@
 import { MUSCLE_GROUPS } from '../../data/exercises.js';
-import { regionsForGroup, selectedRegions, groupSelection } from '../../data/muscle-taxonomy.js';
+import { regionsForGroup, selectedRegions, groupSelection, regionName } from '../../data/muscle-taxonomy.js';
 import { icon } from '../../components/icons.js';
 import { exerciseVisual } from '../../components/exercise-visual.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { bodyMap } from './body-map.js';
 import { countText } from '../../utils/text.js';
-import { LEVELS, GOALS, equipmentOptions, compatibleExercises, estimateMinutes } from './engine.js';
+import { LEVELS, GOALS, equipmentOptions, compatibleExercises, estimateMinutes, targetedRegions, regionalWarnings } from './engine.js';
 
 const options = (entries, value) => entries.map(([id, label]) => `<option value="${esc(id)}"${String(value) === String(id) ? ' selected' : ''}>${esc(label)}</option>`).join('');
 function musclePicker(config, view) {
@@ -20,7 +20,7 @@ function musclePicker(config, view) {
     <div class="generator-muscles" role="group" aria-label="Grupos musculares">${MUSCLE_GROUPS.map((group) => `<button type="button" data-generator-muscle="${group}" aria-pressed="${groupSelection(selected, group)}">${group}</button>`).join('')}</div>
     <p class="generator-help">Los grupos seleccionan todas sus regiones. La marca parcial indica que has elegido solo algunas.</p>
     <div id="muscle-region-list" class="generator-region-list" tabindex="-1"><h3>Regiones por grupo</h3>${MUSCLE_GROUPS.map((group) => `<details class="generator-region-group"><summary>${group}<span data-region-count="${group}">${regionsForGroup(group).filter((region) => selected.includes(region.id)).length}/${regionsForGroup(group).length}</span></summary><div role="group" aria-label="Regiones de ${group}">${regionsForGroup(group).map((region) => `<button type="button" data-generator-region="${region.id}" aria-pressed="${selected.includes(region.id)}"${region.note ? ` aria-describedby="region-note-${region.id}"` : ''}><span>${region.name}</span>${!region.views.length ? '<small>Solo lista</small>' : ''}</button>${region.note ? `<p id="region-note-${region.id}" class="${!region.views.length ? 'generator-region-note' : 'sr-only'}">${region.note}</p>` : ''}`).join('')}</div></details>`).join('')}</div>
-    <p class="generator-help anatomy-compatibility">Por ahora, los ejercicios se proponen por grupo general. Elegir una región no limita la propuesta a ese músculo.</p>
+    <p class="generator-help anatomy-compatibility">Elegir regiones centra la propuesta en sus músculos principales. Un grupo completo permite todas sus regiones y los personalizados sin región. Si faltan opciones, se explican las alternativas con participación secundaria.</p>
   </section>`;
 }
 export function generatorFrame(config, catalog, view) {
@@ -34,7 +34,8 @@ export function availableView(catalog, config) {
   if (!config.muscles.length) return `<div class="generator-catalog-empty">${icon('target')}<h3>Elige dónde quieres trabajar</h3><p>Selecciona grupos en el cuerpo o en la lista para ver ejercicios compatibles.</p></div>`;
   const eligible = compatibleExercises(catalog, config);
   const excluded = catalog.filter((exercise) => exercise.origin === 'custom' && config.muscles.includes(exercise.mainMuscle) && !LEVELS.includes(exercise.difficulty)).length;
-  return `<p class="generator-match-count">${countText(eligible.length, 'compatible', 'compatibles')} · ${esc(config.muscles.join(', '))}</p>${eligible.length ? `<ul class="generator-available-list">${eligible.map((exercise) => `<li><span>${exerciseVisual(exercise)}</span><div><strong>${esc(exercise.name)}</strong><small>${esc(exercise.mainMuscle)} · ${esc(exercise.difficulty)}</small><small>${esc(exercise.equipment)}${exercise.origin === 'custom' ? ' · Personalizado' : ''}</small></div></li>`).join('')}</ul>` : '<div class="generator-catalog-empty"><h3>Sin coincidencias</h3><p>Amplía el equipo disponible, revisa el nivel o cambia los grupos seleccionados.</p></div>'}${excluded ? `<p class="generator-help">${excluded} personalizados sin nivel no se incluyen. Puedes asignarles dificultad desde el catálogo.</p>` : ''}`;
+  const unclassified = catalog.filter((exercise) => exercise.origin === 'custom' && !exercise.mainRegion && targetedRegions(config, exercise.mainMuscle).length && config.muscles.includes(exercise.mainMuscle)).length;
+  return `<p class="generator-match-count">${countText(eligible.length, 'compatible', 'compatibles')} · ${esc(config.muscles.join(', '))}</p>${regionalWarnings(catalog, config).map((message) => `<p class="generator-warning">${esc(message)}</p>`).join('')}${eligible.length ? `<ul class="generator-available-list">${eligible.map((exercise) => `<li><span>${exerciseVisual(exercise)}</span><div><strong>${esc(exercise.name)}</strong><small>${esc(exercise.mainMuscle)} · ${esc(regionName(exercise.mainRegion))}</small><small>${esc(exercise.difficulty)} · ${esc(exercise.equipment)}${exercise.origin === 'custom' ? ' · Personalizado' : ''}</small>${targetedRegions(config, exercise.mainMuscle).length && !targetedRegions(config, exercise.mainMuscle).includes(exercise.mainRegion) ? '<small>Alternativa por participación secundaria</small>' : ''}</div></li>`).join('')}</ul>` : '<div class="generator-catalog-empty"><h3>Sin coincidencias</h3><p>Amplía el equipo disponible, revisa el nivel o cambia los grupos seleccionados.</p></div>'}${excluded ? `<p class="generator-help">${excluded} personalizados sin nivel no se incluyen. Puedes asignarles dificultad desde el catálogo.</p>` : ''}${unclassified ? `<p class="generator-help">${unclassified} personalizados sin región específica no se incluyen en esta selección. Selecciona su grupo completo para utilizarlos.</p>` : ''}`;
 }
 export function prioritiesView(config) {
   return config.muscles.length ? config.muscles.map((group) => `<label><input type="checkbox" data-generator-priority="${group}"${config.priorities.includes(group) ? ' checked' : ''}>${group}</label>`).join('') : '<p class="generator-help">Selecciona músculos para marcar tus prioridades.</p>';

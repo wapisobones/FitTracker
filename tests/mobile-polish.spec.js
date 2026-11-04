@@ -187,7 +187,7 @@ test('FT-009E respaldo: columnas legibles a 320px y cancelación intacta', async
 
 test('FT-009E catálogo y tipografía: tarjetas visibles, filtros, creación y navegación a 320/390px', async ({ page }) => {
   await open(page, 'ejercicios');
-  await expect(page.locator('.exercise-card')).toHaveCount(24);
+  await expect(page.locator('.exercise-card')).toHaveCount(72);
   for (const width of [320, 390, 1536]) {
     await page.setViewportSize({ width, height: 844 });
     await page.evaluate(() => scrollTo(0, 0));
@@ -203,10 +203,10 @@ test('FT-009E catálogo y tipografía: tarjetas visibles, filtros, creación y n
       await toggle.click();
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
       await page.getByRole('combobox', { name: 'Grupo muscular', exact: true }).selectOption('Pecho');
-      await expect(page.locator('.exercise-card')).toHaveCount(4);
+      await expect(page.locator('.exercise-card')).toHaveCount(12);
       await toggle.click();
       await page.locator('.clear-filters').click();
-      await expect(page.locator('.exercise-card')).toHaveCount(24);
+      await expect(page.locator('.exercise-card')).toHaveCount(72);
     }
     await capture(page, 'catalog', width);
   }
