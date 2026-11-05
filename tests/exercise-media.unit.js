@@ -4,15 +4,16 @@ import { readFile, readdir } from 'node:fs/promises';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
 import { CORE_VISUAL_ASSETS } from '../src/data/core-visual-assets.js';
 import { CHEST_VISUAL_ASSETS } from '../src/data/chest-visual-assets.js';
+import { BACK_VISUAL_ASSETS } from '../src/data/back-visual-assets.js';
 import { EXERCISE_MEDIA, exerciseMedia, mediaUrl, verifiedResource } from '../src/data/exercise-media.js';
 
 const noMedia = { thumbnail: null, video: null, animation: null };
-const visualGroups = [['Core', 'core', CORE_VISUAL_ASSETS], ['Pecho', 'pecho', CHEST_VISUAL_ASSETS]];
+const visualGroups = [['Core', 'core', CORE_VISUAL_ASSETS], ['Pecho', 'pecho', CHEST_VISUAL_ASSETS], ['Espalda', 'espalda', BACK_VISUAL_ASSETS]];
 
-test('Core y Pecho: doce pares por grupo, con SVG disponible como respaldo', () => {
+test('Core, Pecho y Espalda: doce pares por grupo, con SVG disponible como respaldo', () => {
   const core = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Core');
   assert.equal(core.length, 12);
-  assert.deepEqual(Object.keys(EXERCISE_MEDIA).sort(), BASE_EXERCISES.filter((exercise) => ['Core', 'Pecho'].includes(exercise.mainMuscle)).map((exercise) => exercise.id).sort());
+  assert.deepEqual(Object.keys(EXERCISE_MEDIA).sort(), BASE_EXERCISES.filter((exercise) => visualGroups.some(([name]) => name === exercise.mainMuscle)).map((exercise) => exercise.id).sort());
   assert.deepEqual(CORE_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [21, 22, 23, 24, 65, 66, 67, 68, 69, 70, 71, 72]);
   assert.equal(core.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(core.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
@@ -22,9 +23,15 @@ test('Core y Pecho: doce pares por grupo, con SVG disponible como respaldo', () 
   assert.equal(chest.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(chest.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
   assert.equal(chest.filter((exercise) => exerciseMedia(exercise).video).length, 0);
+  assert.deepEqual(BACK_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [5, 6, 7, 8, 33, 34, 35, 36, 37, 38, 39, 40]);
+  const back = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Espalda');
+  assert.equal(back.length, 12);
+  assert.equal(back.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
+  assert.equal(back.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
+  assert.equal(back.filter((exercise) => exerciseMedia(exercise).video).length, 0);
   for (const exercise of BASE_EXERCISES) {
     assert.equal(exercise.video, null);
-    if (!['Core', 'Pecho'].includes(exercise.mainMuscle)) assert.deepEqual(exerciseMedia(exercise), noMedia);
+    if (!visualGroups.some(([name]) => name === exercise.mainMuscle)) assert.deepEqual(exerciseMedia(exercise), noMedia);
   }
 });
 
@@ -75,7 +82,7 @@ function chunks(buffer, start = 12) {
   return results;
 }
 
-test('48 WebP Core/Pecho: dos fotogramas de 900 ms, bucle 0 → 1 → 0 y miniatura elegida', async () => {
+test('72 WebP Core/Pecho/Espalda: dos fotogramas de 900 ms, bucle 0 → 1 → 0 y miniatura elegida', async () => {
   for (const [, folder, assets] of visualGroups) {
     const output = new URL(`../public/assets/exercises/${folder}/`, import.meta.url);
     assert.deepEqual((await readdir(output)).filter((name) => name.endsWith('.webp')).sort(), assets.flatMap(({ slug }) => [`${slug}.webp`, `${slug}-poster.webp`]).sort());

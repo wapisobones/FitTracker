@@ -1,8 +1,9 @@
 import { CORE_VISUAL_ASSETS } from './core-visual-assets.js';
 import { CHEST_VISUAL_ASSETS } from './chest-visual-assets.js';
+import { BACK_VISUAL_ASSETS } from './back-visual-assets.js';
 
 // Editorial manifest only. Never read media URLs from IndexedDB or backups.
-// Core and Pecho are approved. Missing/failed assets still fall back to the SVG.
+// Reviewed Core, Pecho and Espalda pairs. Missing/failed assets fall back to SVG.
 function localPair(asset, group = 'core') {
   const rights = {
     status: 'verified', checkedAt: '2026-11-04', author: 'free-exercise-db',
@@ -38,6 +39,7 @@ function localPair(asset, group = 'core') {
 export const EXERCISE_MEDIA = Object.freeze({
   ...Object.fromEntries(CORE_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset)])),
   ...Object.fromEntries(CHEST_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'pecho')])),
+  ...Object.fromEntries(BACK_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'espalda')])),
 });
 
 const secureLink = (value) => {

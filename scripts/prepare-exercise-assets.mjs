@@ -1,10 +1,11 @@
-// Offline preparation of approved Core/Pecho pairs. Default group stays Core.
+// Offline preparation of reviewed Core/Pecho/Espalda pairs. Default stays Core.
 // Reuses the installed Playwright browser to resize and encode WebP frames.
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { chromium } from '@playwright/test';
 import { CORE_VISUAL_ASSETS } from '../src/data/core-visual-assets.js';
 import { CHEST_VISUAL_ASSETS } from '../src/data/chest-visual-assets.js';
+import { BACK_VISUAL_ASSETS } from '../src/data/back-visual-assets.js';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
 
 const root = new URL('../', import.meta.url);
@@ -13,16 +14,16 @@ const height = 427;
 const duration = 900;
 const args = process.argv.slice(2);
 if (args.some((arg) => !/^--(?:group|only)=[a-z0-9-]+$/.test(arg))
-  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho] [--only=<slug>]');
+  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho|espalda] [--only=<slug>]');
 const group = args.find((arg) => arg.startsWith('--group='))?.slice('--group='.length) ?? 'core';
-if (!['core', 'pecho'].includes(group)) throw new Error(`Unapproved group: ${group}`);
-const groupName = group === 'core' ? 'Core' : 'Pecho';
-const assets = group === 'core' ? CORE_VISUAL_ASSETS : CHEST_VISUAL_ASSETS;
+const groups = { core: ['Core', CORE_VISUAL_ASSETS], pecho: ['Pecho', CHEST_VISUAL_ASSETS], espalda: ['Espalda', BACK_VISUAL_ASSETS] };
+if (!Object.hasOwn(groups, group)) throw new Error(`Unapproved group: ${group}`);
+const [groupName, assets] = groups[group];
 const output = new URL(`public/assets/exercises/${group}/`, root);
 const onlySlug = args.find((arg) => arg.startsWith('--only='))?.slice('--only='.length);
 const selectedAsset = assets.find((asset) => asset.slug === onlySlug);
 if (onlySlug && !selectedAsset) throw new Error(`Unknown ${groupName} slug: ${onlySlug}`);
-// Preserve the existing Core attribution file; Pecho has its own file.
+// Preserve the existing Core attribution file; other groups have their own.
 const attributionFile = new URL(group === 'core' ? '../ATTRIBUTION.md' : 'ATTRIBUTION.md', output);
 const previousCredits = onlySlug ? await readFile(attributionFile, 'utf8') : null;
 const sectionHeading = selectedAsset ? `## ${selectedAsset.name} — ${selectedAsset.id}` : null;
@@ -157,7 +158,7 @@ try {
     'Miniatura: fotografía 0, excepto Plancha (fotografía 1, postura sostenida). Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Plancha incluye preparación y postura sostenida. Los doce ejercicios conservan SVG como fallback de carga.',
     'Las referencias externas anteriores de Plancha y Elevación de rodillas se retiraron del build al sustituirlas por estos recursos.', '',
-  ] : [
+  ] : group === 'pecho' ? [
     '# FitTracker — recursos visuales locales de Pecho', '',
     'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
     'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
@@ -168,6 +169,18 @@ try {
     'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
     'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos), indicadas en sus secciones.',
+    'Los doce ejercicios conservan SVG como respaldo de carga.', '',
+  ] : [
+    '# FitTracker — recursos visuales locales de Espalda', '',
+    'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
+    'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
+    'Preparación: `pnpm prepare:exercise-assets --group=espalda`, sin red ni dependencias nuevas.',
+    'Originales intactos y excluidos del build. Core, Pecho y sus atribuciones se conservan sin cambios.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
+    'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
+    'Diez correspondencias exactas y dos aproximadas (elevación en Y y elevación corta de tronco), indicadas en sus secciones.',
     'Los doce ejercicios conservan SVG como respaldo de carga.', '',
   ];
   for (const { asset, frames, animated, originalBytes, dimensions } of outputs) {
