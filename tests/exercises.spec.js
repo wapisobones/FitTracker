@@ -151,7 +151,7 @@ test('Catálogo móvil y técnica accesible, con recuperación de lectura de per
   await page.keyboard.press('Enter');
   const modal = page.getByRole('dialog', { name: 'Press de banca', exact: true });
   await expect(modal).toBeVisible();
-  await expect(modal.getByText('No hay un vídeo autorizado disponible para este ejercicio.', { exact: true })).toBeVisible();
+  await expect(modal.getByText('La demostración es una secuencia de dos fotografías, no un vídeo continuo.', { exact: true })).toBeVisible();
   await expect(modal.locator('video, iframe, .exercise-attribute')).toHaveCount(0);
   await expect(modal.getByRole('button', { name: 'Añadir a rutina', exact: true })).toBeEnabled();
   await modal.evaluate((dialog) => { dialog.scrollTop = dialog.scrollHeight; });

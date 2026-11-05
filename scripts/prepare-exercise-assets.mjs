@@ -1,22 +1,29 @@
-// Offline preparation of approved Core pairs; other groups are excluded.
+// Offline preparation of approved Core/Pecho pairs. Default group stays Core.
 // Reuses the installed Playwright browser to resize and encode WebP frames.
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { chromium } from '@playwright/test';
 import { CORE_VISUAL_ASSETS } from '../src/data/core-visual-assets.js';
+import { CHEST_VISUAL_ASSETS } from '../src/data/chest-visual-assets.js';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
 
 const root = new URL('../', import.meta.url);
-const output = new URL('public/assets/exercises/core/', root);
 const width = 640;
 const height = 427;
 const duration = 900;
 const args = process.argv.slice(2);
-if (args.length > 1 || (args[0] && !args[0].startsWith('--only='))) throw new Error('Usage: pnpm prepare:exercise-assets [--only=<slug>]');
-const onlySlug = args[0]?.slice('--only='.length);
-const selectedAsset = CORE_VISUAL_ASSETS.find((asset) => asset.slug === onlySlug);
-if (args.length && !selectedAsset) throw new Error(`Unknown Core slug: ${onlySlug}`);
-const attributionFile = new URL('../ATTRIBUTION.md', output);
+if (args.some((arg) => !/^--(?:group|only)=[a-z0-9-]+$/.test(arg))
+  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho] [--only=<slug>]');
+const group = args.find((arg) => arg.startsWith('--group='))?.slice('--group='.length) ?? 'core';
+if (!['core', 'pecho'].includes(group)) throw new Error(`Unapproved group: ${group}`);
+const groupName = group === 'core' ? 'Core' : 'Pecho';
+const assets = group === 'core' ? CORE_VISUAL_ASSETS : CHEST_VISUAL_ASSETS;
+const output = new URL(`public/assets/exercises/${group}/`, root);
+const onlySlug = args.find((arg) => arg.startsWith('--only='))?.slice('--only='.length);
+const selectedAsset = assets.find((asset) => asset.slug === onlySlug);
+if (onlySlug && !selectedAsset) throw new Error(`Unknown ${groupName} slug: ${onlySlug}`);
+// Preserve the existing Core attribution file; Pecho has its own file.
+const attributionFile = new URL(group === 'core' ? '../ATTRIBUTION.md' : 'ATTRIBUTION.md', output);
 const previousCredits = onlySlug ? await readFile(attributionFile, 'utf8') : null;
 const sectionHeading = selectedAsset ? `## ${selectedAsset.name} — ${selectedAsset.id}` : null;
 const sectionStart = previousCredits?.indexOf(sectionHeading);
@@ -65,22 +72,22 @@ function animation(frames) {
 
 // Validate the explicit mapping against the supplied reference and actual files.
 const reference = JSON.parse(await readFile(new URL('recursos-originales/ejercicios.json', root), 'utf8'));
-const originalFiles = (await readdir(new URL('recursos-originales/core/', root))).filter((name) => /\.(jpg|png)$/.test(name)).sort();
-const expectedFiles = CORE_VISUAL_ASSETS.flatMap((asset) => [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`)).sort();
-if (CORE_VISUAL_ASSETS.length !== 12 || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error('Review required: expected exactly the twelve approved Core pairs.');
+const originalFiles = (await readdir(new URL(`recursos-originales/${group}/`, root))).filter((name) => /\.(jpg|png)$/.test(name)).sort();
+const expectedFiles = assets.flatMap((asset) => [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`)).sort();
+if (assets.length !== 12 || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error(`Review required: expected exactly the twelve approved ${groupName} pairs.`);
 const inputs = [];
-for (const asset of CORE_VISUAL_ASSETS) {
+for (const asset of assets) {
   const exercise = BASE_EXERCISES.find((item) => item.id === asset.id);
-  const entry = reference.find((item) => item.grupo === 'Core' && item.nombre === asset.name);
+  const entry = reference.find((item) => item.grupo === groupName && item.nombre === asset.name);
   const names = [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`);
   const referenceMatches = asset.provenance === 'user-provided'
     ? entry?.coincidencia === 'sin_resultado' && entry.imagenes.length === 0
     : entry?.nombre_en_base === asset.sourceName && entry.coincidencia === asset.match
       && JSON.stringify(entry.imagenes) === JSON.stringify(names.map((name) => `imagenes/${name}`));
-  if (exercise?.name !== asset.name || exercise.mainMuscle !== 'Core' || !referenceMatches) {
+  if (exercise?.name !== asset.name || exercise.mainMuscle !== groupName || !referenceMatches) {
     throw new Error(`Catalog/reference mismatch: ${asset.name}`);
   }
-  if (!onlySlug || asset.slug === onlySlug) inputs.push({ asset, originals: await Promise.all(names.map((name) => readFile(new URL(`recursos-originales/core/${name}`, root)))) });
+  if (!onlySlug || asset.slug === onlySlug) inputs.push({ asset, originals: await Promise.all(names.map((name) => readFile(new URL(`recursos-originales/${group}/${name}`, root)))) });
 }
 const browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL || 'msedge', headless: true });
 try {
@@ -137,7 +144,7 @@ try {
   }
   // Only write after all mappings, originals and decoded animations pass review checks.
   await mkdir(output, { recursive: true });
-  const credits = [
+  const credits = group === 'core' ? [
     '# FitTracker — recursos visuales locales de Core', '',
     'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
     'Licencia de esos JPG declarada en el archivo suministrado `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
@@ -150,6 +157,18 @@ try {
     'Miniatura: fotografía 0, excepto Plancha (fotografía 1, postura sostenida). Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Plancha incluye preparación y postura sostenida. Los doce ejercicios conservan SVG como fallback de carga.',
     'Las referencias externas anteriores de Plancha y Elevación de rodillas se retiraron del build al sustituirlas por estos recursos.', '',
+  ] : [
+    '# FitTracker — recursos visuales locales de Pecho', '',
+    'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
+    'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
+    'Preparación: `pnpm prepare:exercise-assets --group=pecho`, sin red ni dependencias nuevas.',
+    'Originales intactos y excluidos del build. Core y sus atribuciones se conservan sin cambios.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
+    'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
+    'Diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos), indicadas en sus secciones.',
+    'Los doce ejercicios conservan SVG como respaldo de carga.', '',
   ];
   for (const { asset, frames, animated, originalBytes, dimensions } of outputs) {
     credits.push(`## ${asset.name} — ${asset.id}`, '',
@@ -158,7 +177,7 @@ try {
     if (asset.provenance === 'user-provided') credits.push('Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/core-visual-assets.js`.', '');
     for (const [name, data] of [[`${asset.slug}.webp`, animated], [`${asset.slug}-poster.webp`, frames[asset.posterFrame]]]) {
       await writeFile(new URL(name, output), data);
-      credits.push(`- \`core/${name}\`: ${data.length} bytes; SHA-256 \`${createHash('sha256').update(data).digest('hex')}\`.`);
+      credits.push(`- \`${group}/${name}\`: ${data.length} bytes; SHA-256 \`${createHash('sha256').update(data).digest('hex')}\`.`);
     }
     credits.push('');
     console.log(`${asset.id} | ${asset.slug} | poster ${frames[asset.posterFrame].length} B | animation ${animated.length} B | originals ${originalBytes} B | ${dimensions}`);

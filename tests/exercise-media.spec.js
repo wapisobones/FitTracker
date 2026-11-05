@@ -88,9 +88,9 @@ test('Doce Core: miniaturas, secuencias locales a demanda, detención, cierre y 
     expect(await page.evaluate(() => ({ connected: window.testSequence.isConnected, src: window.testSequence.getAttribute('src') }))).toEqual({ connected: false, src: null });
   }
   expect(requests.some((url) => /recursos-originales|\.jpg(?:\?|$)|\/media\/core\/|\.(webm|mp4)(?:\?|$)/i.test(url))).toBe(false);
-  await page.locator('[data-muscle="Pecho"]').click();
-  await triggerFor(page, 'Press de banca').click();
-  await expect(dialogFor(page, 'Press de banca').locator('.media-sources')).toHaveCount(0);
+  await page.locator('[data-muscle="Espalda"]').click();
+  await triggerFor(page, 'Remo en polea').click();
+  await expect(dialogFor(page, 'Remo en polea').locator('.media-sources')).toHaveCount(0);
   await page.keyboard.press('Escape');
   expect(await readDatabase(page, 'personal')).toEqual(before);
 });
@@ -115,7 +115,7 @@ test('Sin archivos, Plancha alta con toques de hombro recupera SVG; otros grupos
   await expect(dialog.locator('.media-status')).toContainText('No se pudo cargar la secuencia');
   await expect(dialog.locator('.technique-illustration svg')).toBeVisible();
   await page.keyboard.press('Escape');
-  for (const group of ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos']) {
+  for (const group of ['Espalda', 'Piernas', 'Hombros', 'Brazos']) {
     await page.locator(`[data-muscle="${group}"]`).click();
     await expect(page.locator('.exercise-card')).toHaveCount(12);
     await expect(page.locator('.exercise-card img')).toHaveCount(0);
