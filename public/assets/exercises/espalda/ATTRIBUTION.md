@@ -1,13 +1,14 @@
 # FitTracker — recursos visuales locales de Espalda
 
-Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.
-Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.
+Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.
+Licencia de esos JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.
+El par PNG de Jalón de brazos rectos en polea fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.
 Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.
 Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).
 
 Preparación: `pnpm prepare:exercise-assets --group=espalda`, sin red ni dependencias nuevas.
 Originales intactos y excluidos del build. Core, Pecho y sus atribuciones se conservan sin cambios.
-Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.
+Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte; ajuste proporcional con bandas carbón cuando corresponde.
 Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.
 Diez correspondencias exactas y dos aproximadas (elevación en Y y elevación corta de tronco), indicadas en sus secciones.
 Los doce ejercicios conservan SVG como respaldo de carga.
@@ -59,12 +60,14 @@ Referencia: **One-Arm Dumbbell Row**, coincidencia **exacta**.
 
 ## Jalón de brazos rectos en polea — c1700000-0000-4000-8000-000000000034
 
-Originales: `espalda_06_jalon_de_brazos_rectos_en_polea_0.jpg` y `espalda_06_jalon_de_brazos_rectos_en_polea_1.jpg` (850 × 567; 133283 bytes entre ambos).
+Originales: `espalda_06_jalon_de_brazos_rectos_en_polea_0.png` y `espalda_06_jalon_de_brazos_rectos_en_polea_1.png` (972 × 972 y 953 × 997; 2449112 bytes entre ambos).
 Referencia: **Straight-Arm Pulldown**, coincidencia **exacta**.
 
 
-- `espalda/jalon-de-brazos-rectos-en-polea.webp`: 46558 bytes; SHA-256 `316fcd7d7cceeb0f2fa19a9bdc732e56fa0812b92a08a0bb3e8fc90347e78b51`.
-- `espalda/jalon-de-brazos-rectos-en-polea-poster.webp`: 23808 bytes; SHA-256 `f93e912d3c5ab1c8ce053b75364f7e80919fd9fbaa05c03ea7e0fc5ad4215356`.
+Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. La referencia anterior del JSON corresponde a los JPG sustituidos; el par PNG actual se documenta en `src/data/back-visual-assets.js`.
+
+- `espalda/jalon-de-brazos-rectos-en-polea.webp`: 20220 bytes; SHA-256 `fe26c47aa7e54c9e4055bfa0f03e579ca46c08f27a56348706b0eb09d57456ce`.
+- `espalda/jalon-de-brazos-rectos-en-polea-poster.webp`: 10834 bytes; SHA-256 `bc014b9b789464f7b7dc6e8aea98d707ab47853f958bee2ec966e0c444ae1b29`.
 
 ## Remo alto en máquina con codos abiertos — c1700000-0000-4000-8000-000000000035
 

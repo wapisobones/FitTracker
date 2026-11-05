@@ -81,10 +81,11 @@ for (const asset of assets) {
   const exercise = BASE_EXERCISES.find((item) => item.id === asset.id);
   const entry = reference.find((item) => item.grupo === groupName && item.nombre === asset.name);
   const names = [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`);
-  const referenceMatches = asset.provenance === 'user-provided'
+  const referenceNames = [0, 1].map((index) => `imagenes/${asset.originalStem}_${index}.${asset.referenceExtension ?? asset.extension}`);
+  const referenceMatches = asset.provenance === 'user-provided' && !asset.referenceExtension
     ? entry?.coincidencia === 'sin_resultado' && entry.imagenes.length === 0
     : entry?.nombre_en_base === asset.sourceName && entry.coincidencia === asset.match
-      && JSON.stringify(entry.imagenes) === JSON.stringify(names.map((name) => `imagenes/${name}`));
+      && JSON.stringify(entry.imagenes) === JSON.stringify(referenceNames);
   if (exercise?.name !== asset.name || exercise.mainMuscle !== groupName || !referenceMatches) {
     throw new Error(`Catalog/reference mismatch: ${asset.name}`);
   }
@@ -98,18 +99,19 @@ try {
   await page.goto('https://fittracker-assets.invalid/');
   const outputs = [];
   for (const { asset, originals } of inputs) {
-    const encoded = await page.evaluate(async ({ inputs, width, height, mime }) => {
+    const encoded = await page.evaluate(async ({ inputs, width, height, mime, provided }) => {
       const canvas = document.createElement('canvas');
       canvas.width = width; canvas.height = height;
       const context = canvas.getContext('2d', { alpha: false });
       const results = [];
-      let originalWidth, originalHeight;
+      const dimensions = [];
       for (const input of inputs) {
         const image = new Image();
         image.src = `data:${mime};base64,${input}`;
         await image.decode();
-        if (!originalWidth) { originalWidth = image.naturalWidth; originalHeight = image.naturalHeight; }
-        if (image.naturalWidth !== originalWidth || image.naturalHeight !== originalHeight) throw new Error('Pair dimensions differ; review required.');
+        const originalWidth = image.naturalWidth, originalHeight = image.naturalHeight;
+        if (!provided && dimensions.length && dimensions[0] !== `${originalWidth} × ${originalHeight}`) throw new Error('Pair dimensions differ; review required.');
+        dimensions.push(`${originalWidth} × ${originalHeight}`);
         context.fillStyle = '#0b121b';
         context.fillRect(0, 0, width, height);
         // Keep the approved pilot rounding. Fit wide/portrait originals inside
@@ -124,8 +126,8 @@ try {
         if (!data.startsWith('data:image/webp;base64,')) throw new Error('WebP encoding is unavailable.');
         results.push(data.split(',')[1]);
       }
-      return { frames: results, originalWidth, originalHeight };
-    }, { inputs: originals.map((buffer) => buffer.toString('base64')), width, height, mime: asset.extension === 'png' ? 'image/png' : 'image/jpeg' });
+      return { frames: results, dimensions: [...new Set(dimensions)].join(' y ') };
+    }, { inputs: originals.map((buffer) => buffer.toString('base64')), width, height, mime: asset.extension === 'png' ? 'image/png' : 'image/jpeg', provided: asset.provenance === 'user-provided' });
     const frames = encoded.frames.map((data) => Buffer.from(data, 'base64'));
     const animated = animation(frames); // 0 -> 1 -> 0 via loop; never duplicate frame 0.
     const decoded = await page.evaluate(async (data) => {
@@ -141,7 +143,7 @@ try {
       } finally { decoder.close(); }
     }, animated.toString('base64'));
     if (decoded !== 2) throw new Error(`Expected exactly two animation frames: ${asset.name}`);
-    outputs.push({ asset, frames, animated, originalBytes: originals.reduce((size, buffer) => size + buffer.length, 0), dimensions: `${encoded.originalWidth} × ${encoded.originalHeight}` });
+    outputs.push({ asset, frames, animated, originalBytes: originals.reduce((size, buffer) => size + buffer.length, 0), dimensions: encoded.dimensions });
   }
   // Only write after all mappings, originals and decoded animations pass review checks.
   await mkdir(output, { recursive: true });
@@ -172,13 +174,14 @@ try {
     'Los doce ejercicios conservan SVG como respaldo de carga.', '',
   ] : [
     '# FitTracker — recursos visuales locales de Espalda', '',
-    'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
-    'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia de esos JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'El par PNG de Jalón de brazos rectos en polea fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.',
     'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
     'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
     'Preparación: `pnpm prepare:exercise-assets --group=espalda`, sin red ni dependencias nuevas.',
     'Originales intactos y excluidos del build. Core, Pecho y sus atribuciones se conservan sin cambios.',
-    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte; ajuste proporcional con bandas carbón cuando corresponde.',
     'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Diez correspondencias exactas y dos aproximadas (elevación en Y y elevación corta de tronco), indicadas en sus secciones.',
     'Los doce ejercicios conservan SVG como respaldo de carga.', '',
@@ -187,7 +190,9 @@ try {
     credits.push(`## ${asset.name} — ${asset.id}`, '',
       `Originales: \`${asset.originalStem}_0.${asset.extension}\` y \`${asset.originalStem}_1.${asset.extension}\` (${dimensions}; ${originalBytes} bytes entre ambos).`,
       `Referencia: **${asset.sourceName}**, coincidencia **${asset.match}**.`, asset.note, '');
-    if (asset.provenance === 'user-provided') credits.push('Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/core-visual-assets.js`.', '');
+    if (asset.provenance === 'user-provided') credits.push(asset.referenceExtension
+      ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. La referencia anterior del JSON corresponde a los JPG sustituidos; el par PNG actual se documenta en `src/data/back-visual-assets.js`.'
+      : 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/core-visual-assets.js`.', '');
     for (const [name, data] of [[`${asset.slug}.webp`, animated], [`${asset.slug}-poster.webp`, frames[asset.posterFrame]]]) {
       await writeFile(new URL(name, output), data);
       credits.push(`- \`${group}/${name}\`: ${data.length} bytes; SHA-256 \`${createHash('sha256').update(data).digest('hex')}\`.`);

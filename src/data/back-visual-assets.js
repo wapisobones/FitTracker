@@ -16,8 +16,8 @@ const pairs = [
     'Remo unilateral con una mano y una rodilla apoyadas en banco, mancuerna suspendida.',
     'Remo a una mano: mancuerna suspendida y elevada junto al tronco con apoyo en banco.'],
   [34, 'espalda_06_jalon_de_brazos_rectos_en_polea', 'jalon-de-brazos-rectos-en-polea', 'Jalón de brazos rectos en polea', 'Straight-Arm Pulldown',
-    'Jalón de brazos rectos de pie ante una polea, con la barra al frente.',
-    'Jalón de brazos rectos: barra al frente y descendida hacia los muslos.'],
+    'Fase 1: inicio del jalón de brazos rectos, con el tronco inclinado y la barra al frente.',
+    'Jalón de brazos rectos: fase inicial con la barra al frente y fase de jalón hacia los muslos.'],
   [35, 'espalda_07_remo_alto_en_maquina_con_codos_abiertos', 'remo-alto-en-maquina-con-codos-abiertos', 'Remo alto en máquina con codos abiertos', 'Leverage High Row',
     'Remo alto sentado en máquina de palancas, con los brazos elevados hacia los agarres.',
     'Remo alto en máquina: brazos extendidos y agarres acercados al tronco.'],
@@ -41,7 +41,10 @@ const pairs = [
 export const BACK_VISUAL_ASSETS = Object.freeze(pairs.map(([suffix, originalStem, slug, name, sourceName, alt, sequenceAlt]) => Object.freeze({
   id: `c1700000-0000-4000-8000-${String(suffix).padStart(12, '0')}`,
   originalStem, slug, name, sourceName, alt, sequenceAlt,
-  extension: 'jpg', provenance: 'free-exercise-db', posterFrame: 0,
+  extension: suffix === 34 ? 'png' : 'jpg',
+  provenance: suffix === 34 ? 'user-provided' : 'free-exercise-db',
+  ...(suffix === 34 ? { referenceExtension: 'jpg' } : {}),
+  posterFrame: 0,
   match: [38, 40].includes(suffix) ? 'aproximada' : 'exacta',
   note: suffix === 38
     ? 'Correspondencia aproximada: las fotografías muestran una elevación frontal con mancuernas sobre banco inclinado, sin mostrar claramente la apertura en Y. Sigue los pasos del catálogo para formar la Y y empezar sin carga externa.'

@@ -64,7 +64,7 @@ export function mediaUrl(path) {
 export function verifiedResource(resource, kind) {
   if (!resource || resource.status !== 'verified' || !resource.checkedAt || !resource.author || !resource.title) return null;
   const provided = resource.provenance === 'user-provided';
-  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/core\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
+  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/(?:core|espalda)\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
   if (!provided && (!resource.license || !secureLink(resource.sourceUrl) || !secureLink(resource.licenseUrl)
     || (resource.authorUrl && !secureLink(resource.authorUrl)))) return null;
   if (['thumbnail', 'animation'].includes(kind) && (resource.type !== 'image' || !resource.alt || !(resource.width > 0 && resource.height > 0))) return null;

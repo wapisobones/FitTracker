@@ -43,7 +43,7 @@ test('Correspondencias locales por ID, fuente y nombres reales; sin medios activ
       const exercise = BASE_EXERCISES.find((item) => item.id === asset.id);
       assert.equal(exercise.name, asset.name);
       const entry = reference.find((item) => item.grupo === groupName && item.nombre === asset.name);
-      if (asset.provenance === 'user-provided') {
+      if (asset.provenance === 'user-provided' && !asset.referenceExtension) {
         assert.equal(entry.coincidencia, 'sin_resultado');
         assert.deepEqual(entry.imagenes, []);
         assert.equal(asset.extension, 'png');
