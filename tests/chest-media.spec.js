@@ -132,16 +132,3 @@ test('Pecho: movimiento reducido impide la animación y la detiene al activarse'
   await expect(dialog.locator('.exercise-media-still')).toBeVisible();
   await expect(play).toBeDisabled();
 });
-
-test('Piernas, Hombros y Brazos mantienen SVG y no ofrecen créditos inexistentes', async ({ page }) => {
-  await openChest(page);
-  for (const group of ['Piernas', 'Hombros', 'Brazos']) {
-    await page.locator(`[data-muscle="${group}"]`).click();
-    await expect(page.locator('.exercise-card')).toHaveCount(12);
-    await expect(page.locator('.exercise-card img')).toHaveCount(0);
-    await expect(page.locator('.exercise-card svg.exercise-visual')).toHaveCount(12);
-  }
-  await page.locator('[data-muscle="Piernas"]').click();
-  await triggerFor(page, 'Sentadilla con barra').click();
-  await expect(dialogFor(page, 'Sentadilla con barra').locator('.media-sources')).toHaveCount(0);
-});

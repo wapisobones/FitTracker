@@ -88,14 +88,10 @@ test('Doce Core: miniaturas, secuencias locales a demanda, detención, cierre y 
     expect(await page.evaluate(() => ({ connected: window.testSequence.isConnected, src: window.testSequence.getAttribute('src') }))).toEqual({ connected: false, src: null });
   }
   expect(requests.some((url) => /recursos-originales|\.jpg(?:\?|$)|\/media\/core\/|\.(webm|mp4)(?:\?|$)/i.test(url))).toBe(false);
-  await page.locator('[data-muscle="Piernas"]').click();
-  await triggerFor(page, 'Sentadilla con barra').click();
-  await expect(dialogFor(page, 'Sentadilla con barra').locator('.media-sources')).toHaveCount(0);
-  await page.keyboard.press('Escape');
   expect(await readDatabase(page, 'personal')).toEqual(before);
 });
 
-test('Sin archivos, Plancha alta con toques de hombro recupera SVG; otros grupos conservan SVG', async ({ page }) => {
+test('Sin archivos, Plancha alta con toques de hombro recupera SVG', async ({ page }) => {
   await page.route('**/assets/exercises/core/plancha-toque-hombro*.webp', (route) => route.abort());
   await openCore(page);
   const name = 'Plancha alta con toques de hombro';
@@ -115,12 +111,6 @@ test('Sin archivos, Plancha alta con toques de hombro recupera SVG; otros grupos
   await expect(dialog.locator('.media-status')).toContainText('No se pudo cargar la secuencia');
   await expect(dialog.locator('.technique-illustration svg')).toBeVisible();
   await page.keyboard.press('Escape');
-  for (const group of ['Piernas', 'Hombros', 'Brazos']) {
-    await page.locator(`[data-muscle="${group}"]`).click();
-    await expect(page.locator('.exercise-card')).toHaveCount(12);
-    await expect(page.locator('.exercise-card img')).toHaveCount(0);
-    await expect(page.locator('.exercise-card svg.exercise-visual')).toHaveCount(12);
-  }
 });
 
 for (const posterFails of [false, true]) {

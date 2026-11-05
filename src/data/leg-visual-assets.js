@@ -1,0 +1,50 @@
+// Reviewed local Piernas pairs, explicitly linked to existing catalog IDs.
+const pairs = [
+  [9, 'piernas_01_sentadilla_con_barra', 'sentadilla-con-barra', 'Sentadilla con barra', 'Barbell Full Squat',
+    'Sentadilla con barra sobre la espalda alta, de pie ante el soporte.',
+    'Sentadilla con barra: posición de pie y descenso con caderas y rodillas flexionadas.'],
+  [10, 'piernas_02_prensa_de_piernas', 'prensa-de-piernas', 'Prensa de piernas', 'Leg Press',
+    'Prensa inclinada con la espalda apoyada, pies en la plataforma y piernas extendidas.',
+    'Prensa de piernas: plataforma alejada y acercada al flexionar las rodillas.'],
+  [11, 'piernas_03_peso_muerto_rumano', 'peso-muerto-rumano', 'Peso muerto rumano', 'Romanian Deadlift',
+    'Peso muerto rumano con el tronco inclinado y la barra delante de las piernas.',
+    'Peso muerto rumano: cadera atrás con la barra baja y posición erguida con la barra junto a los muslos.'],
+  [12, 'piernas_04_zancadas', 'zancadas', 'Zancadas', 'Dumbbell Lunges',
+    'Zancada con mancuernas a los lados, un pie adelantado y el tronco erguido.',
+    'Zancadas con mancuernas: paso amplio y descenso flexionando ambas rodillas.'],
+  [41, 'piernas_05_hip_thrust_con_barra', 'hip-thrust-con-barra', 'Hip thrust con barra', 'Barbell Hip Thrust',
+    'Hip thrust con la espalda alta apoyada en un banco, barra sobre la cadera y pelvis baja.',
+    'Hip thrust con barra: pelvis baja y elevada con apoyo de la espalda alta en un banco.'],
+  [42, 'piernas_06_puente_de_gluteos_en_el_suelo', 'puente-de-gluteos-en-el-suelo', 'Puente de glúteos en el suelo', 'Butt Lift (Bridge)',
+    'Puente de glúteos tumbado en colchoneta, con las rodillas flexionadas y la pelvis apoyada.',
+    'Puente de glúteos en el suelo: pelvis apoyada y elevada con los pies y la espalda alta apoyados.'],
+  [43, 'piernas_07_curl_femoral_tumbado_en_maquina', 'curl-femoral-tumbado-en-maquina', 'Curl femoral tumbado en máquina', 'Lying Leg Curls',
+    'Curl femoral tumbado boca abajo en máquina, con las piernas extendidas bajo el rodillo.',
+    'Curl femoral tumbado: piernas extendidas y rodillas flexionadas acercando los talones a los glúteos.'],
+  [44, 'piernas_08_aduccion_de_cadera_en_maquina', 'aduccion-de-cadera-en-maquina', 'Aducción de cadera en máquina', 'Thigh Adductor',
+    'Aducción de cadera sentado en máquina, con las piernas separadas contra los apoyos interiores.',
+    'Aducción de cadera en máquina: piernas separadas y acercadas hacia el centro.'],
+  [45, 'piernas_09_abduccion_de_cadera_en_maquina', 'abduccion-de-cadera-en-maquina', 'Abducción de cadera en máquina', 'Thigh Abductor',
+    'Abducción de cadera sentado en máquina, con las piernas juntas contra los apoyos exteriores.',
+    'Abducción de cadera en máquina: piernas juntas y separadas hacia los lados.'],
+  [46, 'piernas_10_elevacion_de_talones_de_pie_en_maquina', 'elevacion-de-talones-de-pie-en-maquina', 'Elevación de talones de pie en máquina', 'Standing Calf Raises',
+    'Elevación de talones de pie en máquina, con los hombros bajo los apoyos y los talones bajos.',
+    'Elevación de talones de pie en máquina: talones bajos y elevados con apoyo del antepié.'],
+  [47, 'piernas_11_elevacion_de_talones_sentado_en_maquina', 'elevacion-de-talones-sentado-en-maquina', 'Elevación de talones sentado en máquina', 'Seated Calf Raise',
+    'Elevación de talones sentado en máquina, con las rodillas flexionadas y los muslos bajo el apoyo.',
+    'Elevación de talones sentado en máquina: descenso y elevación de los talones manteniendo las rodillas flexionadas.'],
+  [48, 'piernas_12_elevacion_puntas_con_apoyo_en_pared', 'elevacion-de-puntas-con-apoyo-en-pared', 'Elevación de puntas con apoyo en pared', 'Imágenes proporcionadas para FitTracker',
+    'Fase 1: pies apoyados en el suelo y espalda junto a la pared para la elevación de puntas.',
+    'Elevación de puntas con apoyo en pared: pies apoyados y puntas elevadas con los talones en el suelo.'],
+];
+
+export const LEG_VISUAL_ASSETS = Object.freeze(pairs.map(([suffix, originalStem, slug, name, sourceName, alt, sequenceAlt]) => Object.freeze({
+  id: `c1700000-0000-4000-8000-${String(suffix).padStart(12, '0')}`,
+  originalStem, slug, name, sourceName, alt, sequenceAlt,
+  extension: suffix === 48 ? 'png' : 'jpg',
+  provenance: suffix === 48 ? 'user-provided' : 'free-exercise-db', posterFrame: 0,
+  match: suffix === 48 ? 'local' : 'exacta', note: '', checkedAt: '2026-11-05',
+})));
+
+// All twelve exercises have reviewed pairs; failed images still reveal the SVG.
+export const LEG_VISUAL_FALLBACKS = Object.freeze([]);

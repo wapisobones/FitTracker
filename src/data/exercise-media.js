@@ -1,12 +1,15 @@
 import { CORE_VISUAL_ASSETS } from './core-visual-assets.js';
 import { CHEST_VISUAL_ASSETS } from './chest-visual-assets.js';
 import { BACK_VISUAL_ASSETS } from './back-visual-assets.js';
+import { LEG_VISUAL_ASSETS } from './leg-visual-assets.js';
+import { SHOULDER_VISUAL_ASSETS } from './shoulder-visual-assets.js';
+import { ARM_VISUAL_ASSETS } from './arm-visual-assets.js';
 
 // Editorial manifest only. Never read media URLs from IndexedDB or backups.
-// Reviewed Core, Pecho and Espalda pairs. Missing/failed assets fall back to SVG.
+// Reviewed local pairs. Missing/failed assets fall back to the existing SVG.
 function localPair(asset, group = 'core') {
   const rights = {
-    status: 'verified', checkedAt: '2026-11-04', author: 'free-exercise-db',
+    status: 'verified', checkedAt: asset.checkedAt ?? '2026-11-04', author: 'free-exercise-db',
     title: `${asset.sourceName} — ${asset.name}`,
     sourceUrl: 'https://github.com/yuhonas/free-exercise-db',
     license: 'Unlicense', licenseUrl: 'https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE',
@@ -40,6 +43,9 @@ export const EXERCISE_MEDIA = Object.freeze({
   ...Object.fromEntries(CORE_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset)])),
   ...Object.fromEntries(CHEST_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'pecho')])),
   ...Object.fromEntries(BACK_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'espalda')])),
+  ...Object.fromEntries(LEG_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'piernas')])),
+  ...Object.fromEntries(SHOULDER_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'hombros')])),
+  ...Object.fromEntries(ARM_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'brazos')])),
 });
 
 const secureLink = (value) => {
@@ -64,7 +70,7 @@ export function mediaUrl(path) {
 export function verifiedResource(resource, kind) {
   if (!resource || resource.status !== 'verified' || !resource.checkedAt || !resource.author || !resource.title) return null;
   const provided = resource.provenance === 'user-provided';
-  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/(?:core|espalda)\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
+  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/(?:core|espalda|piernas|hombros)\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
   if (!provided && (!resource.license || !secureLink(resource.sourceUrl) || !secureLink(resource.licenseUrl)
     || (resource.authorUrl && !secureLink(resource.authorUrl)))) return null;
   if (['thumbnail', 'animation'].includes(kind) && (resource.type !== 'image' || !resource.alt || !(resource.width > 0 && resource.height > 0))) return null;

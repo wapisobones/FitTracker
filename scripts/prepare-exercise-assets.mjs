@@ -1,4 +1,4 @@
-// Offline preparation of reviewed Core/Pecho/Espalda pairs. Default stays Core.
+// Offline preparation of reviewed exercise pairs. Default stays Core.
 // Reuses the installed Playwright browser to resize and encode WebP frames.
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -6,6 +6,9 @@ import { chromium } from '@playwright/test';
 import { CORE_VISUAL_ASSETS } from '../src/data/core-visual-assets.js';
 import { CHEST_VISUAL_ASSETS } from '../src/data/chest-visual-assets.js';
 import { BACK_VISUAL_ASSETS } from '../src/data/back-visual-assets.js';
+import { LEG_VISUAL_ASSETS, LEG_VISUAL_FALLBACKS } from '../src/data/leg-visual-assets.js';
+import { SHOULDER_VISUAL_ASSETS, SHOULDER_VISUAL_FALLBACKS } from '../src/data/shoulder-visual-assets.js';
+import { ARM_VISUAL_ASSETS } from '../src/data/arm-visual-assets.js';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
 
 const root = new URL('../', import.meta.url);
@@ -14,11 +17,11 @@ const height = 427;
 const duration = 900;
 const args = process.argv.slice(2);
 if (args.some((arg) => !/^--(?:group|only)=[a-z0-9-]+$/.test(arg))
-  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho|espalda] [--only=<slug>]');
+  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho|espalda|piernas|hombros|brazos] [--only=<slug>]');
 const group = args.find((arg) => arg.startsWith('--group='))?.slice('--group='.length) ?? 'core';
-const groups = { core: ['Core', CORE_VISUAL_ASSETS], pecho: ['Pecho', CHEST_VISUAL_ASSETS], espalda: ['Espalda', BACK_VISUAL_ASSETS] };
+const groups = { core: ['Core', CORE_VISUAL_ASSETS], pecho: ['Pecho', CHEST_VISUAL_ASSETS], espalda: ['Espalda', BACK_VISUAL_ASSETS], piernas: ['Piernas', LEG_VISUAL_ASSETS, LEG_VISUAL_FALLBACKS], hombros: ['Hombros', SHOULDER_VISUAL_ASSETS, SHOULDER_VISUAL_FALLBACKS], brazos: ['Brazos', ARM_VISUAL_ASSETS] };
 if (!Object.hasOwn(groups, group)) throw new Error(`Unapproved group: ${group}`);
-const [groupName, assets] = groups[group];
+const [groupName, assets, fallbacks = []] = groups[group];
 const output = new URL(`public/assets/exercises/${group}/`, root);
 const onlySlug = args.find((arg) => arg.startsWith('--only='))?.slice('--only='.length);
 const selectedAsset = assets.find((asset) => asset.slug === onlySlug);
@@ -75,7 +78,12 @@ function animation(frames) {
 const reference = JSON.parse(await readFile(new URL('recursos-originales/ejercicios.json', root), 'utf8'));
 const originalFiles = (await readdir(new URL(`recursos-originales/${group}/`, root))).filter((name) => /\.(jpg|png)$/.test(name)).sort();
 const expectedFiles = assets.flatMap((asset) => [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`)).sort();
-if (assets.length !== 12 || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error(`Review required: expected exactly the twelve approved ${groupName} pairs.`);
+if (assets.length + fallbacks.length !== 12 || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error(`Review required: expected exactly ${assets.length} reviewed ${groupName} pairs and ${fallbacks.length} SVG fallbacks.`);
+for (const fallback of fallbacks) {
+  const exercise = BASE_EXERCISES.find((item) => item.id === fallback.id);
+  const entry = reference.find((item) => item.grupo === groupName && item.nombre === fallback.name);
+  if (exercise?.name !== fallback.name || exercise.mainMuscle !== groupName || entry?.coincidencia !== 'sin_resultado' || entry.imagenes.length !== 0) throw new Error(`Fallback review required: ${fallback.name}`);
+}
 const inputs = [];
 for (const asset of assets) {
   const exercise = BASE_EXERCISES.find((item) => item.id === asset.id);
@@ -172,7 +180,7 @@ try {
     'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos), indicadas en sus secciones.',
     'Los doce ejercicios conservan SVG como respaldo de carga.', '',
-  ] : [
+  ] : group === 'espalda' ? [
     '# FitTracker — recursos visuales locales de Espalda', '',
     'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
     'Licencia de esos JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
@@ -185,6 +193,44 @@ try {
     'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
     'Diez correspondencias exactas y dos aproximadas (elevación en Y y elevación corta de tronco), indicadas en sus secciones.',
     'Los doce ejercicios conservan SVG como respaldo de carga.', '',
+  ] : group === 'piernas' ? [
+    '# FitTracker — recursos visuales locales de Piernas', '',
+    'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia de esos JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'El par PNG de Elevación de puntas con apoyo en pared fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.',
+    'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
+    'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
+    'Preparación: `pnpm prepare:exercise-assets --group=piernas`, sin red ni dependencias nuevas.',
+    'Originales intactos y excluidos del build. Los recursos y atribuciones de otros grupos se conservan sin cambios.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte; ajuste proporcional con bandas carbón cuando corresponde.',
+    'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
+    'Doce pares disponibles: once correspondencias exactas de free-exercise-db y un par local suministrado para Elevación de puntas con apoyo en pared.',
+    'Los doce ejercicios conservan SVG como respaldo de carga.', '',
+  ] : group === 'hombros' ? [
+    '# FitTracker — recursos visuales locales de Hombros', '',
+    'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia de esos once pares declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'El nuevo par JPG de Elevación lateral en máquina fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.',
+    'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
+    'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
+    'Preparación: `pnpm prepare:exercise-assets --group=hombros`, sin red ni dependencias nuevas.',
+    'Originales intactos y excluidos del build. Los recursos y atribuciones de otros grupos se conservan sin cambios.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte; ajuste proporcional con bandas carbón cuando corresponde.',
+    'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
+    'Diez correspondencias exactas y una aproximada (remo posterior); las variantes observadas se describen en sus secciones.',
+    'Doce pares disponibles: once de free-exercise-db y uno local suministrado para Elevación lateral en máquina. Todos conservan SVG como respaldo de carga.', '',
+  ] : [
+    '# FitTracker — recursos visuales locales de Brazos', '',
+    'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
+    'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
+    'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
+    'Preparación: `pnpm prepare:exercise-assets --group=brazos`, sin red ni dependencias nuevas.',
+    'Originales intactos y excluidos del build. Los recursos y atribuciones de los otros cinco grupos se conservan sin cambios.',
+    'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
+    'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
+    'Doce correspondencias exactas según el manifiesto. Las dos variantes de muñecas con apoyo en banco se describen en sus secciones.',
+    'Todos los ejercicios conservan SVG como respaldo de carga.', '',
   ];
   for (const { asset, frames, animated, originalBytes, dimensions } of outputs) {
     credits.push(`## ${asset.name} — ${asset.id}`, '',
@@ -192,7 +238,11 @@ try {
       `Referencia: **${asset.sourceName}**, coincidencia **${asset.match}**.`, asset.note, '');
     if (asset.provenance === 'user-provided') credits.push(asset.referenceExtension
       ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. La referencia anterior del JSON corresponde a los JPG sustituidos; el par PNG actual se documenta en `src/data/back-visual-assets.js`.'
-      : 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/core-visual-assets.js`.', '');
+      : group === 'piernas'
+        ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/leg-visual-assets.js`.'
+        : group === 'hombros'
+          ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/shoulder-visual-assets.js`.'
+          : 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/core-visual-assets.js`.', '');
     for (const [name, data] of [[`${asset.slug}.webp`, animated], [`${asset.slug}-poster.webp`, frames[asset.posterFrame]]]) {
       await writeFile(new URL(name, output), data);
       credits.push(`- \`${group}/${name}\`: ${data.length} bytes; SHA-256 \`${createHash('sha256').update(data).digest('hex')}\`.`);
@@ -200,6 +250,7 @@ try {
     credits.push('');
     console.log(`${asset.id} | ${asset.slug} | poster ${frames[asset.posterFrame].length} B | animation ${animated.length} B | originals ${originalBytes} B | ${dimensions}`);
   }
+  if (!onlySlug) for (const fallback of fallbacks) credits.push(`## ${fallback.name} — ${fallback.id}`, '', `${fallback.reason} Se conserva el SVG existente, sin animación ni atribución fotográfica.`, '');
   let nextCredits = credits.join('\n');
   const currentHeader = nextCredits.slice(0, nextCredits.indexOf('## '));
   if (onlySlug) {
