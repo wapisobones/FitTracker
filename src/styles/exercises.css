@@ -25,6 +25,27 @@
 .exercise-preview:hover { background: linear-gradient(145deg, #233d43, #122429); }
 .exercise-preview:focus-visible { outline-offset: -4px; }
 .exercise-visual { display: block; width: 100%; height: auto; }
+.exercise-media-still { position: relative; aspect-ratio: 300 / 170; width: 100%; overflow: hidden; background: #0b121b; border-radius: inherit; }
+.exercise-media-still > .exercise-visual { width: 100%; height: 100%; }
+.exercise-media-still > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+.exercise-media-still[data-media-state="ready"] > img { opacity: 1; }
+.exercise-media-still[data-media-state="ready"] > .exercise-visual { visibility: hidden; }
+.media-credit { color: var(--muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.media-credit a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.exercise-card-body > .media-credit { margin-top: auto; padding-top: 8px; }
+.technique-layout > *, .technique-copy { min-width: 0; }
+.technique-illustration .media-credit, .technique-illustration .media-description { text-align: left; font-size: 12px; line-height: 1.7; }
+.media-sources { margin-top: 4px; text-align: left; }
+.media-sources > summary { width: fit-content; max-width: 100%; min-height: 44px; padding: 12px 0; color: var(--muted); font-size: 12px; line-height: 20px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.media-sources > summary:hover { color: var(--text); }
+.media-sources > summary:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 4px; }
+.media-play { width: 100%; min-height: 44px; margin-bottom: 12px; white-space: normal; }
+.technique-illustration [hidden] { display: none; }
+.media-status:empty { display: none; }
+.technique-player { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 8px; background: #0b121b; margin-bottom: 12px; }
+.technique-player:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+img.technique-player { aspect-ratio: auto; object-fit: contain; }
+iframe.technique-player { min-height: 200px; }
 .preview-caption { display: block; padding: 4px 8px; text-align: left; font-size: 12px; color: #b4c8d0; }
 .technique-badge { position: absolute; right: 9px; top: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 7px; color: var(--lime); background: #0d1921ed; border: 1px solid #9bf45c30; border-radius: 7px; font-size: 12px; }
 .technique-badge .icon { width: 13px; height: 13px; }

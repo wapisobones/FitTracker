@@ -4,6 +4,7 @@ import { exerciseService } from './exercise-service.js';
 import { catalogFrame, equipmentOptions, regionOptions, exerciseCard, noMatches, techniqueView, editorView, deleteView } from './views.js';
 import { MUSCLE_REGIONS } from '../../data/muscle-taxonomy.js';
 import { openRoutineAssignment } from '../routines/add-from-catalog.js';
+import { mountExerciseMedia, loadDemonstration } from '../../components/exercise-media.js';
 
 const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 
@@ -12,6 +13,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   const service = exerciseService(mode);
   const events = new AbortController();
   const { signal } = events;
+  const media = mountExerciseMedia(root, signal);
   const form = root.querySelector('.catalog-filters');
   const grid = root.querySelector('.exercise-grid');
   const count = root.querySelector('.catalog-count');
@@ -27,6 +29,17 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   let focusTarget = () => form.elements.search;
   let loadNumber = 0;
   let assignment;
+  let stopDemonstration = () => {};
+
+  function stopMedia() {
+    stopDemonstration();
+    stopDemonstration = () => {};
+  }
+
+  function closeDialog() {
+    stopMedia();
+    dialog.close();
+  }
 
   function renderResults() {
     const matches = exercises.filter((exercise) => normalize(exercise.name).includes(normalize(filters.search.trim()))
@@ -35,6 +48,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       && (!filters.equipment || exercise.equipment === filters.equipment)
       && (!filters.difficulty || exercise.difficulty === filters.difficulty));
     grid.innerHTML = matches.length ? matches.map(exerciseCard).join('') : noMatches();
+    media.refresh();
     count.textContent = `${matches.length} de ${exercises.length} ejercicios${ready ? '' : ' · Biblioteca base'} `;
     root.querySelectorAll('[data-muscle]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.muscle === filters.muscle)));
   }
@@ -81,12 +95,14 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   }
 
   function open(kind, exercise, trigger) {
+    stopMedia();
     selected = exercise;
     const triggerAttribute = kind === 'technique' ? 'data-technique' : kind === 'delete' ? 'data-delete-exercise' : 'data-edit-exercise';
     focusTarget = () => exercise ? root.querySelector(`[${triggerAttribute}="${exercise.id}"]`) ?? form.elements.search : trigger;
     dialog.dataset.kind = kind;
     dialog.innerHTML = kind === 'technique' ? techniqueView(exercise) : kind === 'delete' ? deleteView(exercise) : editorView(exercise, mode);
     dialog.showModal();
+    media.refresh();
     if (kind === 'editor') dialog.querySelector('input').focus();
   }
 
@@ -111,7 +127,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       feedback.textContent = `Ejercicio ${editing ? 'actualizado' : 'creado'} en ${mode === 'demo' ? 'demostración' : 'modo personal'}. Se limpiaron los filtros para mostrarlo.`;
       focusTarget = () => root.querySelector(`[data-edit-exercise="${saved.id}"]`);
       setBusy(false);
-      dialog.close();
+      closeDialog();
     } catch (failure) {
       if (alive) { error.textContent = failure.message; setBusy(false); }
     }
@@ -132,7 +148,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       feedback.textContent = 'Ejercicio personalizado eliminado del modo actual.';
       focusTarget = () => root.querySelector('[data-create-exercise]');
       setBusy(false);
-      dialog.close();
+      closeDialog();
     } catch (failure) {
       if (alive) { error.textContent = failure.message; setBusy(false); }
     }
@@ -161,12 +177,16 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
     const button = event.target.closest('button');
     if (!button) return;
     if (button.hasAttribute('data-add-exercise-to-routine') && selected) {
-      dialog.close();
+      closeDialog();
       assignment?.destroy();
       assignment = openRoutineAssignment(root, mode, selected, () => { if (alive) focusTarget()?.focus(); });
     }
     else if (button.hasAttribute('data-create-exercise') && ready) open('editor', null, button);
-    else if (button.hasAttribute('data-close-exercise-dialog') && !busy) dialog.close();
+    else if (button.hasAttribute('data-load-demonstration') && selected && dialog.dataset.kind === 'technique') {
+      stopMedia();
+      stopDemonstration = loadDemonstration(dialog.querySelector('[data-technique-media]'), selected);
+    }
+    else if (button.hasAttribute('data-close-exercise-dialog') && !busy) closeDialog();
     else if (button.hasAttribute('data-clear-filters')) clearFilters();
     else if (button.hasAttribute('data-retry-exercises')) void load();
     else if (button.hasAttribute('data-muscle')) {
@@ -187,9 +207,12 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       if (exercise && (techniqueId || exercise.origin === 'custom')) open(techniqueId ? 'technique' : editId ? 'editor' : 'delete', exercise, button);
     }
   }, { signal });
-  dialog.addEventListener('cancel', (event) => { if (busy) event.preventDefault(); }, { signal });
+  dialog.addEventListener('cancel', (event) => { if (busy) event.preventDefault(); else stopMedia(); }, { signal });
   dialog.addEventListener('keydown', (event) => {
     if (event.key !== 'Tab') return;
+    // Let the native dialog contain focus when a player is present, so the
+    // browser's media controls retain their own keyboard navigation.
+    if (dialog.querySelector('video, iframe')) return;
     const controls = [...dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [href]')].filter((control) => control.getClientRects().length);
     const first = controls[0];
     const last = controls.at(-1);
@@ -204,7 +227,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       first.focus();
     }
   }, { signal });
-  dialog.addEventListener('close', () => { if (alive) focusTarget()?.focus(); }, { signal });
+  dialog.addEventListener('close', () => { stopMedia(); if (alive && !dialog.open) focusTarget()?.focus(); }, { signal });
   for (const name of ['search', 'muscle', 'difficulty']) form.elements[name].value = filters[name];
   updateEquipment();
   updateRegions();
@@ -215,6 +238,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
     getFilters: () => ({ ...filters }),
     destroy() {
       alive = false;
+      stopMedia();
       events.abort();
       assignment?.destroy();
       if (dialog.open) dialog.close();

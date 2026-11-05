@@ -1,5 +1,6 @@
 import { icon } from '../../components/icons.js';
-import { exerciseVisual } from '../../components/exercise-visual.js';
+import { exerciseMedia } from '../../data/exercise-media.js';
+import { exerciseStill, techniqueMedia, mediaCredit } from '../../components/exercise-media.js';
 import { MUSCLE_GROUPS, DIFFICULTIES, BASE_EXERCISES } from '../../data/exercises.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { MUSCLE_REGIONS, regionName } from '../../data/muscle-taxonomy.js';
@@ -27,10 +28,11 @@ export function regionOptions(group = '', selected = '') {
 
 export function exerciseCard(exercise) {
   const custom = exercise.origin === 'custom';
+  const { thumbnail } = exerciseMedia(exercise);
   const muscles = [exercise.mainMuscle, ...(exercise.mainRegion ? [regionName(exercise.mainRegion)] : [])].join(' · ');
-  return `<article class="card exercise-card" data-exercise-id="${exercise.id}"><button class="exercise-preview" type="button" data-technique="${exercise.id}" aria-label="Ver técnica de ${esc(exercise.name)}">${exerciseVisual(exercise)}<span class="preview-caption">${custom ? 'Grupo muscular' : 'Esquema orientativo'}</span><span class="technique-badge">Ver técnica ${icon('arrow')}</span></button>
+  return `<article class="card exercise-card" data-exercise-id="${exercise.id}"><button class="exercise-preview" type="button" data-technique="${exercise.id}" aria-label="Ver técnica de ${esc(exercise.name)}">${exerciseStill(exercise, { thumbnail, decorative: true })}<span class="preview-caption">${thumbnail ? thumbnail.provenance === 'user-provided' ? 'Imagen de referencia' : 'Fotografía de referencia' : custom ? 'Grupo muscular' : 'Esquema orientativo'}</span><span class="technique-badge">Ver técnica ${icon('arrow')}</span></button>
     <div class="exercise-card-body"><h2>${esc(exercise.name)}</h2><p class="exercise-attribute">${icon('target')}<span>${esc(muscles)}</span></p><p class="exercise-attribute">${icon('dumbbell')}<span>${esc(exercise.equipment)}</span></p><p class="exercise-attribute difficulty-${exercise.difficulty === 'Principiante' ? 'beginner' : exercise.difficulty === 'Sin especificar' ? 'unknown' : 'intermediate'}">${icon('chart')}<span>${esc(exercise.difficulty)}</span></p>
-    ${custom ? `<div class="custom-exercise-actions"><span>Personalizado</span><button class="icon-button" type="button" data-edit-exercise="${exercise.id}" aria-label="Editar ${esc(exercise.name)}">${icon('edit')}</button><button class="icon-button" type="button" data-delete-exercise="${exercise.id}" aria-label="Eliminar ${esc(exercise.name)}">${icon('trash')}</button></div>` : ''}</div></article>`;
+    ${mediaCredit(thumbnail, true)}${custom ? `<div class="custom-exercise-actions"><span>Personalizado</span><button class="icon-button" type="button" data-edit-exercise="${exercise.id}" aria-label="Editar ${esc(exercise.name)}">${icon('edit')}</button><button class="icon-button" type="button" data-delete-exercise="${exercise.id}" aria-label="Eliminar ${esc(exercise.name)}">${icon('trash')}</button></div>` : ''}</div></article>`;
 }
 
 export function noMatches() {
@@ -42,7 +44,8 @@ function dialogHeading(title) {
 }
 
 export function techniqueView(exercise) {
-  return `${dialogHeading(exercise.name)}<div class="technique-layout"><div class="technique-illustration">${exerciseVisual(exercise)}<p>Representación esquemática · No es un vídeo</p></div><div class="technique-copy"><p class="video-unavailable">${icon('info')}No hay un vídeo autorizado disponible para este ejercicio.</p>
+  const { video, animation } = exerciseMedia(exercise);
+  return `${dialogHeading(exercise.name)}<div class="technique-layout">${techniqueMedia(exercise)}<div class="technique-copy">${video ? '' : `<p class="video-unavailable">${icon('info')}${animation ? animation.provenance === 'user-provided' ? 'La demostración es una secuencia de dos imágenes, no un vídeo continuo.' : 'La demostración es una secuencia de dos fotografías, no un vídeo continuo.' : 'No hay un vídeo autorizado disponible para este ejercicio.'}</p>`}
     <section class="exercise-anatomy"><h3>Músculos del ejercicio</h3><dl><div><dt>Grupo general</dt><dd>${esc(exercise.mainMuscle)}</dd></div><div><dt>Región principal</dt><dd>${esc(regionName(exercise.mainRegion))}</dd></div><div><dt>Regiones secundarias</dt><dd>${exercise.secondaryRegions?.length ? exercise.secondaryRegions.map((id) => esc(regionName(id))).join(', ') : 'Sin regiones secundarias especificadas'}</dd></div></dl>${exercise.anatomyNote ? `<p>${esc(exercise.anatomyNote)}</p>` : ''}<p>Los secundarios son informativos. Las estadísticas cuentan cada serie solo en su grupo principal.</p></section>
     ${exercise.origin === 'base' ? `<section><h3>${icon('layers')}Cómo realizar el movimiento</h3><ol class="technique-steps">${exercise.technique.steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol></section><section class="technique-tips"><h3>${icon('check')}Recomendaciones técnicas</h3><ul>${exercise.technique.tips.map((tip) => `<li>${icon('check')}<span>${esc(tip)}</span></li>`).join('')}</ul></section>` : `<section><h3>Notas del ejercicio</h3><p class="exercise-notes">${exercise.notes ? esc(exercise.notes) : 'Este ejercicio aún no tiene notas técnicas. Puedes añadirlas al editarlo.'}</p></section>`}
     </div></div><div class="future-routine-action"><button class="button button-primary" type="button" data-add-exercise-to-routine>${icon('plus')}Añadir a rutina</button><p>Elige una rutina y sesión para guardar sus objetivos.</p></div>`;
