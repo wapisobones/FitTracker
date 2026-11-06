@@ -186,7 +186,10 @@ test('Catálogo integrado: destino nuevo y existente, contexto móvil y protecci
   const target = stored.routineSessions.find((session) => session.name === 'Refuerzo');
   await third.getByRole('combobox', { name: 'Sesión', exact: true }).selectOption(target.id);
   await third.getByRole('button', { name: 'Añadir ejercicio', exact: true }).click();
-  await modal(page, 'Ejercicio añadido').getByRole('link', { name: 'Ver rutina y objetivos', exact: true }).click();
+  await expect(third.getByRole('alert')).toContainText('ya pertenece a esta sesión');
+  expect(await readDatabase(page, 'personal')).toEqual(stored);
+  await third.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await page.goto(`./#/mis-rutinas?rutina=${target.routineId}&sesion=${target.id}&ambito=personal`);
   await expect(page.locator('.session-heading h3')).toHaveText('Refuerzo');
   await page.goBack();
   await expect(page.getByRole('searchbox', { name: 'Buscar por nombre', exact: true })).toHaveValue('Remo de banda propio');
@@ -198,7 +201,7 @@ test('Catálogo integrado: destino nuevo y existente, contexto móvil y protecci
   expect(result.routines).toHaveLength(1);
   expect(result.routineSessions).toHaveLength(2);
   expect(result.routineSessions.find((session) => session.name === 'Base').prescriptions).toHaveLength(1);
-  expect(result.routineSessions.find((session) => session.name === 'Refuerzo').prescriptions).toHaveLength(2);
+  expect(result.routineSessions.find((session) => session.name === 'Refuerzo').prescriptions).toHaveLength(1);
   for (const width of [320, 390]) { await page.setViewportSize({ width, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width); }
   await mkdir('.cache', { recursive: true });
   await page.screenshot({ path: '.cache/ft004-routines-mobile.png', fullPage: true });

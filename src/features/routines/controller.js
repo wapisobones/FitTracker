@@ -39,6 +39,17 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
   const selectedSession = () => selected()?.sessions.find((session) => session.id === sessionId);
   const message = (text) => { root.querySelector('.routine-feedback').textContent = text; };
 
+  function paintPicker(query = '') {
+    const added = new Set(selectedSession()?.prescriptions.map((item) => item.exerciseId));
+    const available = proposal ? exercises : exercises.filter((exercise) => !added.has(exercise.id));
+    const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(
+      available.filter((exercise) => normalize(exercise.name).includes(normalize(query))),
+      proposal ? undefined : available.length ? 'No hay ejercicios disponibles con ese nombre. Los que ya están en esta sesión no se muestran.' : 'Todos los ejercicios del catálogo ya están en esta sesión.',
+    );
+    technique.refresh();
+  }
+
   function paint() {
     if (!ready && routines.length === 0) {
       root.querySelector('.routine-list').innerHTML = '';
@@ -172,7 +183,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     } else if (button.dataset.sessionAction) {
       const kind = button.dataset.sessionAction;
       if (kind === 'add' || kind === 'edit') show(sessionForm(kind === 'edit' ? session : null, routine.sessions.length + 1), button, { editingSession: kind === 'edit' ? session : null });
-      else if (kind === 'add-exercise') { show(exercisePicker(), button); dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(exercises); technique.refresh(); }
+      else if (kind === 'add-exercise') { show(exercisePicker(!proposal), button); paintPicker(); }
       else {
         const draft = structuredClone(routine);
         const index = draft.sessions.findIndex((item) => item.id === session.id);
@@ -187,6 +198,12 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
       }
     } else if (button.dataset.pickExercise) {
       const exercise = exercises.find((item) => item.id === button.dataset.pickExercise);
+      if (!exercise) return;
+      if (!proposal && session.prescriptions.some((item) => item.exerciseId === exercise.id)) {
+        dialog.querySelector('.routine-form-error').textContent = 'Este ejercicio ya pertenece a esta sesión. Elige otro ejercicio.';
+        paintPicker(dialog.querySelector('[data-picker-search]').value);
+        return;
+      }
       const item = prescription(exercise.id);
       show(prescriptionForm(item, exercise), null, { item, adding: true });
     } else if (button.dataset.itemAction) {
@@ -208,6 +225,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     event.preventDefault();
     const fields = Object.fromEntries(new FormData(event.target));
     let draft;
+    let addition;
     let desiredSession = sessionId;
     if (kind === 'routine') draft = context.editing ? { ...structuredClone(context.editing), name: fields.name, description: fields.description } : newRoutine(fields.name, fields.description, fields.sessionName);
     else {
@@ -218,17 +236,18 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
       } else {
         const session = draft.sessions.find((entry) => entry.id === sessionId);
         const updated = { ...context.item, ...fields };
-        if (context.adding) session.prescriptions.push(updated);
+        if (context.adding) {
+          if (proposal) session.prescriptions.push(updated);
+          else addition = updated;
+        }
         else session.prescriptions = session.prescriptions.map((entry) => entry.id === updated.id ? updated : entry);
       }
     }
-    void perform(() => service.save(draft), (saved) => { sessionId = desiredSession; accept(saved); });
+    void perform(() => addition ? service.addExercise(selected(), sessionId, addition) : service.save(draft), (saved) => { sessionId = desiredSession; accept(saved); });
   }, { signal });
   root.addEventListener('input', (event) => {
     if (event.target.hasAttribute('data-picker-search')) {
-      const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(exercises.filter((exercise) => normalize(exercise.name).includes(normalize(event.target.value))));
-      technique.refresh();
+      paintPicker(event.target.value);
     }
   }, { signal });
   dialog.addEventListener('close', () => {

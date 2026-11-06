@@ -34,6 +34,8 @@ function exercise(number, name, mainMuscle, secondaryMuscles, equipment, difficu
     id: `c1700000-0000-4000-8000-${String(number).padStart(12, '0')}`,
     origin: 'base', name, mainMuscle, mainRegion, equipment, difficulty, visual,
     secondaryRegions: Object.freeze(secondaryRegions), tracking: number === 21 ? 'duration' : 'repetitions',
+    // Explicit exercise variants, independent of equipment and muscle group.
+    recordingMode: number === 21 ? 'duration' : [4, 8, 22, 23, 24, 30, 31, 32, 38, 39, 40, 42, 48, 66, 68, 72].includes(number) ? 'bodyweight_reps' : 'weight_reps',
     anatomyNote: [21, 22].includes(number) ? 'El abdomen trabaja como estabilizador; la clasificación no significa aislamiento muscular.' : number === 24 ? 'La región abdominal corresponde a la retroversión pélvica indicada. Los flexores de cadera también participan y no tienen región propia en este mapa.' : '',
     secondaryMuscles: Object.freeze(secondaryMuscles),
     technique: Object.freeze({ steps: Object.freeze(steps), tips: Object.freeze(tips) }),

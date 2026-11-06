@@ -3,6 +3,7 @@ import { assertMode, createRepository } from '../../db/repository.js';
 import { DATABASES } from '../../db/schema.js';
 import { transact } from '../../db/indexed-db.js';
 import { validateExerciseAnatomy } from '../../data/muscle-taxonomy.js';
+import { recordingMode } from '../../data/recording-modes.js';
 
 const baseIds = new Set(BASE_EXERCISES.map((exercise) => exercise.id));
 const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
@@ -18,7 +19,7 @@ export function validateExerciseInput(input) {
   if (notes.length > 2000 || controls.test(notes)) throw new Error('Las notas admiten hasta 2000 caracteres válidos.');
   const difficulty = input.difficulty ?? 'Sin especificar';
   if (!DIFFICULTIES.includes(difficulty)) throw new Error('Selecciona una dificultad válida.');
-  return { name, mainMuscle: input.mainMuscle, equipment, notes, difficulty, ...validateExerciseAnatomy(input) };
+  return { name, mainMuscle: input.mainMuscle, equipment, notes, difficulty, recordingMode: recordingMode(input), ...validateExerciseAnatomy(input) };
 }
 
 function validateStored(record) {

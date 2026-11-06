@@ -59,6 +59,7 @@
 .workout-notes { white-space: pre-wrap; overflow-wrap: anywhere; }
 .workout-set-header, .workout-set { display: grid; grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) 52px; gap: 10px; align-items: center; text-align: center; }
 .workout-set-header { font-size: 12px; color: var(--muted); padding-bottom: 8px; }
+.workout-set-header.single-value, .workout-set.single-value { grid-template-columns: 38px minmax(0, 1fr) 52px; }
 .workout-sets { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .workout-set { padding: 8px 0; border-radius: 9px; border-bottom: 1px solid #303e4c77; }
 .workout-set.completed { background: #9bf45c0c; box-shadow: inset 3px 0 var(--lime); }
@@ -130,6 +131,7 @@
   .workout-exercise-state { display: none; }
   .workout-number { width: 29px; height: 29px; }
   .workout-set-header, .workout-set { grid-template-columns: 29px minmax(0, 1fr) minmax(0, 1fr) 48px; gap: 8px; }
+  .workout-set-header.single-value, .workout-set.single-value { grid-template-columns: 29px minmax(0, 1fr) 48px; }
   .workout-chooser { padding: 20px 16px; }
   .workout-chooser select { font-size: 16px; }
   .workout-rest { padding: 14px 12px; }

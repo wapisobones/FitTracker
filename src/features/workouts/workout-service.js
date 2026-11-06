@@ -3,7 +3,8 @@ import { DATABASES } from '../../db/schema.js';
 import { transact, storageError } from '../../db/indexed-db.js';
 import { BASE_EXERCISES } from '../../data/exercises.js';
 import { hydrateRoutine } from '../routines/model.js';
-import { ACTIVE_STATUSES, FINAL_STATUSES, assertDraft, realValues, restRemaining, progress } from './model.js';
+import { ACTIVE_STATUSES, FINAL_STATUSES, assertDraft, recordedValues, validRecordedSet, restRemaining, progress } from './model.js';
+import { recordingMode } from '../../data/recording-modes.js';
 
 const stores = ['workouts', 'setRecords', 'settings', 'routines', 'routineSessions', 'exercises'];
 const pointerId = 'active-workout';
@@ -49,13 +50,18 @@ export function workoutService(mode) {
     return updated;
   }
 
-  function lastReferences(records, exerciseId) {
+  function lastReferences(records, exerciseId, mode) {
     const history = records.workouts.filter((item) => FINAL_STATUSES.includes(item.status) && Number.isFinite(Date.parse(item.endedAt)))
       .sort((a, b) => b.endedAt.localeCompare(a.endedAt) || b.id.localeCompare(a.id));
     for (const workout of history) {
       const valid = records.setRecords.filter((set) => {
         if (set.workoutId !== workout.id || set.exerciseId !== exerciseId || set.completed !== true || !Number.isInteger(set.position) || set.position < 0 || !Number.isFinite(Date.parse(set.completedAt))) return false;
-        try { realValues(set.weightKg, set.reps); return typeof set.weightKg === 'number' && typeof set.reps === 'number'; } catch { return false; }
+        const snapshot = workout.entries?.find((entry) => entry.exercise?.id === exerciseId && entry.prescription?.id === set.prescriptionId);
+        if (!snapshot) return false;
+        try {
+          const previousMode = recordingMode(snapshot.exercise);
+          return validRecordedSet(set, previousMode) && (previousMode === mode || (mode === 'bodyweight_reps' && previousMode === 'weight_reps' && set.weightKg === 0));
+        } catch { return false; }
       }).sort((a, b) => (a.exerciseOrder ?? 0) - (b.exerciseOrder ?? 0));
       if (valid.length) return { endedAt: workout.endedAt, sets: valid };
     }
@@ -78,11 +84,13 @@ export function workoutService(mode) {
       const entries = session.prescriptions.map((prescription) => {
         const exercise = exercises.find((item) => item.id === prescription.exerciseId);
         if (!exercise) throw new Error('Un ejercicio de la sesión ya no está disponible. Revisa la rutina antes de iniciar.');
-        const reference = lastReferences(records, exercise.id);
-        return { prescription: structuredClone(prescription), exercise: structuredClone(exercise), sets: Array.from({ length: prescription.sets }, (_, position) => {
+        const mode = recordingMode(exercise);
+        const reference = lastReferences(records, exercise.id, mode);
+        return { prescription: structuredClone(prescription), exercise: { ...structuredClone(exercise), recordingMode: mode }, sets: Array.from({ length: prescription.sets }, (_, position) => {
           const previous = reference?.sets.find((set) => set.position === position);
-          return { id: crypto.randomUUID(), position, weightKg: previous?.weightKg ?? '', reps: previous?.reps ?? '', completed: false, completedAt: null,
-            reference: previous ? { weightKg: previous.weightKg, reps: previous.reps, endedAt: reference.endedAt } : null };
+          return { id: crypto.randomUUID(), position, weightKg: mode === 'weight_reps' ? previous?.weightKg ?? '' : 0, reps: mode === 'duration' ? 0 : previous?.reps ?? '',
+            ...(mode === 'duration' ? { durationSeconds: previous?.durationSeconds ?? '' } : {}), completed: false, completedAt: null,
+            reference: previous ? { ...recordedValues(previous, mode), endedAt: reference.endedAt } : null };
         }) };
       });
       const now = new Date().toISOString();
@@ -105,10 +113,12 @@ export function workoutService(mode) {
           // Incomplete inputs remain strings in the draft. Validation happens
           // before completing, so an empty field never silently becomes zero.
           if (command.type === 'values') {
-            if (!['weightKg', 'reps'].includes(command.field) || typeof command.value !== 'string' || command.value.length > 24) throw new Error('Valor de serie no válido.');
+            const mode = recordingMode(entry.exercise);
+            const fields = mode === 'duration' ? ['durationSeconds'] : mode === 'bodyweight_reps' ? ['reps'] : ['weightKg', 'reps'];
+            if (!fields.includes(command.field) || typeof command.value !== 'string' || command.value.length > 24) throw new Error('Valor de serie no válido.');
             set[command.field] = command.value;
           } else {
-            Object.assign(set, realValues(set.weightKg, set.reps), { completed: true, completedAt: new Date().toISOString() });
+            Object.assign(set, recordedValues(set, recordingMode(entry.exercise)), { completed: true, completedAt: new Date().toISOString() });
             const durationMs = entry.prescription.restSeconds * 1000;
             draft.timer = { status: 'running', durationMs, remainingMs: durationMs, endsAt: Date.now() + durationMs };
           }
@@ -145,7 +155,7 @@ export function workoutService(mode) {
       // Final workouts contain only performed sets. The prescription and session
       // snapshots still describe all planned work, including unperformed work.
       const entries = draft.entries.map((entry, exerciseOrder) => ({ ...entry, sets: entry.sets.filter((set) => set.completed).map((set) => {
-        const record = { ...set, ...realValues(set.weightKg, set.reps), workoutId: draft.id, exerciseId: entry.exercise.id, prescriptionId: entry.prescription.id, exerciseOrder };
+        const record = { ...set, ...recordedValues(set, recordingMode(entry.exercise)), workoutId: draft.id, exerciseId: entry.exercise.id, prescriptionId: entry.prescription.id, exerciseOrder };
         tx.objectStore('setRecords').add(record);
         return record;
       }) }));

@@ -3,7 +3,8 @@ import { transact, storageError } from '../../db/indexed-db.js';
 import { BASE_EXERCISES } from '../../data/exercises.js';
 import { validateExerciseInput } from '../exercises/exercise-service.js';
 import { UUID, hydrateRoutine } from '../routines/model.js';
-import { assertDraft, realValues } from '../workouts/model.js';
+import { assertDraft, validRecordedSet } from '../workouts/model.js';
+import { recordingMode } from '../../data/recording-modes.js';
 import { validateAlias, validateGoals, validatePreferences } from './profile-service.js';
 
 export const BACKUP_VERSION = 1;
@@ -53,9 +54,9 @@ function exercise(item, custom = false) {
     if (!object(item.technique) || !Array.isArray(item.technique.steps) || !Array.isArray(item.technique.tips) || [...item.technique.steps, ...item.technique.tips].some((step) => typeof step !== 'string' || step.length > 2000)) fail('técnica de ejercicio incorrecta.');
   }
 }
-function setValues(set) {
-  if (typeof set.weightKg !== 'number' || typeof set.reps !== 'number') fail('valores de serie incorrectos.');
-  realValues(set.weightKg, set.reps); iso(set.completedAt);
+function setValues(set, mode) {
+  if (!validRecordedSet(set, mode)) fail('valores de serie incorrectos.');
+  iso(set.completedAt);
 }
 export function validateBackup(input) {
   safeTree(input);
@@ -122,6 +123,7 @@ export function validateBackup(input) {
     for (const [order, entry] of workout.entries.entries()) {
       if (!object(entry)) fail('entrada de entrenamiento incorrecta.');
       exercise(entry.exercise); prescription(entry.prescription, order);
+      const mode = recordingMode(entry.exercise);
       prescriptionIds.push(entry.prescription.id);
       const snapshot = workout.sessionSnapshot.prescriptions[order];
       prescription(snapshot, order);
@@ -133,12 +135,15 @@ export function validateBackup(input) {
         integer(set.position, 0, entry.prescription.sets - 1); positions.push(set.position);
         if (typeof set.completed !== 'boolean') fail('estado de serie incorrecto.');
         if (set.reference !== null) {
-          if (!object(set.reference) || typeof set.reference.weightKg !== 'number' || typeof set.reference.reps !== 'number') fail('referencia anterior incorrecta.');
-          realValues(set.reference.weightKg, set.reference.reps); iso(set.reference.endedAt);
+          if (!object(set.reference) || !validRecordedSet(set.reference, mode)) fail('referencia anterior incorrecta.');
+          iso(set.reference.endedAt);
         }
-        if (set.completed) { setValues(set); completed++; }
+        if (set.completed) { setValues(set, mode); completed++; }
         else {
           if (final || set.completedAt !== null || !['string', 'number'].includes(typeof set.weightKg) || !['string', 'number'].includes(typeof set.reps) || String(set.weightKg).length > 24 || String(set.reps).length > 24) fail('borrador de serie incorrecto.');
+          if (mode === 'duration' && (!['string', 'number'].includes(typeof set.durationSeconds) || String(set.durationSeconds).length > 24 || set.weightKg !== 0 || set.reps !== 0)) fail('borrador de duración incorrecto.');
+          if (mode !== 'duration' && set.durationSeconds !== undefined) fail('duración inesperada en una serie por repeticiones.');
+          if (mode === 'bodyweight_reps' && set.weightKg !== 0) fail('carga externa inesperada en peso corporal.');
         }
         if (final) {
           if (!set.completed || set.workoutId !== workout.id || set.exerciseId !== entry.exercise.id || set.prescriptionId !== entry.prescription.id || set.exerciseOrder !== order) fail('referencias de serie incorrectas.');

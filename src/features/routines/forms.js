@@ -21,10 +21,10 @@ export function confirmation(title, message) {
   return `${dialogHeading(title)}<p>${esc(message)}</p><p class="routine-form-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button button-secondary" data-close-routine-dialog autofocus>Cancelar</button><button type="button" class="button button-danger" data-confirm-routine-action>Confirmar eliminación</button></div>`;
 }
 
-export function exercisePicker() {
-  return `${dialogHeading('Añadir ejercicio a la sesión')}<label class="picker-search-label">Buscar ejercicio<input type="search" data-picker-search placeholder="Nombre del ejercicio…" maxlength="80" /></label><div class="routine-exercise-picker"></div>`;
+export function exercisePicker(onlyAvailable = false) {
+  return `${dialogHeading('Añadir ejercicio a la sesión')}<label class="picker-search-label">Buscar ejercicio<input type="search" data-picker-search placeholder="Nombre del ejercicio…" maxlength="80" /></label>${onlyAvailable ? '<p class="availability-note">Solo se muestran ejercicios que aún no están en esta sesión.</p><p class="routine-form-error" role="alert"></p>' : ''}<div class="routine-exercise-picker"></div>`;
 }
 
-export function pickerEntries(exercises) {
-  return exercises.length ? exercises.map((exercise) => `<div class="picker-exercise">${routineExercisePreview(exercise, `${exercise.mainMuscle} · ${exercise.equipment}${exercise.origin === 'custom' ? ' · Personalizado' : ''}`)}<button type="button" class="icon-button" data-pick-exercise="${exercise.id}" aria-label="Añadir ${esc(exercise.name)}">${icon('plus')}</button></div>`).join('') : '<p>No hay ejercicios que coincidan con ese nombre.</p>';
+export function pickerEntries(exercises, emptyMessage = 'No hay ejercicios que coincidan con ese nombre.') {
+  return exercises.length ? exercises.map((exercise) => `<div class="picker-exercise">${routineExercisePreview(exercise, `${exercise.mainMuscle} · ${exercise.equipment}${exercise.origin === 'custom' ? ' · Personalizado' : ''}`)}<button type="button" class="icon-button" data-pick-exercise="${exercise.id}" aria-label="Añadir ${esc(exercise.name)}">${icon('plus')}</button></div>`).join('') : `<p>${esc(emptyMessage)}</p>`;
 }

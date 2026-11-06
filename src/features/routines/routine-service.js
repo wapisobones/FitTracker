@@ -6,6 +6,10 @@ import { ROUTINE_TEMPLATES } from '../../data/routine-templates.js';
 import { UUID, validateRoutine, hydrateRoutine, independentCopy, prescription, newRoutine, newSession } from './model.js';
 import { validateConfig, compatibleExercises } from '../generator/engine.js';
 
+function assertExerciseAvailable(session, exerciseId) {
+  if (session.prescriptions.some((item) => item.exerciseId === exerciseId)) throw new Error('Este ejercicio ya pertenece a esta sesión. Puedes editar sus objetivos o elegir otro ejercicio.');
+}
+
 export function routineService(mode) {
   assertMode(mode);
   async function transaction(access, action) {
@@ -62,6 +66,18 @@ export function routineService(mode) {
   return Object.freeze({
     list: () => transaction('readonly', (_, records) => records.routines.map((routine) => hydrateRoutine(routine, records.routineSessions)).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))),
     save: (draft) => transaction('readwrite', (tx, records) => persist(tx, records, draft)),
+    // Guard additions, not general validation: inherited duplicates remain
+    // readable/editable, and copying an existing session keeps its contents.
+    addExercise: (routine, sessionId, item) => transaction('readwrite', (tx, records) => {
+      const storedSession = records.routineSessions.find((session) => session.routineId === routine.id && session.id === sessionId);
+      if (!storedSession) throw new Error('La sesión seleccionada ya no existe. Recarga la lista antes de continuar.');
+      // Check the stored session before the revision to explain stale duplicate
+      // attempts clearly. Both checks and the write share one transaction.
+      assertExerciseAvailable(storedSession, item.exerciseId);
+      const draft = current(records, routine);
+      draft.sessions.find((session) => session.id === sessionId).prescriptions.push(structuredClone(item));
+      return persist(tx, records, draft);
+    }),
     saveGenerated: (draft, token) => transaction('readwrite', (tx, records) => withToken(tx, records, token, () => {
       if (draft.origin !== 'generator' || draft.revision !== 0 || !draft.sessions?.length || draft.sessions.some((session) => !session.prescriptions?.length)) throw new Error('La propuesta necesita al menos un ejercicio por sesión antes de guardarse como una rutina nueva.');
       const catalog = [...BASE_EXERCISES, ...records.exercises];
@@ -88,12 +104,15 @@ export function routineService(mode) {
       let draft;
       if (target.routineId) {
         const record = records.routines.find((routine) => routine.id === target.routineId);
+        const storedSession = records.routineSessions.find((session) => session.routineId === target.routineId && session.id === target.sessionId);
+        if (storedSession) assertExerciseAvailable(storedSession, exerciseId);
         if (!record || record.revision !== target.revision) throw new Error('La rutina seleccionada cambió. Cierra el selector y vuelve a intentarlo.');
         draft = hydrateRoutine(record, records.routineSessions);
       } else draft = newRoutine(target.routineName, '', '');
       let session = draft.sessions.find((item) => item.id === target.sessionId);
       if (!target.sessionId) { session = newSession(draft.id, target.sessionName); draft.sessions.push(session); }
       if (!session) throw new Error('La sesión seleccionada ya no existe.');
+      assertExerciseAvailable(session, exerciseId);
       session.prescriptions.push(prescription(exerciseId));
       return persist(tx, records, { ...draft, catalogOperationToken: token });
     }),
