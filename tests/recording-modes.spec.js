@@ -76,7 +76,8 @@ for (const width of [320, 390]) test(`Flujo de las tres modalidades, recuperaci√
   await action(page, 'Siguiente ejercicio').click();
   await expect(input(page, 'weightKg')).toHaveCount(0);
   await expect(input(page, 'reps')).toHaveCount(0);
-  await expect(page.locator('.workout-targets')).not.toContainText('Reps');
+  await expect(page.locator('.workout-targets')).toContainText('8‚Äì12');
+  await expect(page.locator('.workout-reference-note').first()).toContainText('Objetivos heredados');
   for (const value of ['', '-1', '0', '1.5']) {
     await input(page, 'durationSeconds').fill(value);
     await action(page, 'Completar serie 1').click();
@@ -129,7 +130,8 @@ for (const width of [320, 390]) test(`Flujo de las tres modalidades, recuperaci√
   await page.getByRole('combobox', { name: 'Ejercicio', exact: true }).selectOption(exercises[2].id);
   await expect(page.locator('[data-metric="sets"] .metric-value')).toHaveText('1');
   await expect(page.locator('[data-metric="volume"] .metric-value')).toHaveText('0 kg');
-  await expect(page.locator('.stats-strength .history-chart')).toHaveCount(0);
+  await expect(page.locator('.stats-strength .history-chart')).toHaveCount(1);
+  await expect(page.locator('.stats-strength .history-chart-unit')).toHaveText('s');
   await expect(page.locator('.stats-record-list')).toHaveCount(0);
   await page.goto('./#/rutina-activa');
   await action(page, 'Iniciar entrenamiento').click();

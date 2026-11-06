@@ -1,3 +1,5 @@
+import { defaultTargets, validateTargets } from '../../data/prescription-targets.js';
+
 export const UUID = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
 const invalidControls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 
@@ -13,8 +15,8 @@ function integer(value, label, min, max) {
   return Number(value);
 }
 
-export function prescription(exerciseId) {
-  return { id: crypto.randomUUID(), exerciseId, order: 0, sets: 3, repsMin: 8, repsMax: 12, restSeconds: 90, notes: '' };
+export function prescription(exerciseId, exercise) {
+  return { id: crypto.randomUUID(), exerciseId, order: 0, sets: 3, ...defaultTargets(exercise), restSeconds: 90, notes: '' };
 }
 
 export function newSession(routineId, name = 'Sesión 1') {
@@ -43,10 +45,8 @@ export function validateRoutine(input) {
     return { ...session, order, name: text(session.name, 'Nombre de sesión', 80, true), prescriptions: Array.from(session.prescriptions).map((item, position) => {
       if (!item || !UUID.test(item.exerciseId)) throw new Error('La sesión contiene una referencia de ejercicio no válida.');
       identity(item.id);
-      const repsMin = integer(item.repsMin, 'Repeticiones mínimas', 1, 100);
-      const repsMax = integer(item.repsMax, 'Repeticiones máximas', 1, 100);
-      if (repsMin > repsMax) throw new Error('Las repeticiones mínimas no pueden superar las máximas. Para un valor fijo, usa el mismo número en ambos campos.');
-      return { ...item, order: position, sets: integer(item.sets, 'Series', 1, 20), repsMin, repsMax, restSeconds: integer(item.restSeconds, 'Descanso en segundos', 0, 900), notes: text(item.notes, 'Notas', 1000) };
+      const targets = validateTargets(item);
+      return { ...item, order: position, sets: integer(item.sets, 'Series', 1, 20), ...targets, restSeconds: integer(item.restSeconds, 'Descanso en segundos', 0, 900), notes: text(item.notes, 'Notas', 1000) };
     }) };
   });
   return { ...input, name: text(input.name, 'Nombre de rutina', 80, true), description: text(input.description, 'Descripción', 1000), sessions, nextSessionId: sessions.some((session) => session.id === input.nextSessionId) ? input.nextSessionId : sessions[0]?.id ?? null, cyclePolicy: 'sequential-wrap' };

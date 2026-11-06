@@ -4,6 +4,7 @@ import { heatmapDays } from './muscle-heatmap.js';
 import { progressView, SECTIONS } from './views.js';
 import { dashboard } from '../dashboard.js';
 import { escapeHTML as esc } from '../../utils/html.js';
+import { RECORDING_MODES } from '../../data/recording-modes.js';
 
 export function mountStatistics(root, mode, { progress = false, params = new URLSearchParams() } = {}) {
   const events = new AbortController();
@@ -11,7 +12,7 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
   let version = 0;
   let history;
   const scoped = params.get('ambito') === mode;
-  const state = { period: scoped && Object.hasOwn(PERIODS, params.get('periodo')) ? params.get('periodo') : progress ? '90' : 'month', exerciseId: scoped ? params.get('ejercicio') || '' : '', chartExerciseId: scoped ? params.get('grafico') || '' : '', section: scoped && Object.hasOwn(SECTIONS, params.get('vista')) ? params.get('vista') : 'summary', strengthMetric: scoped && params.get('metrica') === 'estimated1RM' ? 'estimated1RM' : 'weight' };
+  const state = { period: scoped && Object.hasOwn(PERIODS, params.get('periodo')) ? params.get('periodo') : progress ? '90' : 'month', exerciseId: scoped ? params.get('ejercicio') || '' : '', chartExerciseId: scoped ? params.get('grafico') || '' : '', chartRecordingMode: scoped && Object.hasOwn(RECORDING_MODES, params.get('modalidad')) ? params.get('modalidad') : '', section: scoped && Object.hasOwn(SECTIONS, params.get('vista')) ? params.get('vista') : 'summary', strengthMetric: scoped && params.get('metrica') === 'estimated1RM' ? 'estimated1RM' : 'weight' };
   const service = historyService(mode);
   function paint() {
     if (!alive || !history) return;
@@ -26,6 +27,7 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
     const query = new URLSearchParams({ ambito: mode, periodo: state.period });
     if (state.exerciseId) query.set('ejercicio', state.exerciseId);
     if (state.chartExerciseId) query.set('grafico', state.chartExerciseId);
+    if (state.chartRecordingMode && stats.chartRecordingModes.includes(state.chartRecordingMode)) query.set('modalidad', state.chartRecordingMode);
     if (progress) query.set('vista', state.section);
     if (state.strengthMetric !== 'weight') query.set('metrica', state.strengthMetric);
     window.history.replaceState(null, '', `#/${progress ? 'progreso' : 'inicio'}?${query}`);
@@ -47,6 +49,7 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
     const field = event.target.dataset.statsFilter;
     if (!field || !history) return;
     state[field] = event.target.value;
+    if (field === 'exerciseId' || field === 'chartExerciseId') state.chartRecordingMode = '';
     paint(); root.querySelector(`[data-stats-filter="${field}"]`)?.focus({ preventScroll: true });
   }, { signal: events.signal });
   root.addEventListener('click', (event) => {
@@ -55,7 +58,7 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
     if (button.hasAttribute('data-retry-stats')) { void load(); return; }
     if (!history) return;
     if (button.dataset.statsSection) { state.section = button.dataset.statsSection; paint(); root.querySelector(`[data-stats-section="${state.section}"]`)?.focus({ preventScroll: true }); }
-    else if (button.hasAttribute('data-reset-stats')) { state.exerciseId = ''; state.chartExerciseId = ''; state.period = 'all'; paint(); }
+    else if (button.hasAttribute('data-reset-stats')) { state.exerciseId = ''; state.chartExerciseId = ''; state.chartRecordingMode = ''; state.period = 'all'; paint(); }
   }, { signal: events.signal });
   window.addEventListener('workout-change', load, { signal: events.signal });
   window.addEventListener('focus', load, { signal: events.signal });

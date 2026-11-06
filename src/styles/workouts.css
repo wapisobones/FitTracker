@@ -52,6 +52,7 @@
 .register-set-progress { font-size: 13px; margin-top: 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .workout-exercise .exercise-set-progress { font-size: 12px; color: var(--lime); }
 .workout-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.workout-targets.duration-targets { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr); }
 .workout-targets > div { border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; text-align: center; }
 .workout-targets dt { color: var(--muted); font-size: 12px; }
 .workout-targets dd { margin: 4px 0 0; font-size: 18px; font-weight: 650; }

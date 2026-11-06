@@ -6,6 +6,7 @@ import { mountExerciseTechnique } from '../../components/exercise-technique-dial
 import { escapeHTML } from '../../utils/html.js';
 import { routineService } from './routine-service.js';
 import { newRoutine, newSession, prescription, validateRoutine } from './model.js';
+import { defaultDurationTarget } from '../../data/prescription-targets.js';
 import { routinesFrame, listCard, detailView, noRoutines, routineLink } from './views.js';
 import { routineForm, sessionForm, prescriptionForm, confirmation, exercisePicker, pickerEntries } from './forms.js';
 
@@ -144,6 +145,13 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
       return;
     }
     if (button.hasAttribute('data-close-routine-dialog')) { dialog.close(); return; }
+    if (button.dataset.convertTarget && context?.item) {
+      const item = { ...context.item, ...Object.fromEntries(new FormData(dialog.querySelector('form'))) };
+      delete item.repsMin; delete item.repsMax; delete item.durationMinSeconds; delete item.durationMaxSeconds; delete item.targetType;
+      Object.assign(item, button.dataset.convertTarget === 'duration' ? defaultDurationTarget() : { repsMin: 8, repsMax: 12 });
+      show(prescriptionForm(item, exercises.find((exercise) => exercise.id === item.exerciseId)), null, { ...context, item });
+      return;
+    }
     if (button.hasAttribute('data-confirm-routine-action')) { void pending?.(); return; }
     if (button.dataset.routineAction === 'reload') { if (proposal) { root.querySelector('.routine-error').innerHTML = ''; paint(); } else void load(); return; }
     if (!ready) return;
@@ -204,7 +212,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
         paintPicker(dialog.querySelector('[data-picker-search]').value);
         return;
       }
-      const item = prescription(exercise.id);
+      const item = prescription(exercise.id, exercise);
       show(prescriptionForm(item, exercise), null, { item, adding: true });
     } else if (button.dataset.itemAction) {
       const item = session.prescriptions.find((entry) => entry.id === button.dataset.itemId);

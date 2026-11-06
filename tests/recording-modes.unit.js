@@ -79,7 +79,7 @@ test('Backup de duración: round trip, borrador en pausa, referencias y snapshot
   ]) { const invalid = JSON.parse(JSON.stringify(backup)); change(invalid); assert.throws(() => validateBackup(invalid), change.toString()); }
 });
 
-test('Duración cuenta series, sesiones y músculos; sin volumen, carga, 1RM ni puntos de fuerza', () => {
+test('Duración cuenta series, sesiones y músculos; sin volumen, carga ni 1RM, con evolución en segundos', () => {
   const backup = timedBackup();
   const before = structuredClone(backup);
   const history = normalizeHistory(backup.stores);
@@ -88,7 +88,8 @@ test('Duración cuenta series, sesiones y músculos; sin volumen, carga, 1RM ni 
   assert.equal(stats.totalSets, 2); assert.equal(stats.sessions.length, 1);
   assert.equal(stats.totalVolume, 0); assert.equal(stats.max1RM, null); assert.equal(stats.maxLoad, null);
   assert.equal(stats.mostWorked.sets, 2); assert.equal(stats.muscles[0].count, 2);
-  assert.deepEqual(stats.strength, []);
+  assert.equal(stats.strength.length, 1);
+  assert.equal(stats.strength[0].durationSeconds, 45);
   assert.deepEqual(backup, before);
   backup.stores.setRecords[0].reps = 45;
   assert.equal(normalizeHistory(backup.stores).ignored, 1);

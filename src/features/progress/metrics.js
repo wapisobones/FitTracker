@@ -2,6 +2,7 @@
 // lookups: historical names and muscles always come from the workout snapshot.
 import { recordingMode } from '../../data/recording-modes.js';
 import { validRecordedSet } from '../workouts/model.js';
+import { validateTargets } from '../../data/prescription-targets.js';
 export const PERIODS = { week: 'Esta semana', month: 'Este mes', '30': 'Últimos 30 días', '90': 'Últimos 90 días', all: 'Todo el historial' };
 export const number = (value, digits = 1) => new Intl.NumberFormat('es-CL', { maximumFractionDigits: digits }).format(value);
 export const dateLabel = (value, options = {}) => new Date(value).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', ...options });
@@ -41,9 +42,9 @@ export function normalizeHistory({ workouts = [], setRecords = [], settings = []
     const date = new Date(workout.endedAt);
     const key = `${set.workoutId}/${set.prescriptionId}/${set.position}`;
     let mode;
-    try { mode = recordingMode(entry?.exercise); } catch { ignored++; continue; }
+    try { mode = recordingMode(entry?.exercise); validateTargets(entry?.prescription, true); } catch { ignored++; continue; }
     if (!entry || typeof entry.exercise.name !== 'string' || !entry.exercise.name.trim() || typeof workout.endedAt !== 'string' || !Number.isFinite(date.getTime()) || typeof set.completedAt !== 'string' || !Number.isFinite(Date.parse(set.completedAt)) ||
-      !Number.isInteger(entry.prescription.sets) || entry.prescription.sets < 1 || entry.prescription.sets > 20 || !Number.isInteger(entry.prescription.repsMin) || !Number.isInteger(entry.prescription.repsMax) || entry.prescription.repsMin < 1 || entry.prescription.repsMax > 100 || entry.prescription.repsMin > entry.prescription.repsMax ||
+      !Number.isInteger(entry.prescription.sets) || entry.prescription.sets < 1 || entry.prescription.sets > 20 ||
       !validRecordedSet(set, mode) ||
       !Number.isInteger(set.position) || set.position < 0 || set.position >= entry.prescription.sets || seen.has(key)) { ignored++; continue; }
     seen.add(key);
@@ -57,7 +58,7 @@ export function normalizeHistory({ workouts = [], setRecords = [], settings = []
   return { rows, ignored, exercises: [...exercises.values()].sort((a, b) => a.name.localeCompare(b.name, 'es')), goals: settings.find((item) => item.id === 'weekly-goals') ?? null };
 }
 
-export function calculate(history, { period = 'month', exerciseId = '', chartExerciseId = '', strengthMetric = 'weight', now = new Date() } = {}) {
+export function calculate(history, { period = 'month', exerciseId = '', chartExerciseId = '', chartRecordingMode = '', strengthMetric = 'weight', now = new Date() } = {}) {
   const bounds = periodBounds(period, now);
   const inPeriod = (row) => (!bounds.start || row.date >= bounds.start) && row.date < bounds.end;
   const rows = history.rows.filter((row) => inPeriod(row) && (!exerciseId || row.exerciseId === exerciseId));
@@ -69,7 +70,7 @@ export function calculate(history, { period = 'month', exerciseId = '', chartExe
     const exercise = exercises.get(row.exerciseId) ?? { id: row.exerciseId, name: row.name, exercise: row.exercise, sets: 0, maxLoad: null, max1RM: null };
     exercise.name = row.name;
     exercise.sets++;
-    if (row.recordingMode !== 'duration' && (!exercise.maxLoad || row.weightKg >= exercise.maxLoad.weightKg)) exercise.maxLoad = row;
+    if (row.recordingMode === 'weight_reps' && (!exercise.maxLoad || row.weightKg >= exercise.maxLoad.weightKg)) exercise.maxLoad = row;
     if (row.estimated1RM !== null && (!exercise.max1RM || row.estimated1RM >= exercise.max1RM.estimated1RM)) exercise.max1RM = row;
     exercises.set(row.exerciseId, exercise);
     muscles.set(row.muscle, (muscles.get(row.muscle) ?? 0) + 1);
@@ -81,9 +82,22 @@ export function calculate(history, { period = 'month', exerciseId = '', chartExe
   const positiveLoad = records.find((record) => record.maxLoad?.weightKg > 0);
   const automaticExercise = strengthMetric === 'estimated1RM' ? records.find((record) => record.max1RM !== null) ?? positiveLoad : positiveLoad;
   const selectedExerciseId = exerciseId || chartExerciseId || automaticExercise?.id || records[0]?.id || '';
-  const chartRows = rows.filter((row) => row.exerciseId === selectedExerciseId && row.recordingMode !== 'duration');
+  // Use saved snapshots across the selected exercise's history to keep its
+  // available units stable when changing period. Default to its latest snapshot;
+  // mixed histories remain explicitly selectable and are never combined.
+  const exerciseHistory = history.rows.filter((row) => row.exerciseId === selectedExerciseId);
+  const chartRecordingModes = [...new Set(exerciseHistory.map((row) => row.recordingMode))];
+  const selectedRecordingMode = chartRecordingModes.includes(chartRecordingMode) ? chartRecordingMode : exerciseHistory.at(-1)?.recordingMode ?? 'weight_reps';
+  const chartRows = rows.filter((row) => row.exerciseId === selectedExerciseId && row.recordingMode === selectedRecordingMode);
   const days = new Map();
   for (const row of chartRows) {
+    if (selectedRecordingMode !== 'weight_reps') {
+      const field = selectedRecordingMode === 'duration' ? 'durationSeconds' : 'reps';
+      const day = days.get(row.day) ?? { date: row.day, [field]: 0 };
+      day[field] = Math.max(day[field], row[field]);
+      days.set(row.day, day);
+      continue;
+    }
     const day = days.get(row.day) ?? { date: row.day, weight: 0, estimated1RM: null };
     day.weight = Math.max(day.weight, row.weightKg);
     if (row.estimated1RM !== null) day.estimated1RM = Math.max(day.estimated1RM ?? 0, row.estimated1RM);
@@ -103,7 +117,7 @@ export function calculate(history, { period = 'month', exerciseId = '', chartExe
     max1RM: [...records].filter((item) => item.max1RM).sort((a, b) => b.max1RM.estimated1RM - a.max1RM.estimated1RM)[0]?.max1RM ?? null,
     sessions: [...sessions.values()].sort((a, b) => b.date - a.date || a.workout.id.localeCompare(b.workout.id)),
     muscles: [...muscles].map(([name, count]) => ({ name, count, percent: count / rows.length * 100 })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'es')),
-    selectedExerciseId, strength: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
+    selectedExerciseId, selectedRecordingMode, chartRecordingModes, strength: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
     volume: [...volumeBuckets].sort(([a], [b]) => a.localeCompare(b)).map(([date, value]) => ({ date, value })),
     weekSessions: new Set(weekRows.map((row) => row.workoutId)).size, monthSessions: new Set(monthRows.map((row) => row.workoutId)).size,
     weekVolume: weekRows.reduce((sum, row) => sum + row.volume, 0), weekStart: thisWeek.start,

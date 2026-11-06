@@ -113,7 +113,9 @@ export function routineService(mode) {
       if (!target.sessionId) { session = newSession(draft.id, target.sessionName); draft.sessions.push(session); }
       if (!session) throw new Error('La sesión seleccionada ya no existe.');
       assertExerciseAvailable(session, exerciseId);
-      session.prescriptions.push(prescription(exerciseId));
+      const exercise = [...BASE_EXERCISES, ...records.exercises].find((item) => item.id === exerciseId);
+      if (!exercise) throw new Error('El ejercicio ya no está disponible.');
+      session.prescriptions.push(prescription(exerciseId, exercise));
       return persist(tx, records, { ...draft, catalogOperationToken: token });
     }),
   });

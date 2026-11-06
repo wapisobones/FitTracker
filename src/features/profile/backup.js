@@ -5,6 +5,7 @@ import { validateExerciseInput } from '../exercises/exercise-service.js';
 import { UUID, hydrateRoutine } from '../routines/model.js';
 import { assertDraft, validRecordedSet } from '../workouts/model.js';
 import { recordingMode } from '../../data/recording-modes.js';
+import { validateTargets } from '../../data/prescription-targets.js';
 import { validateAlias, validateGoals, validatePreferences } from './profile-service.js';
 
 export const BACKUP_VERSION = 1;
@@ -39,7 +40,7 @@ function prescription(item, order) {
   if (!object(item)) fail('prescripción incorrecta.');
   identity(item.id); identity(item.exerciseId);
   if (item.order !== order) fail('orden de ejercicios incoherente.');
-  integer(item.sets, 1, 20); integer(item.repsMin, 1, 100); integer(item.repsMax, item.repsMin, 100); integer(item.restSeconds, 0, 900); text(item.notes, 1000);
+  integer(item.sets, 1, 20); validateTargets(item, true); integer(item.restSeconds, 0, 900); text(item.notes, 1000);
 }
 function exercise(item, custom = false) {
   if (!object(item)) fail('ejercicio incorrecto.');

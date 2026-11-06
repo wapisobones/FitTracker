@@ -5,8 +5,8 @@ import { selectedRegions } from '../data/muscle-taxonomy.js';
 import { MUSCLE_GROUPS } from '../data/exercises.js';
 import { HEAT_LEVELS, muscleHeat } from '../features/progress/muscle-heatmap.js';
 
-export function seriesChart(points, { id, title, unit = 'kg', bars = false } = {}) {
-  if (!points.length) return `<div class="stats-chart-empty"><p>No hay registros para este gráfico.</p><small>${id === 'strength' ? 'Selecciona otro ejercicio o amplía el período. El 1RM estimado requiere carga positiva y entre 1 y 10 repeticiones.' : 'Completa series y guarda una sesión para ver su evolución.'}</small></div>`;
+export function seriesChart(points, { id, title, unit = 'kg', bars = false, emptyHint } = {}) {
+  if (!points.length) return `<div class="stats-chart-empty"><p>No hay registros para este gráfico.</p><small>${esc(emptyHint ?? (id === 'strength' ? 'Selecciona otro ejercicio o amplía el período. El 1RM estimado requiere carga positiva y entre 1 y 10 repeticiones.' : 'Completa series y guarda una sesión para ver su evolución.'))}</small></div>`;
   const left = 85, right = 460, top = 28, bottom = 208;
   const values = points.map((point) => point.value);
   const rawMax = Math.max(...values);

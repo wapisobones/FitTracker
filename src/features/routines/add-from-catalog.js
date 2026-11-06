@@ -2,6 +2,7 @@ import { createRoutineDialog, dialogHeading } from '../../components/routine-dia
 import { escapeHTML as esc } from '../../utils/html.js';
 import { routineService } from './routine-service.js';
 import { routineLink } from './views.js';
+import { defaultTargets, targetText } from '../../data/prescription-targets.js';
 
 export function openRoutineAssignment(root, mode, exercise, returnFocus) {
   const dialog = createRoutineDialog(root);
@@ -33,7 +34,7 @@ export function openRoutineAssignment(root, mode, exercise, returnFocus) {
     try {
       routines = await service.list();
       if (!alive) return;
-      dialog.innerHTML = `${dialogHeading('Añadir a rutina')}<p><strong>${esc(exercise.name)}</strong></p><p class="availability-note">Se añadirá solo en ${mode === 'demo' ? 'demostración' : 'modo personal'}.</p><form data-assignment-form><label>Rutina<select name="routineId">${routines.map((routine) => `<option value="${routine.id}">${esc(routine.name)}</option>`).join('')}<option value="">Crear nueva rutina</option></select></label><label data-new-routine>Nombre de la nueva rutina<input type="text" name="routineName" value="Mi rutina" minlength="2" maxlength="80" /></label><label>Sesión<select name="sessionId"></select></label><label data-new-session>Nombre de la nueva sesión<input type="text" name="sessionName" value="Sesión 1" minlength="2" maxlength="80" /></label><p class="availability-note">Objetivos iniciales: 3 series, 8–12 repeticiones y 90 s de descanso. Podrás editarlos en Mis rutinas.</p>${errorMarkup}<div class="dialog-actions"><button type="button" class="button button-secondary" data-close-routine-dialog>Cancelar</button><button type="submit" class="button button-primary">Añadir ejercicio</button></div></form>`;
+      dialog.innerHTML = `${dialogHeading('Añadir a rutina')}<p><strong>${esc(exercise.name)}</strong></p><p class="availability-note">Se añadirá solo en ${mode === 'demo' ? 'demostración' : 'modo personal'}.</p><form data-assignment-form><label>Rutina<select name="routineId">${routines.map((routine) => `<option value="${routine.id}">${esc(routine.name)}</option>`).join('')}<option value="">Crear nueva rutina</option></select></label><label data-new-routine>Nombre de la nueva rutina<input type="text" name="routineName" value="Mi rutina" minlength="2" maxlength="80" /></label><label>Sesión<select name="sessionId"></select></label><label data-new-session>Nombre de la nueva sesión<input type="text" name="sessionName" value="Sesión 1" minlength="2" maxlength="80" /></label><p class="availability-note">Objetivos iniciales orientativos: 3 series, ${targetText(defaultTargets(exercise))} por serie y 90 s de descanso. Podrás editarlos en Mis rutinas.</p>${errorMarkup}<div class="dialog-actions"><button type="button" class="button button-secondary" data-close-routine-dialog>Cancelar</button><button type="submit" class="button button-primary">Añadir ejercicio</button></div></form>`;
       refreshSessions();
     } catch (error) {
       if (alive) dialog.innerHTML = `${dialogHeading('Añadir a rutina')}<p role="alert">${esc(error.message)}</p><button type="button" class="button button-secondary" data-retry-assignment>Reintentar carga</button>`;

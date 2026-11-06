@@ -5,6 +5,8 @@ import { seriesChart, distribution } from '../../components/history-charts.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { PERIODS, number, dateLabel } from './metrics.js';
 import { setText } from '../../utils/set-format.js';
+import { RECORDING_MODES } from '../../data/recording-modes.js';
+import { isDurationTarget, targetText } from '../../data/prescription-targets.js';
 
 export const SECTIONS = { summary: 'Resumen', strength: 'Fuerza por ejercicio', volume: 'Volumen', muscles: 'Grupos musculares', history: 'Historial' };
 const title = (id, symbol, text, extra = '') => `<div class="card-heading"><h2 id="${id}">${icon(symbol)}${text}</h2>${extra}</div>`;
@@ -25,9 +27,20 @@ export function dataNotice(history, stats, { exerciseId, period }) {
 }
 export function strengthCard(stats, history, state) {
   const name = history.exercises.find((exercise) => exercise.id === stats.selectedExerciseId)?.name;
-  const points = stats.strength.filter((point) => state.strengthMetric !== 'estimated1RM' || point.estimated1RM !== null).map((point) => ({ date: point.date, value: fromKg(state.strengthMetric === 'estimated1RM' ? point.estimated1RM : point.weight, stats.unit) }));
-  const chartName = `${state.strengthMetric === 'estimated1RM' ? '1RM estimado' : 'Carga máxima diaria'}${name ? ` · ${name}` : ''}`;
-  return `<section class="card load-card stats-strength" aria-labelledby="strength-heading">${title('strength-heading', 'chart', 'Evolución de carga', !state.exerciseId ? exerciseSelect(history.exercises, stats.selectedExerciseId, { chart: true, all: false }) : '')}<label class="stats-chart-mode">Mostrar<select data-stats-filter="strengthMetric" aria-label="Métrica de fuerza"><option value="weight"${state.strengthMetric === 'weight' ? ' selected' : ''}>Carga registrada</option><option value="estimated1RM"${state.strengthMetric === 'estimated1RM' ? ' selected' : ''}>1RM estimado</option></select></label>${seriesChart(points, { id: 'strength', title: chartName, unit: stats.unit })}<p class="card-caption">Los ejercicios por tiempo no aportan carga ni 1RM. ${state.strengthMetric === 'estimated1RM' ? 'Epley: peso × (1 + reps / 30), con 2–10 reps; con 1 repetición se usa la carga real. Estimación, no un máximo medido.' : `Mayor peso registrado por fecha local. Una carga de 0 ${stats.unit} indica peso corporal sin carga externa registrada.`}</p></section>`;
+  const mode = stats.selectedRecordingMode;
+  const weighted = mode === 'weight_reps';
+  const timed = mode === 'duration';
+  const estimated = weighted && state.strengthMetric === 'estimated1RM';
+  const unit = weighted ? stats.unit : timed ? 's' : 'reps';
+  const field = weighted ? estimated ? 'estimated1RM' : 'weight' : timed ? 'durationSeconds' : 'reps';
+  const points = stats.strength.filter((point) => !estimated || point.estimated1RM !== null).map((point) => ({ date: point.date, value: weighted ? fromKg(point[field], stats.unit) : point[field] }));
+  const heading = weighted ? 'Evolución de carga' : timed ? 'Evolución de duración' : 'Evolución de repeticiones';
+  const chartName = `${weighted ? estimated ? '1RM estimado' : 'Carga máxima diaria' : timed ? 'Duración máxima diaria' : 'Repeticiones máximas diarias'}${name ? ` · ${name}` : ''}`;
+  const modePicker = stats.chartRecordingModes.length > 1 ? `<label class="stats-chart-mode">Modalidad del historial<select data-stats-filter="chartRecordingMode" aria-label="Modalidad del gráfico">${stats.chartRecordingModes.map((value) => `<option value="${value}"${value === mode ? ' selected' : ''}>${RECORDING_MODES[value]}</option>`).join('')}</select></label><p class="card-caption">Cada modalidad utiliza sus propios snapshots. Los registros anteriores se conservan sin convertir ni combinar unidades.</p>` : '';
+  const metricPicker = weighted ? `<label class="stats-chart-mode">Mostrar<select data-stats-filter="strengthMetric" aria-label="Métrica de fuerza"><option value="weight"${!estimated ? ' selected' : ''}>Carga registrada</option><option value="estimated1RM"${estimated ? ' selected' : ''}>1RM estimado</option></select></label>` : '';
+  const caption = weighted ? estimated ? 'Epley: peso × (1 + reps / 30), con 2–10 reps; con 1 repetición se usa la carga real. Estimación, no un máximo medido.' : `Mayor peso registrado por fecha local. Una carga de 0 ${stats.unit} indica peso corporal sin carga externa registrada.` : `Máximo de ${timed ? 'segundos' : 'repeticiones'} realizados por serie en cada fecha local. Solo series completadas de sesiones completas o parciales guardadas.`;
+  const emptyHint = `Selecciona otro ejercicio o amplía el período.${estimated ? ' El 1RM estimado requiere carga positiva y entre 1 y 10 repeticiones.' : ` Guarda series completadas ${weighted ? 'con peso y repeticiones' : timed ? 'con duración en segundos' : 'de peso corporal con repeticiones'} para ver su evolución.`}`;
+  return `<section class="card load-card stats-strength" aria-labelledby="strength-heading">${title('strength-heading', 'chart', heading, !state.exerciseId ? exerciseSelect(history.exercises, stats.selectedExerciseId, { chart: true, all: false }) : '')}${modePicker}${metricPicker}${seriesChart(points, { id: 'strength', title: chartName, unit, emptyHint })}<p class="card-caption">${caption}</p></section>`;
 }
 export function musclesCard(stats, dashboard = false, { schematic = dashboard } = {}) {
   return `<section class="card muscle-card stats-muscles" aria-labelledby="muscles-heading">${title('muscles-heading', 'dumbbell', dashboard ? 'Trabajo por grupo muscular' : 'Grupos musculares (series)')}${dashboard ? '<p class="card-caption">Últimos 7 días · Todos los ejercicios.</p>' : ''}${distribution(stats.muscles, stats.totalSets, { schematic, heatmapDays: stats.heatmapDays })}</section>`;
@@ -44,12 +57,15 @@ function duration(workout) {
   const elapsed = Date.parse(workout.endedAt) - Date.parse(workout.startedAt);
   return Number.isFinite(elapsed) && elapsed >= 0 ? `${number(Math.round(elapsed / 60000), 0)} min transcurridos` : 'Duración no disponible';
 }
+function originalPlan(entry) {
+  return `${entry.prescription.sets} series de ${targetText(entry.prescription)}${entry.recordingMode === 'duration' && !isDurationTarget(entry.prescription) ? '; objetivos heredados de repeticiones, sin objetivo de tiempo' : ''}`;
+}
 export function historyCard(stats, { limit = Infinity, dashboard = false, filtered = false } = {}) {
   return `<section class="card workouts-card stats-history" aria-labelledby="workouts-heading">${title('workouts-heading', 'clock', dashboard ? 'Últimos entrenamientos' : 'Historial de entrenamientos', limit < Infinity ? '<a class="text-link" href="#/progreso?ambito=' + (stats.mode ?? 'personal') + '&vista=history&periodo=all">Ver historial completo ' + icon('arrow') + '</a>' : '')}${stats.sessions.length ? `<ul class="stats-session-list">${stats.sessions.slice(0, limit).map((session) => {
     const { workout, rows, date, volume } = session;
     const entries = new Map();
     for (const row of rows) { const group = entries.get(row.prescriptionId) ?? { name: row.name, recordingMode: row.recordingMode, prescription: row.prescription, sets: [] }; group.sets.push(row); entries.set(row.prescriptionId, group); }
-    return `<li><details class="stats-session"><summary><span class="date-tile"><span>${esc(date.toLocaleDateString('es-CL', { weekday: 'short' }))}</span><strong>${esc(dateLabel(date))}</strong></span><span class="workout-copy"><strong>${esc(workout.sessionName || 'Sesión guardada')}</strong><small>${esc(workout.routineName || 'Sin rutina')} · ${workout.status === 'partial' ? 'Parcial' : 'Completa'}</small><small>${session.exerciseIds.size} ejercicios · ${rows.length} series · ${weightText(volume, stats.unit)}${filtered ? ' (del filtro)' : ''}</small></span>${icon('chevron')}</summary><div class="stats-session-detail"><p>${esc(date.toLocaleString('es-CL'))} · ${duration(workout)}</p>${[...entries.values()].map((entry) => `<section><h3>${esc(entry.name)}</h3><p class="availability-note">Plan original: ${entry.prescription.sets} series${entry.recordingMode === 'duration' ? '; sin objetivo de tiempo. Las repeticiones del plan original no representan segundos' : ` de ${entry.prescription.repsMin}–${entry.prescription.repsMax} reps`}.</p><ul>${entry.sets.sort((a, b) => a.position - b.position).map((set) => `<li>Serie ${set.position + 1}: <strong>${setText(set, set.recordingMode, stats.unit)}</strong></li>`).join('')}</ul></section>`).join('')}</div></details></li>`;
+    return `<li><details class="stats-session"><summary><span class="date-tile"><span>${esc(date.toLocaleDateString('es-CL', { weekday: 'short' }))}</span><strong>${esc(dateLabel(date))}</strong></span><span class="workout-copy"><strong>${esc(workout.sessionName || 'Sesión guardada')}</strong><small>${esc(workout.routineName || 'Sin rutina')} · ${workout.status === 'partial' ? 'Parcial' : 'Completa'}</small><small>${session.exerciseIds.size} ejercicios · ${rows.length} series · ${weightText(volume, stats.unit)}${filtered ? ' (del filtro)' : ''}</small></span>${icon('chevron')}</summary><div class="stats-session-detail"><p>${esc(date.toLocaleString('es-CL'))} · ${duration(workout)}</p>${[...entries.values()].map((entry) => `<section><h3>${esc(entry.name)}</h3><p class="availability-note">Plan original: ${originalPlan(entry)}.</p><ul>${entry.sets.sort((a, b) => a.position - b.position).map((set) => `<li>Serie ${set.position + 1}: <strong>${setText(set, set.recordingMode, stats.unit)}</strong></li>`).join('')}</ul></section>`).join('')}</div></details></li>`;
   }).join('')}</ul>` : '<div class="stats-chart-empty"><p>No hay entrenamientos guardados en este filtro.</p></div>'}</section>`;
 }
 export function goalsCard(stats, goals) {

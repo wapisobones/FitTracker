@@ -1,12 +1,13 @@
 import { MUSCLE_GROUPS } from '../../data/exercises.js';
 import { MUSCLE_REGIONS, legacyGroupsForRegions, groupSelection, regionName } from '../../data/muscle-taxonomy.js';
 import { UUID, newRoutine, newSession, prescription, validateRoutine } from '../routines/model.js';
+import { recordingMode } from '../../data/recording-modes.js';
+import { defaultDurationTarget, isDurationTarget } from '../../data/prescription-targets.js';
 
 export const LEVELS = ['Principiante', 'Intermedio', 'Avanzado'];
 export const GOALS = { hypertrophy: 'Hipertrofia', strength: 'Fuerza', conditioning: 'Acondicionamiento' };
 export const EQUIPMENT = ['Peso corporal', 'Colchoneta', 'Mancuernas', 'Banco', 'Barra', 'Polea', 'Máquina', 'Barra de dominadas'];
 const requirements = { 'Barra y banco': ['Barra', 'Banco'], 'Mancuernas y banco': ['Mancuernas', 'Banco'] };
-const timedExercise = 'c1700000-0000-4000-8000-000000000021';
 export const defaultConfig = () => ({ modality: 'session', level: 'Principiante', goal: 'hypertrophy', frequency: 3, minutes: 30, muscles: [], priorities: [], equipment: [...EQUIPMENT] });
 
 export function equipmentOptions(exercises) {
@@ -33,7 +34,7 @@ const secondaryMatch = (exercise, region) => Array.isArray(exercise.secondaryReg
 
 function candidateSelection(exercises, config) {
   const basic = exercises.filter((exercise) => UUID.test(exercise.id) && typeof exercise.name === 'string' && exercise.name.trim() && config.muscles.includes(exercise.mainMuscle) &&
-    LEVELS.includes(exercise.difficulty) && LEVELS.indexOf(exercise.difficulty) <= LEVELS.indexOf(config.level) && exercise.id !== timedExercise && exercise.tracking !== 'duration' &&
+    LEVELS.includes(exercise.difficulty) && LEVELS.indexOf(exercise.difficulty) <= LEVELS.indexOf(config.level) &&
     (requirements[exercise.equipment] ?? [exercise.equipment]).every((item) => config.equipment.includes(item)));
   const included = new Set();
   const regions = [];
@@ -58,16 +59,18 @@ export function regionalWarnings(exercises, config, selectedIds) {
   return candidateSelection(exercises, config).regions.filter(({ alternatives }) => alternatives.some((exercise) => !selectedIds || selectedIds.has(exercise.id)))
     .map(({ id, direct }) => `${regionName(id)}: ${direct.length ? 'hay pocas opciones principales compatibles' : 'no hay opciones principales compatibles'}. Se amplía la selección con ejercicios del mismo grupo que declaran esta región como secundaria. Revisa esas alternativas antes de entrenar.`);
 }
-export function targets(config) {
+export function targets(config, exercise) {
   const level = LEVELS.indexOf(config.level);
+  if (recordingMode(exercise) === 'duration') return { sets: [2, 3, 4][level], ...defaultDurationTarget(), restSeconds: 60 };
   if (config.goal === 'strength') return { sets: [3, 4, 5][level], repsMin: [5, 4, 3][level], repsMax: [6, 6, 5][level], restSeconds: [150, 180, 180][level] };
   if (config.goal === 'conditioning') return { sets: [2, 3, 3][level], repsMin: 12, repsMax: [15, 15, 20][level], restSeconds: 45 };
   return { sets: [2, 3, 4][level], repsMin: 8, repsMax: 12, restSeconds: [75, 90, 90][level] };
 }
 export function estimateSeconds(session) {
   // Five minutes of preparation, one minute per exercise transition, four
-  // seconds per target repetition, and rest only between sets of an exercise.
-  return 300 + session.prescriptions.reduce((sum, item) => sum + 60 + Number(item.sets) * Number(item.repsMax) * 4 + Math.max(0, Number(item.sets) - 1) * Number(item.restSeconds), 0);
+  // seconds per target repetition (or the explicit time target), and rest only
+  // between sets of an exercise. These remain editable planning estimates.
+  return 300 + session.prescriptions.reduce((sum, item) => sum + 60 + Number(item.sets) * (isDurationTarget(item) ? Number(item.durationMaxSeconds) : Number(item.repsMax) * 4) + Math.max(0, Number(item.sets) - 1) * Number(item.restSeconds), 0);
 }
 export const estimateMinutes = (session) => Math.ceil(estimateSeconds(session) / 60);
 
@@ -87,7 +90,7 @@ export function generateRoutine(input, catalog) {
   const config = validateConfig(input, catalog);
   const eligible = compatibleExercises(catalog, config);
   const missing = config.muscles.filter((group) => !eligible.some((exercise) => exercise.mainMuscle === group));
-  if (missing.length) throw new Error(`No hay ejercicios compatibles para: ${missing.join(', ')}. Añade equipamiento, revisa el nivel o retira esos grupos. Los personalizados necesitan un nivel asignado; los ejercicios por tiempo no se proponen como repeticiones.`);
+  if (missing.length) throw new Error(`No hay ejercicios compatibles para: ${missing.join(', ')}. Añade equipamiento, revisa el nivel o retira esos grupos. Los personalizados necesitan un nivel asignado.`);
   const missingRegions = candidateSelection(catalog, config).regions.filter(({ direct, alternatives }) => !direct.length && !alternatives.length);
   if (missingRegions.length) throw new Error(`No hay ejercicios compatibles para estas regiones: ${missingRegions.map(({ id }) => regionName(id)).join(', ')}. Amplía el equipo o el nivel, o retira esas regiones. No se sustituirán por músculos ajenos.`);
   const routine = newRoutine(config.modality === 'session' ? 'Mi sesión generada' : 'Mi programa generado', `${GOALS[config.goal]} · ${config.level}. Propuesta local editable.`, '');
@@ -98,7 +101,6 @@ export function generateRoutine(input, catalog) {
   const use = new Map();
   const warnings = new Set();
   let previous = new Set();
-  const target = targets(config);
   for (let index = 0; index < count; index++) {
     const muscles = buckets[index % buckets.length];
     const ordered = [...muscles].sort((a, b) => Number(config.priorities.includes(b)) - Number(config.priorities.includes(a)) || MUSCLE_GROUPS.indexOf(a) - MUSCLE_GROUPS.indexOf(b));
@@ -116,7 +118,7 @@ export function generateRoutine(input, catalog) {
       selected.add(exercise.id);
       groupCounts.set(exercise.mainMuscle, (groupCounts.get(exercise.mainMuscle) ?? 0) + 1);
       use.set(exercise.id, (use.get(exercise.id) ?? 0) + 1);
-      session.prescriptions.push({ ...prescription(exercise.id), ...target, order: session.prescriptions.length });
+      session.prescriptions.push({ ...prescription(exercise.id, exercise), ...targets(config, exercise), order: session.prescriptions.length });
     }
     for (const group of ordered) {
       const regions = targetedRegions(config, group);
@@ -133,7 +135,7 @@ export function generateRoutine(input, catalog) {
     while (session.prescriptions.length < 8) {
       const candidates = ordered.map((group) => ({ group, exercise: pick(group) })).filter((item) => item.exercise)
         .sort((a, b) => (groupCounts.get(a.group) ?? 0) / (config.priorities.includes(a.group) ? 2 : 1) - (groupCounts.get(b.group) ?? 0) / (config.priorities.includes(b.group) ? 2 : 1) || ordered.indexOf(a.group) - ordered.indexOf(b.group));
-      const next = candidates.find(({ exercise }) => estimateSeconds({ prescriptions: [...session.prescriptions, { ...target, exerciseId: exercise.id }] }) <= config.minutes * 60);
+      const next = candidates.find(({ exercise }) => estimateSeconds({ prescriptions: [...session.prescriptions, { ...targets(config, exercise), exerciseId: exercise.id }] }) <= config.minutes * 60);
       if (!next) break;
       add(next.exercise);
     }

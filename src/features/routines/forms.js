@@ -2,6 +2,8 @@ import { dialogHeading } from '../../components/routine-dialog.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { icon } from '../../components/icons.js';
 import { routineExercisePreview } from './views.js';
+import { isDurationTarget, hasInheritedReps } from '../../data/prescription-targets.js';
+import { recordingMode, MAX_DURATION_SECONDS } from '../../data/recording-modes.js';
 
 const actions = (label) => `<p class="routine-form-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button button-secondary" data-close-routine-dialog>Cancelar</button><button type="submit" class="button button-primary">${label}</button></div>`;
 
@@ -14,7 +16,11 @@ export function sessionForm(session, number) {
 }
 
 export function prescriptionForm(item, exercise) {
-  return `${dialogHeading('Configurar ejercicio')}<div class="routine-form-context">${exercise ? routineExercisePreview(exercise, '') : 'Ejercicio no disponible'}</div><form data-routine-form="prescription"><div class="prescription-form-grid"><label>Series<input name="sets" type="number" min="1" max="20" step="1" required value="${item.sets}" /></label><label>Descanso (segundos)<input name="restSeconds" type="number" min="0" max="900" step="1" required value="${item.restSeconds}" /></label><label>Repeticiones mínimas<input name="repsMin" type="number" min="1" max="100" step="1" required value="${item.repsMin}" /></label><label>Repeticiones máximas<input name="repsMax" type="number" min="1" max="100" step="1" required value="${item.repsMax}" /></label></div><p class="availability-note">Para repeticiones fijas, usa el mismo valor mínimo y máximo.</p><label>Notas del ejercicio<textarea name="notes" rows="4" maxlength="1000">${esc(item.notes)}</textarea></label>${actions('Guardar objetivos')}</form>`;
+  const duration = isDurationTarget(item);
+  const inherited = hasInheritedReps(item, exercise);
+  const mismatch = duration && exercise && recordingMode(exercise) !== 'duration';
+  const range = duration ? [['durationMinSeconds', 'Duración mínima (segundos)'], ['durationMaxSeconds', 'Duración máxima (segundos)']] : [['repsMin', 'Repeticiones mínimas'], ['repsMax', 'Repeticiones máximas']];
+  return `${dialogHeading('Configurar ejercicio')}<div class="routine-form-context">${exercise ? routineExercisePreview(exercise, '') : 'Ejercicio no disponible'}</div><form data-routine-form="prescription">${inherited ? '<p class="availability-note">Objetivos heredados de repeticiones. No son segundos. Puedes conservarlos o sustituirlos por un nuevo rango de 30–45 s, editable antes de guardar. Los números anteriores no se convierten.</p><button type="button" class="button button-secondary" data-convert-target="duration">Confirmar cambio a segundos</button>' : mismatch ? '<p class="availability-note">El ejercicio ahora registra repeticiones. El objetivo de tiempo se conserva hasta que decidas cambiarlo.</p><button type="button" class="button button-secondary" data-convert-target="reps">Confirmar cambio a repeticiones</button>' : ''}<div class="prescription-form-grid"><label>Series<input name="sets" type="number" min="1" max="20" step="1" required value="${esc(item.sets)}" /></label><label>Descanso (segundos)<input name="restSeconds" type="number" min="0" max="900" step="1" required value="${esc(item.restSeconds)}" /></label>${range.map(([key, label]) => `<label>${label}<input name="${key}" type="number" inputmode="numeric" min="1" max="${duration ? MAX_DURATION_SECONDS : 100}" step="1" required value="${esc(item[key])}" /></label>`).join('')}</div><p class="availability-note">${duration ? 'Objetivo por serie. Punto de partida orientativo y editable, sin carácter médico. Para una duración fija, usa el mismo mínimo y máximo.' : 'Para repeticiones fijas, usa el mismo valor mínimo y máximo.'}</p><label>Notas del ejercicio<textarea name="notes" rows="4" maxlength="1000">${esc(item.notes)}</textarea></label>${actions('Guardar objetivos')}</form>`;
 }
 
 export function confirmation(title, message) {
