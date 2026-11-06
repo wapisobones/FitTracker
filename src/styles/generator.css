@@ -50,7 +50,9 @@
 .generator-match-count { margin: 18px 0 10px; font-size: 12px; color: var(--lime); }
 .generator-available-list { max-height: 480px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; }
 .generator-available-list li { display: flex; align-items: center; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); }
-.generator-available-list li > span { flex: 0 0 57px; border-radius: 7px; background: #142730; overflow: hidden; }
+.generator-exercise-technique { display: flex; align-items: center; gap: 10px; width: 100%; }
+.generator-thumb { flex: 0 0 57px; border-radius: 7px; background: #142730; overflow: hidden; }
+.generator-exercise-copy { min-width: 0; text-align: left; }
 .generator-available-list svg { display: block; width: 100%; }
 .generator-available-list strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
 .generator-available-list small { display: block; margin-top: 5px; font-size: var(--text-small); color: var(--muted); overflow-wrap: anywhere; }

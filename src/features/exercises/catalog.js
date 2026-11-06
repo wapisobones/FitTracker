@@ -1,10 +1,10 @@
 import { BASE_EXERCISES } from '../../data/exercises.js';
 import { escapeHTML } from '../../utils/html.js';
 import { exerciseService } from './exercise-service.js';
-import { catalogFrame, equipmentOptions, regionOptions, exerciseCard, noMatches, techniqueView, editorView, deleteView } from './views.js';
+import { catalogFrame, equipmentOptions, regionOptions, exerciseCard, noMatches, editorView, deleteView } from './views.js';
 import { MUSCLE_REGIONS } from '../../data/muscle-taxonomy.js';
 import { openRoutineAssignment } from '../routines/add-from-catalog.js';
-import { mountExerciseMedia, loadDemonstration } from '../../components/exercise-media.js';
+import { mountExerciseTechnique } from '../../components/exercise-technique-dialog.js';
 
 const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 
@@ -13,7 +13,6 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   const service = exerciseService(mode);
   const events = new AbortController();
   const { signal } = events;
-  const media = mountExerciseMedia(root, signal);
   const form = root.querySelector('.catalog-filters');
   const grid = root.querySelector('.exercise-grid');
   const count = root.querySelector('.catalog-count');
@@ -29,15 +28,13 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   let focusTarget = () => form.elements.search;
   let loadNumber = 0;
   let assignment;
-  let stopDemonstration = () => {};
-
-  function stopMedia() {
-    stopDemonstration();
-    stopDemonstration = () => {};
-  }
+  const technique = mountExerciseTechnique(root, { dialog, onAssign(exercise) {
+    assignment?.destroy();
+    assignment = openRoutineAssignment(root, mode, exercise, () => { if (alive) focusTarget()?.focus(); });
+  } });
 
   function closeDialog() {
-    stopMedia();
+    technique.stopMedia();
     dialog.close();
   }
 
@@ -48,7 +45,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       && (!filters.equipment || exercise.equipment === filters.equipment)
       && (!filters.difficulty || exercise.difficulty === filters.difficulty));
     grid.innerHTML = matches.length ? matches.map(exerciseCard).join('') : noMatches();
-    media.refresh();
+    technique.refresh();
     count.textContent = `${matches.length} de ${exercises.length} ejercicios${ready ? '' : ' · Biblioteca base'} `;
     root.querySelectorAll('[data-muscle]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.muscle === filters.muscle)));
   }
@@ -95,14 +92,14 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   }
 
   function open(kind, exercise, trigger) {
-    stopMedia();
+    technique.stopMedia();
     selected = exercise;
     const triggerAttribute = kind === 'technique' ? 'data-technique' : kind === 'delete' ? 'data-delete-exercise' : 'data-edit-exercise';
     focusTarget = () => exercise ? root.querySelector(`[${triggerAttribute}="${exercise.id}"]`) ?? form.elements.search : trigger;
+    if (kind === 'technique') { technique.open(exercise, trigger); return; }
     dialog.dataset.kind = kind;
-    dialog.innerHTML = kind === 'technique' ? techniqueView(exercise) : kind === 'delete' ? deleteView(exercise) : editorView(exercise, mode);
+    dialog.innerHTML = kind === 'delete' ? deleteView(exercise) : editorView(exercise, mode);
     dialog.showModal();
-    media.refresh();
     if (kind === 'editor') dialog.querySelector('input').focus();
   }
 
@@ -176,16 +173,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
   root.addEventListener('click', (event) => {
     const button = event.target.closest('button');
     if (!button) return;
-    if (button.hasAttribute('data-add-exercise-to-routine') && selected) {
-      closeDialog();
-      assignment?.destroy();
-      assignment = openRoutineAssignment(root, mode, selected, () => { if (alive) focusTarget()?.focus(); });
-    }
-    else if (button.hasAttribute('data-create-exercise') && ready) open('editor', null, button);
-    else if (button.hasAttribute('data-load-demonstration') && selected && dialog.dataset.kind === 'technique') {
-      stopMedia();
-      stopDemonstration = loadDemonstration(dialog.querySelector('[data-technique-media]'), selected);
-    }
+    if (button.hasAttribute('data-create-exercise') && ready) open('editor', null, button);
     else if (button.hasAttribute('data-close-exercise-dialog') && !busy) closeDialog();
     else if (button.hasAttribute('data-clear-filters')) clearFilters();
     else if (button.hasAttribute('data-retry-exercises')) void load();
@@ -207,27 +195,8 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
       if (exercise && (techniqueId || exercise.origin === 'custom')) open(techniqueId ? 'technique' : editId ? 'editor' : 'delete', exercise, button);
     }
   }, { signal });
-  dialog.addEventListener('cancel', (event) => { if (busy) event.preventDefault(); else stopMedia(); }, { signal });
-  dialog.addEventListener('keydown', (event) => {
-    if (event.key !== 'Tab') return;
-    // Let the native dialog contain focus when a player is present, so the
-    // browser's media controls retain their own keyboard navigation.
-    if (dialog.querySelector('video, iframe')) return;
-    const controls = [...dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [href]')].filter((control) => control.getClientRects().length);
-    const first = controls[0];
-    const last = controls.at(-1);
-    if (!first) {
-      event.preventDefault();
-      dialog.focus();
-    } else if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }, { signal });
-  dialog.addEventListener('close', () => { stopMedia(); if (alive && !dialog.open) focusTarget()?.focus(); }, { signal });
+  dialog.addEventListener('cancel', (event) => { if (busy) event.preventDefault(); }, { signal });
+  dialog.addEventListener('close', () => { if (dialog.dataset.kind !== 'technique' && alive && !dialog.open) focusTarget()?.focus(); }, { signal });
   for (const name of ['search', 'muscle', 'difficulty']) form.elements[name].value = filters[name];
   updateEquipment();
   updateRegions();
@@ -238,7 +207,7 @@ export function mountExerciseCatalog(root, mode, previousFilters) {
     getFilters: () => ({ ...filters }),
     destroy() {
       alive = false;
-      stopMedia();
+      technique.destroy();
       events.abort();
       assignment?.destroy();
       if (dialog.open) dialog.close();

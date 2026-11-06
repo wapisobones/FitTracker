@@ -3,6 +3,7 @@ import { routineService } from '../routines/routine-service.js';
 import { mountRoutines } from '../routines/controller.js';
 import { routineLink } from '../routines/views.js';
 import { createRoutineDialog } from '../../components/routine-dialog.js';
+import { mountExerciseTechnique } from '../../components/exercise-technique-dialog.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { defaultConfig, generateRoutine, compatibleExercises, equipmentOptions, estimateMinutes } from './engine.js';
 import { generatorFrame, availableView, prioritiesView, proposalSummary, noProposal } from './views.js';
@@ -21,6 +22,7 @@ export function mountGenerator(root, mode, previousState) {
   let busy = false;
   let editor;
   let dialog;
+  let technique;
   let replacement;
   let confirmTrigger;
   const feedback = (message) => { if (alive) root.querySelector('.generator-feedback')?.replaceChildren(document.createTextNode(message)); };
@@ -40,6 +42,7 @@ export function mountGenerator(root, mode, previousState) {
     });
     if (rebuildPriorities) root.querySelector('.generator-priorities > div').innerHTML = prioritiesView(state.config);
     root.querySelector('.generator-available').innerHTML = availableView(catalog, state.config);
+    technique.refresh();
     const frequency = root.querySelector('[name="frequency"]');
     frequency.disabled = state.config.modality === 'session';
     frequency.value = state.config.modality === 'session' ? '1' : String(state.config.frequency);
@@ -70,6 +73,7 @@ export function mountGenerator(root, mode, previousState) {
     if (busy) return;
     ready = false;
     editor?.destroy(); editor = null;
+    technique?.destroy();
     if (dialog?.open) dialog.close();
     root.innerHTML = '<section class="page-heading"><h1>Generador</h1></section><p role="status">Cargando los ejercicios de este espacio…</p><div class="generator-error" role="alert"></div>';
     try {
@@ -82,6 +86,7 @@ export function mountGenerator(root, mode, previousState) {
       }
       state.config.equipment = state.config.equipment.filter((item) => equipmentOptions(catalog).includes(item));
       root.innerHTML = generatorFrame(state.config, catalog, state.view);
+      technique = mountExerciseTechnique(root);
       dialog = createRoutineDialog(root);
       dialog.setAttribute('aria-labelledby', 'generator-dialog-title');
       dialog.addEventListener('close', () => { if (confirmTrigger?.isConnected) confirmTrigger.focus(); }, { signal });
@@ -124,6 +129,11 @@ export function mountGenerator(root, mode, previousState) {
     if (!button || busy || button.disabled) return;
     if (button.hasAttribute('data-generator-reload')) { void load(); return; }
     if (!ready) return;
+    if (button.dataset.technique) {
+      const exercise = catalog.find((item) => item.id === button.dataset.technique);
+      if (exercise) technique.open(exercise, button);
+      return;
+    }
     const group = button.dataset.generatorMuscle ?? button.dataset.generatorRegion ?? button.dataset.mapMuscle;
     if (group) {
       state.config = toggleMuscleSelection(state.config, group, Boolean(button.dataset.generatorMuscle));
@@ -185,6 +195,6 @@ export function mountGenerator(root, mode, previousState) {
   return {
     getState: () => state,
     async prepareLeave() { while (busy) await new Promise((resolve) => setTimeout(resolve, 15)); return true; },
-    destroy() { alive = false; events.abort(); editor?.destroy(); if (dialog?.open) dialog.close(); if (!busy) window.removeEventListener('beforeunload', beforeUnload); },
+    destroy() { alive = false; events.abort(); technique?.destroy(); editor?.destroy(); if (dialog?.open) dialog.close(); if (!busy) window.removeEventListener('beforeunload', beforeUnload); },
   };
 }

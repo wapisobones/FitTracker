@@ -19,7 +19,7 @@ async function addSession(page, name) {
 async function addExercise(page, name) {
   await page.getByRole('button', { name: 'Añadir ejercicio', exact: true }).click();
   await modal(page, 'Añadir ejercicio a la sesión').getByRole('searchbox').fill(name);
-  await modal(page, 'Añadir ejercicio a la sesión').getByRole('button', { name: new RegExp(`^${name}`) }).click();
+  await modal(page, 'Añadir ejercicio a la sesión').getByRole('button', { name: `Añadir ${name}`, exact: true }).click();
   return modal(page, 'Configurar ejercicio');
 }
 

@@ -25,6 +25,10 @@
 .exercise-preview:hover { background: linear-gradient(145deg, #233d43, #122429); }
 .exercise-preview:focus-visible { outline-offset: -4px; }
 .exercise-visual { display: block; width: 100%; height: auto; }
+.compact-technique { min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; touch-action: manipulation; }
+.compact-technique strong { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
+.compact-technique:hover strong, .compact-technique:focus-visible strong { color: var(--lime); text-decoration-color: var(--lime); }
+.compact-technique:focus-visible { outline-offset: 2px; }
 .exercise-media-still { position: relative; aspect-ratio: 300 / 170; width: 100%; overflow: hidden; background: #0b121b; border-radius: inherit; }
 .exercise-media-still > .exercise-visual { width: 100%; height: 100%; }
 .exercise-media-still > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; }

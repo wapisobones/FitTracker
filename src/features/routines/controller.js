@@ -2,6 +2,7 @@ import { BASE_EXERCISES } from '../../data/exercises.js';
 import { ROUTINE_TEMPLATES } from '../../data/routine-templates.js';
 import { exerciseService } from '../exercises/exercise-service.js';
 import { createRoutineDialog } from '../../components/routine-dialog.js';
+import { mountExerciseTechnique } from '../../components/exercise-technique-dialog.js';
 import { escapeHTML } from '../../utils/html.js';
 import { routineService } from './routine-service.js';
 import { newRoutine, newSession, prescription, validateRoutine } from './model.js';
@@ -11,6 +12,7 @@ import { routineForm, sessionForm, prescriptionForm, confirmation, exercisePicke
 export function mountRoutines(root, mode, { templates = false, params = new URLSearchParams(), proposal = null } = {}) {
   root.innerHTML = proposal ? '<p class="routine-feedback" role="status" aria-live="polite"></p><div class="routine-error"></div><div class="routine-list" hidden></div><section class="routine-detail" aria-label="Propuesta editable"></section>' : routinesFrame(templates);
   const dialog = createRoutineDialog(root);
+  const technique = mountExerciseTechnique(root);
   const service = proposal ? { async save(input) {
     const valid = validateRoutine(input);
     const ids = new Set(proposal.exercises.map((exercise) => exercise.id));
@@ -52,6 +54,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     root.querySelector('.routine-list').innerHTML = visible.map((item) => listCard(item, item.id === routineId)).join('');
     root.querySelector('.routine-detail').innerHTML = routine ? detailView(routine, sessionId, new Map(exercises.map((exercise) => [exercise.id, exercise])), { templates, copied: copies.get(routine.id), mode, draft: Boolean(proposal), sessionMinutes: proposal?.estimateSession }) : ready ? noRoutines() : '<p class="availability-note">Esperando la carga de las rutinas.</p>';
     root.querySelectorAll('[data-template-level]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.templateLevel === level)));
+    technique?.refresh();
     const create = root.querySelector('[data-routine-action="create"]');
     if (create) create.disabled = !ready;
     if (routine && ready && !proposal) history.replaceState(null, '', routineLink(routine.id, sessionId, mode).replace('#/mis-rutinas', templates ? '#/predisenadas' : '#/mis-rutinas'));
@@ -105,6 +108,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     trigger = button ?? trigger;
     context = newContext;
     dialog.innerHTML = html;
+    technique.refresh();
     if (!dialog.open) dialog.showModal();
     dialog.querySelector('[autofocus], input, select, textarea')?.focus();
   }
@@ -132,6 +136,12 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     if (button.hasAttribute('data-confirm-routine-action')) { void pending?.(); return; }
     if (button.dataset.routineAction === 'reload') { if (proposal) { root.querySelector('.routine-error').innerHTML = ''; paint(); } else void load(); return; }
     if (!ready) return;
+    if (button.dataset.technique && technique) {
+      const exercise = exercises.find((item) => item.id === button.dataset.technique);
+      if (exercise) technique.open(exercise, button);
+      event.stopPropagation();
+      return;
+    }
     if (button.dataset.selectRoutine) {
       routineId = button.dataset.selectRoutine; sessionId = null; paint();
       const heading = root.querySelector('.routine-detail h2');
@@ -162,7 +172,7 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     } else if (button.dataset.sessionAction) {
       const kind = button.dataset.sessionAction;
       if (kind === 'add' || kind === 'edit') show(sessionForm(kind === 'edit' ? session : null, routine.sessions.length + 1), button, { editingSession: kind === 'edit' ? session : null });
-      else if (kind === 'add-exercise') { show(exercisePicker(), button); dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(exercises); }
+      else if (kind === 'add-exercise') { show(exercisePicker(), button); dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(exercises); technique.refresh(); }
       else {
         const draft = structuredClone(routine);
         const index = draft.sessions.findIndex((item) => item.id === session.id);
@@ -178,10 +188,10 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     } else if (button.dataset.pickExercise) {
       const exercise = exercises.find((item) => item.id === button.dataset.pickExercise);
       const item = prescription(exercise.id);
-      show(prescriptionForm(item, exercise.name), null, { item, adding: true });
+      show(prescriptionForm(item, exercise), null, { item, adding: true });
     } else if (button.dataset.itemAction) {
       const item = session.prescriptions.find((entry) => entry.id === button.dataset.itemId);
-      if (button.dataset.itemAction === 'edit') show(prescriptionForm(item, exercises.find((exercise) => exercise.id === item.exerciseId)?.name ?? 'Ejercicio no disponible'), button, { item });
+      if (button.dataset.itemAction === 'edit') show(prescriptionForm(item, exercises.find((exercise) => exercise.id === item.exerciseId)), button, { item });
       else {
         const draft = structuredClone(routine);
         const items = draft.sessions.find((entry) => entry.id === session.id).prescriptions;
@@ -218,10 +228,12 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
     if (event.target.hasAttribute('data-picker-search')) {
       const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       dialog.querySelector('.routine-exercise-picker').innerHTML = pickerEntries(exercises.filter((exercise) => normalize(exercise.name).includes(normalize(event.target.value))));
+      technique.refresh();
     }
   }, { signal });
   dialog.addEventListener('close', () => {
-    if (!alive) return;
+    if (!alive || dialog.open) return;
+    dialog.replaceChildren();
     if (trigger?.isConnected) trigger.focus();
     else { const heading = root.querySelector('.routine-detail h2'); if (heading) { heading.tabIndex = -1; heading.focus(); } }
   }, { signal });
@@ -229,5 +241,5 @@ export function mountRoutines(root, mode, { templates = false, params = new URLS
   if (proposal) message('Propuesta sin guardar. Puedes editarla antes de añadirla a Mis rutinas.');
   else if (templates) message('3 plantillas disponibles · Guarda una copia para personalizarla.');
   else void load();
-  return { destroy() { alive = false; events.abort(); if (dialog.open) dialog.close(); } };
+  return { destroy() { alive = false; events.abort(); technique?.destroy(); if (dialog.open) dialog.close(); } };
 }

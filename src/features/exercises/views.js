@@ -43,12 +43,12 @@ function dialogHeading(title) {
   return `<div class="dialog-heading"><h2 id="exercise-dialog-title">${esc(title)}</h2><button class="icon-button" type="button" data-close-exercise-dialog aria-label="Cerrar ventana">${icon('close')}</button></div>`;
 }
 
-export function techniqueView(exercise) {
+export function techniqueView(exercise, { allowAssignment = true } = {}) {
   const { video, animation } = exerciseMedia(exercise);
   return `${dialogHeading(exercise.name)}<div class="technique-layout">${techniqueMedia(exercise)}<div class="technique-copy">${video ? '' : `<p class="video-unavailable">${icon('info')}${animation ? animation.provenance === 'user-provided' ? 'La demostración es una secuencia de dos imágenes, no un vídeo continuo.' : 'La demostración es una secuencia de dos fotografías, no un vídeo continuo.' : 'No hay un vídeo autorizado disponible para este ejercicio.'}</p>`}
     <section class="exercise-anatomy"><h3>Músculos del ejercicio</h3><dl><div><dt>Grupo general</dt><dd>${esc(exercise.mainMuscle)}</dd></div><div><dt>Región principal</dt><dd>${esc(regionName(exercise.mainRegion))}</dd></div><div><dt>Regiones secundarias</dt><dd>${exercise.secondaryRegions?.length ? exercise.secondaryRegions.map((id) => esc(regionName(id))).join(', ') : 'Sin regiones secundarias especificadas'}</dd></div></dl>${exercise.anatomyNote ? `<p>${esc(exercise.anatomyNote)}</p>` : ''}<p>Los secundarios son informativos. Las estadísticas cuentan cada serie solo en su grupo principal.</p></section>
     ${exercise.origin === 'base' ? `<section><h3>${icon('layers')}Cómo realizar el movimiento</h3><ol class="technique-steps">${exercise.technique.steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol></section><section class="technique-tips"><h3>${icon('check')}Recomendaciones técnicas</h3><ul>${exercise.technique.tips.map((tip) => `<li>${icon('check')}<span>${esc(tip)}</span></li>`).join('')}</ul></section>` : `<section><h3>Notas del ejercicio</h3><p class="exercise-notes">${exercise.notes ? esc(exercise.notes) : 'Este ejercicio aún no tiene notas técnicas. Puedes añadirlas al editarlo.'}</p></section>`}
-    </div></div><div class="future-routine-action"><button class="button button-primary" type="button" data-add-exercise-to-routine>${icon('plus')}Añadir a rutina</button><p>Elige una rutina y sesión para guardar sus objetivos.</p></div>`;
+    </div></div>${allowAssignment ? `<div class="future-routine-action"><button class="button button-primary" type="button" data-add-exercise-to-routine>${icon('plus')}Añadir a rutina</button><p>Elige una rutina y sesión para guardar sus objetivos.</p></div>` : ''}`;
 }
 
 export function editorView(exercise, mode) {

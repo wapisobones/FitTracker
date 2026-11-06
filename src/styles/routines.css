@@ -71,7 +71,8 @@
 .picker-exercise:hover { border-color: var(--lime); }
 .picker-exercise strong { display: block; font-size: 14px; }
 .picker-exercise small { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
-.picker-exercise > span:last-child { color: var(--lime); font-size: 22px; }
+.picker-exercise > .compact-technique { flex: 1; align-self: stretch; }
+.picker-exercise > .icon-button { flex: 0 0 44px; color: var(--lime); }
 @media (max-width: 1200px) { .routines-layout { grid-template-columns: 1fr; } .routine-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) {
   .routine-list { display: flex; }
