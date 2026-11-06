@@ -51,6 +51,10 @@
 .stats-distribution .muscle-list li > div:first-child > span { display: flex; align-items: center; gap: 6px; }
 .stats-distribution .muscle-list i { width: 9px; height: 9px; display: inline-block; border-radius: 2px; }
 .stats-distribution .muscle-list small { font-size: var(--text-small); color: var(--muted); }
+.muscle-heat-level { font-size: var(--text-small); color: var(--muted); }
+.muscle-heat-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 14px; font-size: var(--text-small); }
+.muscle-heat-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.muscle-heat-legend i { width: 10px; height: 10px; flex-shrink: 0; border-radius: 2px; }
 .stats-distribution .muscle-list li + li { margin-top: 9px; }
 .summary-view .stats-distribution { flex-direction: column; gap: 10px; }
 .summary-view .stats-donut { width: 70%; max-width: 180px; }

@@ -2,6 +2,8 @@ import { escapeHTML as esc } from '../utils/html.js';
 import { number, dateLabel, dayDate } from '../features/progress/metrics.js';
 import { anatomyMap } from './anatomy-map.js';
 import { selectedRegions } from '../data/muscle-taxonomy.js';
+import { MUSCLE_GROUPS } from '../data/exercises.js';
+import { HEAT_LEVELS, muscleHeat } from '../features/progress/muscle-heatmap.js';
 
 export function seriesChart(points, { id, title, unit = 'kg', bars = false } = {}) {
   if (!points.length) return `<div class="stats-chart-empty"><p>No hay registros para este gráfico.</p><small>${id === 'strength' ? 'Selecciona otro ejercicio o amplía el período. El 1RM estimado requiere carga positiva y entre 1 y 10 repeticiones.' : 'Completa series y guarda una sesión para ver su evolución.'}</small></div>`;
@@ -36,8 +38,10 @@ export function seriesChart(points, { id, title, unit = 'kg', bars = false } = {
 }
 
 const colors = { Pecho: '#9bf45c', Espalda: '#45d699', Piernas: '#54cde1', Hombros: '#a28bf8', Brazos: '#ea86c4', Core: '#ffc244' };
-export function distribution(groups, total, { schematic = false } = {}) {
-  if (!total) return '<div class="stats-chart-empty"><p>Sin series completadas en este período.</p><small>Cada serie se cuenta una vez, en su grupo muscular principal.</small></div>';
+export function distribution(groups, total, { schematic = false, heatmapDays = 7 } = {}) {
+  const empty = '<div class="stats-chart-empty"><p>Sin series completadas en este período.</p><small>Cada serie se cuenta una vez, en su grupo muscular principal.</small></div>';
+  if (!total && !schematic) return empty;
+  const color = (group) => schematic ? muscleHeat(group.count, heatmapDays).color : colors[group.name] ?? '#b9c6d5';
   let offset = 0;
   const segments = groups.map((group) => {
     const length = group.count / total * 100;
@@ -45,13 +49,21 @@ export function distribution(groups, total, { schematic = false } = {}) {
     offset += length;
     return circle;
   }).join('');
-  return `<div class="stats-distribution${schematic ? ' stats-distribution--anatomy' : ''}">${schematic ? muscleActivityMap(groups) : `<svg class="stats-donut" viewBox="0 0 200 200" role="img" aria-label="Distribución de ${total} series por grupo muscular; detalle en la lista contigua"><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="98" text-anchor="middle" class="donut-count">${number(total, 0)}</text><text x="100" y="120" text-anchor="middle" class="donut-label">series</text></svg>`}<ul class="muscle-list">${groups.map((group) => `<li><div><span><i style="background:${colors[group.name] ?? '#b9c6d5'}"></i>${esc(group.name)}</span><strong>${number(group.percent)} %</strong></div><div class="progress-track"><span style="width:${group.percent}%;background:${colors[group.name] ?? '#b9c6d5'}"></span></div><small>${number(group.count, 0)} series</small></li>`).join('')}</ul></div><p class="card-caption">Solo el grupo principal de cada serie. Los músculos secundarios no se suman.${schematic ? ' Las zonas resaltadas representan grupos generales, no la activación de cada músculo.' : ''}</p>`;
+  return `<div class="stats-distribution${schematic ? ' stats-distribution--anatomy' : ''}">${schematic ? muscleActivityMap(groups, heatmapDays) : `<svg class="stats-donut" viewBox="0 0 200 200" role="img" aria-label="Distribución de ${total} series por grupo muscular; detalle en la lista contigua"><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="98" text-anchor="middle" class="donut-count">${number(total, 0)}</text><text x="100" y="120" text-anchor="middle" class="donut-label">series</text></svg>`}${total ? `<ul class="muscle-list">${groups.map((group) => `<li${schematic ? ` aria-label="${esc(group.name)}: ${group.count} series, ${number(muscleHeat(group.count, heatmapDays).weekly, 2)} por semana, nivel ${muscleHeat(group.count, heatmapDays).label}"` : ''}><div><span><i aria-hidden="true" style="background:${color(group)}"></i>${esc(group.name)}</span><strong>${number(group.percent)} %</strong></div><div class="progress-track"><span style="width:${group.percent}%;background:${color(group)}"></span></div><small>${number(group.count, 0)} series</small>${schematic ? `<span class="muscle-heat-level"> · ${muscleHeat(group.count, heatmapDays).label}</span>` : ''}</li>`).join('')}</ul>` : empty}</div>${schematic ? heatmapLegend(heatmapDays) : ''}<p class="card-caption">${schematic ? 'Series del grupo principal, sin sumar secundarios. El color describe cantidad registrada; no diagnostica sobreentrenamiento.' : 'Solo el grupo principal de cada serie. Los músculos secundarios no se suman.'}</p>`;
 }
 
-function muscleActivityMap(groups) {
+function heatmapLegend(days) {
+  const thresholds = { none: '0', low: days === 7 ? '1–5' : '>0 y <6', medium: days === 7 ? '6–11' : '6 a <12', high: '12 o más' };
+  return `<div class="muscle-heat-legend" aria-label="Escala de series por semana">${Object.entries(HEAT_LEVELS).map(([level, { label, color }]) => `<span><i aria-hidden="true" style="background:${color}"></i>${label}: ${thresholds[level]}</span>`).join('')}</div><p class="card-caption muscle-heat-scale">${days === 7 ? 'Escala de 7 días. Períodos más cortos: series sin extrapolar.' : `Color: promedio semanal = series × 7 / ${days} días. Las cifras y barras conservan el total del período.`}</p>`;
+}
+
+function muscleActivityMap(groups, days) {
   const activeGroups = groups.filter((group) => group.count > 0).map((group) => group.name);
+  const counts = new Map(groups.map((group) => [group.name, group.count]));
+  const heat = MUSCLE_GROUPS.map((name) => ({ name, count: counts.get(name) ?? 0, ...muscleHeat(counts.get(name) ?? 0, days) }));
   return anatomyMap(selectedRegions({ muscles: activeGroups }), {
     idPrefix: 'stats-anatomy',
-    label: `Mapa anatómico frontal y posterior. Grupos con series completadas: ${activeGroups.join(', ')}. Las zonas resaltadas representan grupos generales, no la activación de cada músculo. Series y porcentajes en la lista contigua.`,
+    groupLevels: Object.fromEntries(heat.map((group) => [group.name, group.level])),
+    label: `Mapa anatómico frontal y posterior. ${heat.map((group) => `${group.name}: ${group.count} series, ${number(group.weekly, 2)} por semana, nivel ${group.label}`).join('; ')}. Escala de ${days} días. Las zonas representan grupos generales, no la activación de cada músculo.`,
   });
 }

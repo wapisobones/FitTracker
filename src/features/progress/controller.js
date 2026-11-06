@@ -1,5 +1,6 @@
 import { historyService } from './history-service.js';
-import { calculate, PERIODS } from './metrics.js';
+import { calculate, PERIODS, periodBounds } from './metrics.js';
+import { heatmapDays } from './muscle-heatmap.js';
 import { progressView, SECTIONS } from './views.js';
 import { dashboard } from '../dashboard.js';
 import { escapeHTML as esc } from '../../utils/html.js';
@@ -16,9 +17,12 @@ export function mountStatistics(root, mode, { progress = false, params = new URL
     if (!alive || !history) return;
     if (!history.exercises.some((exercise) => exercise.id === state.exerciseId)) state.exerciseId = '';
     if (!history.exercises.some((exercise) => exercise.id === state.chartExerciseId)) state.chartExerciseId = '';
-    const stats = calculate(history, state);
+    const now = new Date();
+    const stats = calculate(history, { ...state, now });
     stats.unit = history.weightUnit;
-    root.innerHTML = progress ? progressView(history, stats, state, mode) : dashboard(history, stats, state, mode);
+    const muscleStats = progress ? stats : calculate(history, { period: '7', now });
+    muscleStats.heatmapDays = heatmapDays(periodBounds(progress ? state.period : '7', now), history.rows[0]?.date);
+    root.innerHTML = progress ? progressView(history, stats, state, mode) : dashboard(history, stats, state, mode, muscleStats);
     const query = new URLSearchParams({ ambito: mode, periodo: state.period });
     if (state.exerciseId) query.set('ejercicio', state.exerciseId);
     if (state.chartExerciseId) query.set('grafico', state.chartExerciseId);

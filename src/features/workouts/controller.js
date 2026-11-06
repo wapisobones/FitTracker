@@ -4,6 +4,7 @@ import { StorageError } from '../../db/indexed-db.js';
 import { workoutService } from './workout-service.js';
 import { routineService } from '../routines/routine-service.js';
 import { createRoutineDialog } from '../../components/routine-dialog.js';
+import { mountExerciseTechnique } from '../../components/exercise-technique-dialog.js';
 import { escapeHTML as esc } from '../../utils/html.js';
 import { restRemaining, SetValidationError } from './model.js';
 import { heading, chooser, pendingView, activeView, finishDialog, discardDialog, resultView, timeText } from './views.js';
@@ -11,6 +12,7 @@ import { heading, chooser, pendingView, activeView, finishDialog, discardDialog,
 export function mountWorkout(root, mode, params = new URLSearchParams()) {
   root.innerHTML = `${heading()}<div class="workout-feedback" role="status" aria-live="polite">Cargando entrenamiento…</div><div class="workout-error" role="alert"></div><div class="workout-content"></div>`;
   const dialog = createRoutineDialog(root);
+  const technique = mountExerciseTechnique(root);
   const service = workoutService(mode);
   const events = new AbortController();
   const { signal } = events;
@@ -65,6 +67,7 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
     if (!alive || !ready) return;
     content.innerHTML = workout ? reviewingPending ? pendingView(workout) : activeView(workout, unit) : chooser(routines, routineId, sessionId);
     content.classList.toggle('show-workout-register', mobileRegister);
+    technique.refresh();
     tick();
   }
 
@@ -253,6 +256,11 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
       return;
     }
     if (!workout) return;
+    if (button.hasAttribute('data-workout-technique')) {
+      const exercise = workout.entries[Number(button.dataset.workoutTechnique)]?.exercise;
+      if (exercise) technique.open(exercise, button);
+      return;
+    }
     if (action === 'continue') {
       reviewingPending = false;
       mobileRegister = true;
@@ -299,6 +307,6 @@ export function mountWorkout(root, mode, params = new URLSearchParams()) {
       feedback('Hay cambios sin guardar. Reintenta el guardado o recupera la versión guardada antes de salir.');
       return false;
     },
-    destroy() { alive = false; events.abort(); clearInterval(ticker); if (!commands.length && !running && !busy) window.removeEventListener('beforeunload', beforeUnload); if (dialog.open) dialog.close(); },
+    destroy() { alive = false; events.abort(); technique.destroy(); clearInterval(ticker); if (!commands.length && !running && !busy) window.removeEventListener('beforeunload', beforeUnload); if (dialog.open) dialog.close(); },
   };
 }

@@ -11,6 +11,10 @@
 .anatomy-map--informative { width: 100%; max-width: 220px; gap: 8px; padding: 0; justify-self: center; }
 .anatomy-map--informative .anatomy-body { height: 240px; max-height: 240px; }
 .anatomy-map--informative figcaption { font-size: 12px; }
+.anatomy-map--informative [data-heat-level="none"] path { fill: #8c959f; }
+.anatomy-map--informative [data-heat-level="low"] path { fill: #9bf45c; }
+.anatomy-map--informative [data-heat-level="medium"] path { fill: #ffc244; }
+.anatomy-map--informative [data-heat-level="high"] path { fill: #f87171; }
 @media (max-width: 600px) {
   .anatomy-map--informative { max-width: 184px; }
   .anatomy-map--informative .anatomy-body { height: 200px; max-height: 200px; }

@@ -19,7 +19,7 @@ export function periodBounds(period, now = new Date()) {
   let start = null;
   if (period === 'week') start = weekStart(now);
   else if (period === 'month') start = new Date(now.getFullYear(), now.getMonth(), 1);
-  else if (period !== 'all') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (period === '30' ? 29 : 89));
+  else if (period !== 'all') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (period === '7' ? 6 : period === '30' ? 29 : 89));
   return { start, end };
 }
 export function epley(weightKg, reps) {

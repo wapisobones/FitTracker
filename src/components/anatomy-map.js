@@ -42,13 +42,13 @@ const fibers = {
   back: 'M145 126 L127 135 M148 142 L133 146 M150 159 L144 169 M117 205 L137 221 M120 221 L136 238 M124 241 L133 256 M91 146 L99 158 M85 202 L70 244 M47 294 L32 336 M117 320 L127 312 M119 351 Q133 341 143 335 M117 364 Q131 357 145 346 M122 410 L120 459 M140 413 L141 465 M124 567 L124 595 M141 565 L143 588 M121 615 L128 640',
 };
 
-export function anatomyMap(selected, { view = 'both', interactive = false, idPrefix = 'anatomy', label = 'Mapa anatómico frontal y posterior' } = {}) {
+export function anatomyMap(selected, { view = 'both', interactive = false, idPrefix = 'anatomy', label = 'Mapa anatómico frontal y posterior', groupLevels = null } = {}) {
   function regionShape(region, zones, side, label) {
     // Anatomical left/right reverses when the person faces the viewer.
     const halves = side === 'front' ? ['right', 'left'] : ['left', 'right'];
     const paths = halves.map((half, index) => `<g${index ? ' transform="translate(320 0) scale(-1 1)"' : ''}>${zones[region.id].map((path, part) => `<path id="${idPrefix}-${side}-${region.id}-${half}-${part + 1}" d="${path}"/>`).join('')}</g>`).join('');
     const state = interactive ? `id="map-${side}-${region.id}" role="button" tabindex="0" aria-label="${region.name}, vista ${label}, ambos lados" aria-pressed="${selected.includes(region.id)}" data-map-muscle="${region.id}"` : `data-active="${selected.includes(region.id)}"`;
-    return `<g data-anatomy-region="${region.id}" data-muscle-group="${region.group}" ${state}>${interactive ? `<title>${region.name} · ambos lados</title>` : ''}${paths}</g>`;
+    return `<g data-anatomy-region="${region.id}" data-muscle-group="${region.group}" ${state}${!interactive && groupLevels ? ` data-heat-level="${esc(groupLevels[region.group] ?? 'none')}"` : ''}>${interactive ? `<title>${region.name} · ambos lados</title>` : ''}${paths}</g>`;
   }
   function figure(zones, side, label) {
     const visible = MUSCLE_REGIONS.filter((region) => region.views.includes(side));
