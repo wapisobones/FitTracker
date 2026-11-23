@@ -1,5 +1,6 @@
 import { icon } from './icons.js';
 import { routes } from '../app/routes.js';
+import { visualCredits } from './visual-credits.js';
 
 const link = (route) => `<a class="nav-link" href="#/${route.id}" data-page="${route.id}">${icon(route.icon)}<span>${route.title}</span></a>`;
 
@@ -31,7 +32,7 @@ export function shell() {
   <div class="operation-notice" hidden><p class="operation-status" role="status" aria-live="polite"></p><button type="button" class="icon-button" data-dismiss-operation aria-label="Cerrar aviso">${icon('close')}</button></div>
   <div class="pending-workout-banner" aria-live="polite"></div>
   <main id="contenido" tabindex="-1"></main>
-  <footer class="page-footer">Datos locales en este navegador · Sin cuentas ni nube.</footer></div>
+  <footer class="page-footer"><p data-footer-mode>Datos locales en este navegador · Sin cuentas ni nube.</p>${visualCredits()}</footer></div>
   <nav class="bottom-nav" aria-label="Navegación móvil">${[
     ['inicio', 'home', 'Inicio', 'Inicio'], ['mis-rutinas', 'dumbbell', 'Entrenamientos', 'Rutinas'], ['rutina-activa', 'calendar', 'Rutina activa', 'Entrenar'], ['progreso', 'chart', 'Progreso', 'Progreso'], ['herramientas', 'tools', 'Herramientas', 'Cálculos'],
   ].map(([id, symbol, title, label]) => `<a href="#/${id}" data-mobile-page="${id}" aria-label="${label === title ? title : `${label} (${title})`}">${icon(symbol)}<span>${label}</span></a>`).join('')}</nav>

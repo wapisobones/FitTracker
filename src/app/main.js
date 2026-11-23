@@ -123,7 +123,7 @@ function render({ focus = false } = {}) {
   document.querySelector('[data-open-modes]').disabled = state.status === 'loading';
   document.querySelector('.operation-status').textContent = state.message;
   document.querySelector('.operation-notice').hidden = !state.message;
-  document.querySelector('.page-footer').textContent = state.mode === 'demo' ? 'Demostración · Datos ficticios guardados en este navegador.' : state.mode === 'personal' ? 'Modo personal · Tus datos se guardan solo en este navegador.' : 'Datos locales en este navegador · Sin cuentas ni nube.';
+  document.querySelector('[data-footer-mode]').textContent = state.mode === 'demo' ? 'Demostración · Datos ficticios guardados en este navegador.' : state.mode === 'personal' ? 'Modo personal · Tus datos se guardan solo en este navegador.' : 'Datos locales en este navegador · Sin cuentas ni nube.';
   document.querySelectorAll('[data-page]').forEach((link) => {
     const active = link.dataset.page === id;
     link.classList.toggle('is-active', active);

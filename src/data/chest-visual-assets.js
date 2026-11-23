@@ -36,14 +36,18 @@ const pairs = [
   [32, 'pecho_12_fondos_asistidos_con_torso_inclinado', 'fondos-asistidos-con-torso-inclinado', 'Fondos asistidos con torso inclinado', 'Dips - Chest Version',
     'Fondos en una máquina con barras paralelas, brazos extendidos y rodillas flexionadas.',
     'Fondos con el torso inclinado: apoyo alto y descenso entre las barras paralelas.'],
+  [78, 'press-inclinado-maquina', 'press-inclinado-maquina', 'Press inclinado de pecho en máquina', 'Imágenes proporcionadas para FitTracker',
+    'Press inclinado en máquina con espalda apoyada, agarres junto a la parte alta del pecho y codos flexionados.',
+    'Press inclinado en máquina: posición inicial y empuje hacia delante y arriba con espalda apoyada.'],
 ];
 
 export const CHEST_VISUAL_ASSETS = Object.freeze(pairs.map(([suffix, originalStem, slug, name, sourceName, alt, sequenceAlt]) => Object.freeze({
   id: `c1700000-0000-4000-8000-${String(suffix).padStart(12, '0')}`,
   originalStem, slug, name, sourceName, alt, sequenceAlt,
-  extension: 'jpg', provenance: 'free-exercise-db', posterFrame: 0,
+  extension: suffix === 78 ? 'png' : 'jpg', provenance: suffix === 78 ? 'user-provided' : 'free-exercise-db', posterFrame: 0,
+  ...(suffix === 78 ? { originalFrames: Object.freeze(['press-inclinado-maquina-start.png', 'press-inclinado-maquina-peak.png']), checkedAt: '2026-11-23' } : {}),
   match: [28, 32].includes(suffix) ? 'aproximada' : 'exacta',
   note: suffix === 28
     ? 'Correspondencia aproximada: las fotografías muestran un press bilateral en polea. Para el ejercicio unilateral del catálogo, sigue los pasos de ejecución con un solo brazo.'
-    : suffix === 32 ? 'Correspondencia aproximada: referencia «Dips - Chest Version». Ajusta la asistencia y sigue los pasos del catálogo para los fondos asistidos con torso inclinado.' : '',
+    : suffix === 32 ? 'Correspondencia aproximada: referencia «Dips - Chest Version». Ajusta la asistencia y sigue los pasos del catálogo para los fondos asistidos con torso inclinado.' : suffix === 78 ? 'Referencia de dos posiciones del press inclinado en máquina. Sigue las instrucciones escritas para ajustar el asiento y controlar el recorrido.' : '',
 })));

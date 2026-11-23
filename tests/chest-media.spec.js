@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { CHEST_VISUAL_ASSETS } from '../src/data/chest-visual-assets.js';
@@ -16,7 +17,7 @@ const dialogFor = (page, name = 'Press de banca') => page.getByRole('dialog', { 
 const animationRequests = (requests) => requests.filter((url) => /\/assets\/exercises\/pecho\/[^/]+\.webp$/.test(url) && !url.endsWith('-poster.webp'));
 
 for (const width of [1536, 390, 320]) {
-  test(`Pecho a ${width}px: doce pares, créditos plegados, secuencias a demanda y detención`, async ({ page }) => {
+  test(`Pecho a ${width}px: trece pares, créditos globales, secuencias a demanda y detención`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 1536 ? 1024 : 844 });
     const requests = [];
     page.on('request', (request) => requests.push(request.url()));
@@ -40,19 +41,10 @@ for (const width of [1536, 390, 320]) {
       await trigger.click();
       const dialog = dialogFor(page, asset.name);
       await expect(dialog.locator('.exercise-media-still')).toHaveAttribute('data-media-state', 'ready');
-      await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
-      await expect(dialog.locator('.media-credit')).not.toBeVisible();
-      await expect(dialog.locator('.media-description')).not.toBeVisible();
-      const sources = dialog.locator('.media-sources > summary');
-      await expect(sources).toHaveText('Fuente de las imágenes');
-      await sources.focus();
-      await page.keyboard.press('Enter');
-      await expect(dialog.getByRole('link', { name: 'Fuente', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db');
-      await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE');
-      if (asset.match === 'aproximada') await expect(dialog.locator('.media-description')).toHaveText(asset.note);
+      await expect(dialog.locator('.media-sources, .media-credit')).toHaveCount(0);
+      await expectGlobalCredit(page, asset);
+      if (asset.note) await expect(dialog.locator('.media-description')).toHaveText(asset.note);
       expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-      await page.keyboard.press('Space');
-      await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
       await expect(dialog.locator('.technique-steps li')).toHaveText(exercise.technique.steps);
       await expect(dialog.locator('.technique-tips li span')).toHaveText(exercise.technique.tips);
       await expect(dialog.locator('.exercise-anatomy dd').first()).toHaveText('Pecho');

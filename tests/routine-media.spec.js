@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
@@ -53,10 +54,8 @@ async function checkTechnique(page, exercise) {
   await expect(modal.locator('.technique-steps li')).toHaveText(exercise.technique.steps);
   await expect(modal.locator('.technique-tips li span')).toHaveText(exercise.technique.tips);
   await expect(modal.locator('.exercise-anatomy dd')).toHaveCount(3);
-  await expect(modal.locator('.media-sources')).not.toHaveAttribute('open');
-  await modal.locator('.media-sources > summary').click();
-  await expect(modal.locator('.media-credit')).toContainText('Unlicense');
-  await expect(modal.getByRole('link', { name: 'Fuente', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db');
+  await expect(modal.locator('.media-sources, .media-credit')).toHaveCount(0);
+  await expectGlobalCredit(page, exercise);
   await fits(page, modal);
   await modal.getByRole('button', { name: 'Ver secuencia', exact: true }).click();
   const player = modal.locator('img.technique-player');

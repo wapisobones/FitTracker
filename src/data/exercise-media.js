@@ -4,13 +4,14 @@ import { BACK_VISUAL_ASSETS } from './back-visual-assets.js';
 import { LEG_VISUAL_ASSETS } from './leg-visual-assets.js';
 import { SHOULDER_VISUAL_ASSETS } from './shoulder-visual-assets.js';
 import { ARM_VISUAL_ASSETS } from './arm-visual-assets.js';
+import { REPDB_VISUAL_ASSETS, REPDB_SOURCE, REPDB_LICENSE_URL } from './repdb-visual-assets.js';
 
 // Editorial manifest only. Never read media URLs from IndexedDB or backups.
 // Reviewed local pairs. Missing/failed assets fall back to the existing SVG.
 function localPair(asset, group = 'core') {
   const rights = {
     status: 'verified', checkedAt: asset.checkedAt ?? '2026-11-04', author: 'free-exercise-db',
-    title: `${asset.sourceName} — ${asset.name}`,
+    title: asset.name ? `${asset.sourceName} — ${asset.name}` : asset.sourceName,
     sourceUrl: 'https://github.com/yuhonas/free-exercise-db',
     license: 'Unlicense', licenseUrl: 'https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE',
     type: 'image', width: 640, height: 427,
@@ -21,19 +22,26 @@ function localPair(asset, group = 'core') {
       title: asset.name, sourceUrl: null, license: null, licenseUrl: null,
     });
   }
+  if (asset.provenance === 'repdb') {
+    Object.assign(rights, {
+      provenance: 'repdb', checkedAt: REPDB_SOURCE.checkedAt, author: REPDB_SOURCE.author,
+      sourceUrl: `${REPDB_SOURCE.repository}/tree/${REPDB_SOURCE.revision}/images/flat`,
+      license: REPDB_SOURCE.license, licenseUrl: REPDB_LICENSE_URL,
+    });
+  }
   const path = `assets/exercises/${group}/${asset.slug}`;
   return {
     status: 'verified',
     thumbnail: {
       ...rights, src: `${path}-poster.webp`, alt: asset.alt,
-      changes: asset.provenance === 'user-provided' ? 'Imagen local reducida y convertida a WebP; sin recorte.' : 'Fotografía local reducida y convertida a WebP; sin recorte.',
+      changes: ['user-provided', 'repdb'].includes(asset.provenance) ? 'Imagen local reducida y convertida a WebP; sin recorte.' : 'Fotografía local reducida y convertida a WebP; sin recorte.',
     },
     animation: {
       ...rights, src: `${path}.webp`, alt: asset.sequenceAlt,
       description: asset.note || (asset.slug === 'crunch-abdominal'
         ? 'Alterna las posiciones inicial y final. Consulta los pasos para controlar el movimiento y evitar tirar del cuello.'
         : 'Alterna dos fotografías de referencia. Sigue las instrucciones para realizar el movimiento de forma controlada.'),
-      changes: asset.provenance === 'user-provided' ? 'Dos imágenes reducidas y combinadas en una secuencia animada; sin recorte ni audio.' : 'Dos fotografías reducidas y combinadas en una secuencia animada; sin recorte ni audio.',
+      changes: ['user-provided', 'repdb'].includes(asset.provenance) ? 'Dos imágenes reducidas y combinadas en una secuencia animada; sin recorte ni audio.' : 'Dos fotografías reducidas y combinadas en una secuencia animada; sin recorte ni audio.',
     },
     video: null,
   };
@@ -46,6 +54,7 @@ export const EXERCISE_MEDIA = Object.freeze({
   ...Object.fromEntries(LEG_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'piernas')])),
   ...Object.fromEntries(SHOULDER_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'hombros')])),
   ...Object.fromEntries(ARM_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'brazos')])),
+  ...Object.fromEntries(REPDB_VISUAL_ASSETS.map((asset) => [asset.id, localPair(asset, 'repdb')])),
 });
 
 const secureLink = (value) => {
@@ -70,7 +79,7 @@ export function mediaUrl(path) {
 export function verifiedResource(resource, kind) {
   if (!resource || resource.status !== 'verified' || !resource.checkedAt || !resource.author || !resource.title) return null;
   const provided = resource.provenance === 'user-provided';
-  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/(?:core|espalda|piernas|hombros)\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
+  if (provided && (!['thumbnail', 'animation'].includes(kind) || !/^assets\/exercises\/(?:core|pecho|espalda|piernas|hombros)\/[a-z0-9-]+\.webp$/.test(resource.src))) return null;
   if (!provided && (!resource.license || !secureLink(resource.sourceUrl) || !secureLink(resource.licenseUrl)
     || (resource.authorUrl && !secureLink(resource.authorUrl)))) return null;
   if (['thumbnail', 'animation'].includes(kind) && (resource.type !== 'image' || !resource.alt || !(resource.width > 0 && resource.height > 0))) return null;

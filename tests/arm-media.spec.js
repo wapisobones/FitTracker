@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 ﻿import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { ARM_VISUAL_ASSETS } from '../src/data/arm-visual-assets.js';
@@ -40,24 +41,10 @@ for (const width of [1536, 390, 320]) {
       await trigger.click();
       const dialog = dialogFor(page, asset.name);
       await expect(dialog.locator('.exercise-media-still')).toHaveAttribute('data-media-state', 'ready');
-      await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
-      await expect(dialog.locator('.media-credit')).not.toBeVisible();
-      await expect(dialog.locator('.media-description')).not.toBeVisible();
-      const sources = dialog.locator('.media-sources > summary');
-      await expect(sources).toHaveText('Fuente de las imágenes');
-      await sources.focus();
-      await page.keyboard.press('Enter');
-      if (asset.provenance === 'user-provided') {
-        await expect(dialog.locator('.media-credit')).toContainText('Imágenes proporcionadas para FitTracker');
-        await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toHaveCount(0);
-      } else {
-        await expect(dialog.getByRole('link', { name: 'Fuente', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db');
-        await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE');
-      }
+      await expect(dialog.locator('.media-sources, .media-credit')).toHaveCount(0);
+      await expectGlobalCredit(page, asset);
       if (asset.note) await expect(dialog.locator('.media-description')).toHaveText(asset.note);
       expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-      await page.keyboard.press('Space');
-      await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
       await expect(dialog.locator('.technique-steps li')).toHaveText(exercise.technique.steps);
       await expect(dialog.locator('.technique-tips li span')).toHaveText(exercise.technique.tips);
       await expect(dialog.locator('.exercise-anatomy dd').first()).toHaveText('Brazos');

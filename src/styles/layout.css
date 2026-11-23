@@ -42,6 +42,17 @@ main { padding-top: 25px; }
 .page-heading p { margin-top: 7px; color: var(--muted); font-size: 14px; }
 .greeting-symbol { font-size: 29px; }
 .page-footer { color: #9aaabb; font-size: var(--text-small); padding: 24px 0; text-align: center; }
+.page-footer > p, .visual-credits > p { margin: 0 0 10px; }
+.visual-credits a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.visual-credits-details { max-width: 76ch; margin: 0 auto; }
+.visual-credits-details > summary { cursor: pointer; padding: 10px; min-height: 44px; }
+.visual-credits-details[open] { text-align: left; }
+.visual-credits-details section { margin: 16px 0; }
+.visual-credits-details h2 { font-size: 1rem; }
+.visual-credits-details ul { padding-left: 20px; }
+.visual-credits-details li { margin-bottom: 18px; overflow-wrap: anywhere; }
+.visual-credits-details p { margin: 6px 0; }
+.visual-credits a:focus-visible, .visual-credits summary:focus-visible { outline: 2px solid #9bf45c; outline-offset: 3px; }
 .bottom-nav, .mobile-menu-button, .mobile-brand { display: none; }
 .mobile-menu { background: var(--sidebar); color: var(--text); border: 1px solid var(--line); border-radius: 0 20px 20px 0; padding: 20px 14px; margin: 0; width: min(350px, calc(100% - 32px)); max-width: none; height: 100dvh; max-height: 100dvh; }
 .mobile-menu::backdrop { background: #03080dcc; }

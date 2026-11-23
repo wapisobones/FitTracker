@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { readDatabase } from './helpers/storage.js';
@@ -20,7 +21,7 @@ test('Doce Core: miniaturas, secuencias locales a demanda, detención, cierre y 
   page.on('request', (request) => requests.push(request.url()));
   await openCore(page);
   const before = await readDatabase(page, 'personal');
-  await expect(page.locator('.exercise-card img')).toHaveCount(12);
+  await expect(page.locator('.exercise-card img')).toHaveCount(13);
   for (const asset of CORE_VISUAL_ASSETS) {
     const trigger = triggerFor(page, asset.name);
     await trigger.scrollIntoViewIfNeeded();
@@ -40,26 +41,10 @@ test('Doce Core: miniaturas, secuencias locales a demanda, detención, cierre y 
     await trigger.click();
     const dialog = dialogFor(page, asset.name);
     await expect(dialog.locator('.exercise-media-still')).toHaveAttribute('data-media-state', 'ready');
-    await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
-    await expect(dialog.locator('.media-credit')).not.toBeVisible();
-    await expect(dialog.locator('.media-description')).not.toBeVisible();
-    const sources = dialog.locator('.media-sources > summary');
-    await expect(sources).toHaveText('Fuente de las imágenes');
-    await dialog.getByRole('button', { name: 'Ver secuencia', exact: true }).focus();
-    await page.keyboard.press('Tab');
-    await expect(sources).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expect(dialog.locator('.media-credit')).toBeVisible();
-    if (asset.provenance === 'user-provided') {
-      await expect(dialog.locator('.media-credit')).toContainText('Imágenes proporcionadas para FitTracker');
-      await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toHaveCount(0);
-    } else {
-      await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toBeVisible();
-      await expect(dialog.getByRole('link', { name: 'Fuente', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db');
-      await expect(dialog.getByRole('link', { name: 'Unlicense', exact: true })).toHaveAttribute('href', 'https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE');
-    }
-    await page.keyboard.press('Space');
-    await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
+    await expect(dialog.locator('.media-sources, .media-credit')).toHaveCount(0);
+    await expectGlobalCredit(page, asset);
+    if (asset.note) await expect(dialog.locator('.media-description')).toHaveText(asset.note);
+    expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
     await expect(dialog.locator('.technique-steps li')).toHaveText(exercise.technique.steps);
     await expect(dialog.locator('.technique-tips li span')).toHaveText(exercise.technique.tips);
     await expect(dialog.locator('.exercise-anatomy dd').first()).toHaveText('Core');
@@ -180,10 +165,8 @@ for (const width of [390, 320]) {
       const dialog = dialogFor(page, asset.name);
       expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
       if (['crunch-abdominal', 'plancha-toque-hombro'].includes(asset.slug)) {
-        await dialog.locator('.media-sources > summary').click();
-        await expect(dialog.locator('.media-credit')).toBeVisible();
+        await expect(dialog.locator('.media-credit')).toHaveCount(0);
         expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-        await dialog.locator('.media-sources > summary').click();
       }
       await dialog.getByRole('button', { name: 'Ver secuencia', exact: true }).click();
       const sequence = dialog.locator('img.technique-player');

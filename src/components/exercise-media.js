@@ -16,12 +16,11 @@ export function exerciseStill(exercise, { thumbnail = exerciseMedia(exercise).th
 
 export function techniqueMedia(exercise) {
   const { thumbnail, video, animation } = exerciseMedia(exercise);
-  const credits = mediaCredit(animation ?? thumbnail) + (video && video.sourceUrl !== thumbnail?.sourceUrl ? mediaCredit(video) : '');
-  return `<div class="technique-illustration" data-technique-media><div data-media-stage>${exerciseStill(exercise)}</div><p data-media-label>${thumbnail ? thumbnail.provenance === 'user-provided' ? 'Imagen de referencia' : 'Fotografía de referencia' : 'Representación esquemática · No es un vídeo'}</p>
+  return `<div class="technique-illustration" data-technique-media><div data-media-stage>${exerciseStill(exercise)}</div><p data-media-label>${thumbnail ? thumbnail.provenance === 'repdb' ? 'Ilustración de referencia' : thumbnail.provenance === 'user-provided' ? 'Imagen de referencia' : 'Fotografía de referencia' : 'Representación esquemática · No es un vídeo'}</p>
     ${video || animation ? `<button type="button" class="button button-secondary media-play" data-load-demonstration${animation ? ' data-animation-control' : ''}>${animation ? 'Ver secuencia' : 'Ver demostración'}</button>` : ''}
-    ${animation ? '<p data-reduced-motion-note hidden>Movimiento reducido activado: se muestra la fotografía estática.</p>' : ''}
+    ${animation ? `<p data-reduced-motion-note hidden>Movimiento reducido activado: se muestra ${thumbnail?.provenance === 'repdb' ? 'la ilustración' : 'la imagen'} estática.</p>` : ''}
     <p class="media-status" role="status" aria-live="polite"></p>
-    ${credits ? `<details class="media-sources"><summary>Fuente de las imágenes</summary>${credits}${animation ? `<p class="media-description">${esc(animation.description)}</p>` : ''}</details>` : ''}
+    ${animation ? `<p class="media-description">${esc(animation.description)}</p>` : ''}
     ${video ? `<p class="sr-only" id="exercise-video-description">${esc(video.description ?? 'Demostración externa. Las instrucciones escritas describen el movimiento.')}</p>` : ''}</div>`;
 }
 
@@ -100,7 +99,7 @@ export function loadDemonstration(container, exercise) {
   fallback.addEventListener('click', () => restore(false));
   player.onerror = fail;
   still.hidden = true; button.hidden = true;
-  label.textContent = animation ? animation.provenance === 'user-provided' ? 'Secuencia de 2 imágenes · No es un vídeo' : 'Secuencia de 2 fotografías · No es un vídeo' : 'Demostración de técnica';
+  label.textContent = animation ? animation.provenance === 'repdb' ? 'Secuencia de 2 ilustraciones · No es un vídeo' : animation.provenance === 'user-provided' ? 'Secuencia de 2 imágenes · No es un vídeo' : 'Secuencia de 2 fotografías · No es un vídeo' : 'Demostración de técnica';
   status.textContent = 'Cargando demostración…';
   stage.append(player); button.after(fallback);
   timeout = setTimeout(fail, 20000);

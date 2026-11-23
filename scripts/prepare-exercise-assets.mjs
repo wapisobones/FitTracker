@@ -10,6 +10,7 @@ import { LEG_VISUAL_ASSETS, LEG_VISUAL_FALLBACKS } from '../src/data/leg-visual-
 import { SHOULDER_VISUAL_ASSETS, SHOULDER_VISUAL_FALLBACKS } from '../src/data/shoulder-visual-assets.js';
 import { ARM_VISUAL_ASSETS } from '../src/data/arm-visual-assets.js';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
+import { REPDB_VISUAL_ASSETS, REPDB_SOURCE, REPDB_LICENSE_URL } from '../src/data/repdb-visual-assets.js';
 
 const root = new URL('../', import.meta.url);
 const width = 640;
@@ -17,9 +18,9 @@ const height = 427;
 const duration = 900;
 const args = process.argv.slice(2);
 if (args.some((arg) => !/^--(?:group|only)=[a-z0-9-]+$/.test(arg))
-  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho|espalda|piernas|hombros|brazos] [--only=<slug>]');
+  || new Set(args.map((arg) => arg.split('=')[0])).size !== args.length) throw new Error('Usage: pnpm prepare:exercise-assets [--group=core|pecho|espalda|piernas|hombros|brazos|repdb] [--only=<slug>]');
 const group = args.find((arg) => arg.startsWith('--group='))?.slice('--group='.length) ?? 'core';
-const groups = { core: ['Core', CORE_VISUAL_ASSETS], pecho: ['Pecho', CHEST_VISUAL_ASSETS], espalda: ['Espalda', BACK_VISUAL_ASSETS], piernas: ['Piernas', LEG_VISUAL_ASSETS, LEG_VISUAL_FALLBACKS], hombros: ['Hombros', SHOULDER_VISUAL_ASSETS, SHOULDER_VISUAL_FALLBACKS], brazos: ['Brazos', ARM_VISUAL_ASSETS] };
+const groups = { core: ['Core', CORE_VISUAL_ASSETS], pecho: ['Pecho', CHEST_VISUAL_ASSETS], espalda: ['Espalda', BACK_VISUAL_ASSETS], piernas: ['Piernas', LEG_VISUAL_ASSETS, LEG_VISUAL_FALLBACKS], hombros: ['Hombros', SHOULDER_VISUAL_ASSETS, SHOULDER_VISUAL_FALLBACKS], brazos: ['Brazos', ARM_VISUAL_ASSETS], repdb: ['RepDB', REPDB_VISUAL_ASSETS.map((asset) => ({ ...asset, name: BASE_EXERCISES.find(({ id }) => id === asset.id)?.name }))] };
 if (!Object.hasOwn(groups, group)) throw new Error(`Unapproved group: ${group}`);
 const [groupName, assets, fallbacks = []] = groups[group];
 const output = new URL(`public/assets/exercises/${group}/`, root);
@@ -75,10 +76,11 @@ function animation(frames) {
 }
 
 // Validate the explicit mapping against the supplied reference and actual files.
-const reference = JSON.parse(await readFile(new URL('recursos-originales/ejercicios.json', root), 'utf8'));
-const originalFiles = (await readdir(new URL(`recursos-originales/${group}/`, root))).filter((name) => /\.(jpg|png)$/.test(name)).sort();
-const expectedFiles = assets.flatMap((asset) => [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`)).sort();
-if (assets.length + fallbacks.length !== 12 || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error(`Review required: expected exactly ${assets.length} reviewed ${groupName} pairs and ${fallbacks.length} SVG fallbacks.`);
+const reference = JSON.parse(await readFile(new URL(group === 'repdb' ? 'recursos-originales/repdb/SOURCE.json' : 'recursos-originales/ejercicios.json', root), 'utf8'));
+const frameNames = (asset) => asset.originalFrames ?? [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`);
+const originalFiles = (await readdir(new URL(`recursos-originales/${group}/`, root))).filter((name) => /\.(jpg|png|webp)$/.test(name)).sort();
+const expectedFiles = assets.flatMap(frameNames).sort();
+if ((group === 'repdb' ? assets.length !== 7 || reference.revision !== REPDB_SOURCE.revision : assets.length + fallbacks.length !== (group === 'pecho' ? 13 : 12)) || JSON.stringify(originalFiles) !== JSON.stringify(expectedFiles)) throw new Error(`Review required: expected exactly ${assets.length} reviewed ${groupName} pairs and ${fallbacks.length} SVG fallbacks.`);
 for (const fallback of fallbacks) {
   const exercise = BASE_EXERCISES.find((item) => item.id === fallback.id);
   const entry = reference.find((item) => item.grupo === groupName && item.nombre === fallback.name);
@@ -87,10 +89,19 @@ for (const fallback of fallbacks) {
 const inputs = [];
 for (const asset of assets) {
   const exercise = BASE_EXERCISES.find((item) => item.id === asset.id);
+  if (group === 'repdb') {
+    const entry = reference.assets.find((item) => item.id === asset.id && item.slug === asset.slug);
+    const originals = await Promise.all(frameNames(asset).map((name) => readFile(new URL(`recursos-originales/repdb/${name}`, root))));
+    if (exercise?.name !== asset.name || exercise.mainMuscle !== asset.group || entry?.sourceName !== asset.sourceName || !originals.every((buffer, index) => createHash('sha256').update(buffer).digest('hex') === entry.frames[index]?.sha256 && entry.frames[index]?.file === frameNames(asset)[index])) throw new Error(`RepDB mapping/integrity mismatch: ${asset.slug}`);
+    if (!onlySlug || asset.slug === onlySlug) inputs.push({ asset, originals });
+    continue;
+  }
   const entry = reference.find((item) => item.grupo === groupName && item.nombre === asset.name);
-  const names = [0, 1].map((index) => `${asset.originalStem}_${index}.${asset.extension}`);
+  const names = frameNames(asset);
   const referenceNames = [0, 1].map((index) => `imagenes/${asset.originalStem}_${index}.${asset.referenceExtension ?? asset.extension}`);
-  const referenceMatches = asset.provenance === 'user-provided' && !asset.referenceExtension
+  const referenceMatches = asset.provenance === 'user-provided' && asset.originalFrames
+    ? entry === undefined
+    : asset.provenance === 'user-provided' && !asset.referenceExtension
     ? entry?.coincidencia === 'sin_resultado' && entry.imagenes.length === 0
     : entry?.nombre_en_base === asset.sourceName && entry.coincidencia === asset.match
       && JSON.stringify(entry.imagenes) === JSON.stringify(referenceNames);
@@ -135,7 +146,7 @@ try {
         results.push(data.split(',')[1]);
       }
       return { frames: results, dimensions: [...new Set(dimensions)].join(' y ') };
-    }, { inputs: originals.map((buffer) => buffer.toString('base64')), width, height, mime: asset.extension === 'png' ? 'image/png' : 'image/jpeg', provided: asset.provenance === 'user-provided' });
+    }, { inputs: originals.map((buffer) => buffer.toString('base64')), width, height, mime: asset.extension === 'webp' ? 'image/webp' : asset.extension === 'png' ? 'image/png' : 'image/jpeg', provided: asset.provenance === 'user-provided' });
     const frames = encoded.frames.map((data) => Buffer.from(data, 'base64'));
     const animated = animation(frames); // 0 -> 1 -> 0 via loop; never duplicate frame 0.
     const decoded = await page.evaluate(async (data) => {
@@ -155,7 +166,18 @@ try {
   }
   // Only write after all mappings, originals and decoded animations pass review checks.
   await mkdir(output, { recursive: true });
-  const credits = group === 'core' ? [
+  if (group === 'repdb') await writeFile(new URL('LICENSE-DATA.md', output), await readFile(new URL('recursos-originales/repdb/LICENSE-DATA.md', root)));
+  const credits = group === 'repdb' ? [
+    '# FitTracker — ilustraciones RepDB integradas en la aplicación', '',
+    'Exercise data by [RepDB (repdb.co)](https://repdb.co).',
+    `Fuente: ${REPDB_SOURCE.repository}; revisión ${REPDB_SOURCE.revision}.`,
+    `Licencia: ${REPDB_SOURCE.license}. ${REPDB_LICENSE_URL}. Copia local: LICENSE-DATA.md.`,
+    'Solo siete pares gratuitos de ilustraciones para uso dentro de FitTracker; no se redistribuye el dataset completo ni como API.',
+    'Salida: 640 × 427, calidad WebP 0.78, sin recorte ni deformación; ajuste proporcional con bandas carbón.',
+    'Miniatura start; secuencia propia de dos fotogramas de 900 ms en bucle start → peak → start, sin interpolación ni audio.',
+    'No se usan animaciones premium, modelos generativos, eliminación de fondo o escalado de la figura por encima de su resolución original.',
+    'La revisión RepDB consultada no contiene un press inclinado de pecho en máquina exacto (#78); su par aportado para FitTracker se documenta por separado en ../pecho/ATTRIBUTION.md.', '',
+  ] : group === 'core' ? [
     '# FitTracker — recursos visuales locales de Core', '',
     'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
     'Licencia de esos JPG declarada en el archivo suministrado `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
@@ -171,15 +193,16 @@ try {
   ] : group === 'pecho' ? [
     '# FitTracker — recursos visuales locales de Pecho', '',
     'Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
-    'Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'Licencia de esos doce pares JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.',
+    'El par PNG de Press inclinado de pecho en máquina fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.',
     'Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.',
     'Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).', '',
     'Preparación: `pnpm prepare:exercise-assets --group=pecho`, sin red ni dependencias nuevas.',
     'Originales intactos y excluidos del build. Core y sus atribuciones se conservan sin cambios.',
     'Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.',
     'Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.',
-    'Diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos), indicadas en sus secciones.',
-    'Los doce ejercicios conservan SVG como respaldo de carga.', '',
+    'Los doce pares anteriores conservan diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos); el nuevo par local corresponde al press inclinado en máquina.',
+    'Los trece ejercicios conservan SVG como respaldo de carga.', '',
   ] : group === 'espalda' ? [
     '# FitTracker — recursos visuales locales de Espalda', '',
     'Fuente de los once pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.',
@@ -234,9 +257,12 @@ try {
   ];
   for (const { asset, frames, animated, originalBytes, dimensions } of outputs) {
     credits.push(`## ${asset.name} — ${asset.id}`, '',
-      `Originales: \`${asset.originalStem}_0.${asset.extension}\` y \`${asset.originalStem}_1.${asset.extension}\` (${dimensions}; ${originalBytes} bytes entre ambos).`,
+      `Originales: ${frameNames(asset).map((name) => `\`${name}\``).join(' y ')} (${dimensions}; ${originalBytes} bytes entre ambos).`,
       `Referencia: **${asset.sourceName}**, coincidencia **${asset.match}**.`, asset.note, '');
-    if (asset.provenance === 'user-provided') credits.push(asset.referenceExtension
+    if (asset.provenance === 'repdb') credits.push(`Procedencia: RepDB Free Tier, ${REPDB_SOURCE.revision}. Uso dentro de la aplicación con atribución global visible; no es Unlicense.`, '');
+    if (asset.provenance === 'user-provided') credits.push(asset.originalFrames
+      ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a RepDB ni a free-exercise-db ni se les asigna una licencia pública. No forman parte del JSON histórico de 72 ejercicios; el mapeo explícito está en `src/data/chest-visual-assets.js`.'
+      : asset.referenceExtension
       ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. La referencia anterior del JSON corresponde a los JPG sustituidos; el par PNG actual se documenta en `src/data/back-visual-assets.js`.'
       : group === 'piernas'
         ? 'Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a free-exercise-db ni se les asigna Unlicense. El JSON original conserva su antiguo estado sin resultado; el mapeo explícito actual está en `src/data/leg-visual-assets.js`.'
@@ -262,6 +288,6 @@ try {
     }
     nextCredits = currentHeader + nextCredits.slice(nextCredits.indexOf('## '));
   }
-  await writeFile(attributionFile, nextCredits);
+  await writeFile(attributionFile, nextCredits.trimEnd() + '\n');
   console.log(`${outputs.length} pairs prepared; ${outputs.reduce((sum, item) => sum + item.animated.length + item.frames[item.asset.posterFrame].length, 0)} bytes total; ${outputs.length * 2} WebP files.`);
 } finally { await browser.close(); }

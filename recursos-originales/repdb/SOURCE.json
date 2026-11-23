@@ -1,0 +1,137 @@
+{
+  "revision": "f12da458a90f353a86c953f204304d5a8bd98275",
+  "checkedAt": "2026-11-23",
+  "author": "RepDB (Sergei Argutin)",
+  "license": "RepDB Free Tier License v1.0",
+  "homepage": "https://repdb.co",
+  "repository": "https://github.com/RepDB/exercise-dataset",
+  "licenseUrl": "https://github.com/RepDB/exercise-dataset/blob/f12da458a90f353a86c953f204304d5a8bd98275/LICENSE-DATA.md",
+  "licenseSha256": "ef3dc963ae8f7640fc1f816664933c639a6170b021ae3c7976210810cbea1c12",
+  "assets": [
+    {
+      "id": "c1700000-0000-4000-8000-000000000073",
+      "slug": "chest-supported-machine-row",
+      "sourceName": "Chest-Supported Machine Row",
+      "frames": [
+        {
+          "file": "chest-supported-machine-row-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/chest-supported-machine-row-start.webp",
+          "sha256": "86a5f29399ea08822211741d38a9d47d77b9cd17ca2a6e71f2b07ed6c7f76f9c"
+        },
+        {
+          "file": "chest-supported-machine-row-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/chest-supported-machine-row-peak.webp",
+          "sha256": "6c989a4f4539d7b854fbeb24bdfc312d23613543ef969497ae0a5c096b0597b8"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000074",
+      "slug": "cable-overhead-tricep-extension",
+      "sourceName": "Cable Overhead Tricep Extension",
+      "frames": [
+        {
+          "file": "cable-overhead-tricep-extension-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/cable-overhead-tricep-extension-start.webp",
+          "sha256": "36896a5b569f99cf4b0579fdb9a2547b654458502fbe7db005bcbbfe5872ca35"
+        },
+        {
+          "file": "cable-overhead-tricep-extension-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/cable-overhead-tricep-extension-peak.webp",
+          "sha256": "4fb20107a13b6f1542985d366bf48566c66bdfb7ec50667e80d0f9305fddfd5b"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000075",
+      "slug": "dumbbell-romanian-deadlift",
+      "sourceName": "Dumbbell Romanian Deadlift",
+      "frames": [
+        {
+          "file": "dumbbell-romanian-deadlift-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/dumbbell-romanian-deadlift-start.webp",
+          "sha256": "89cc2f28aea4da32e2988c63f1f4369a328d900c40be3f5c641e9fffbffeef65"
+        },
+        {
+          "file": "dumbbell-romanian-deadlift-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/dumbbell-romanian-deadlift-peak.webp",
+          "sha256": "b314c8ca72f445b5aa5c8b7697bc61ede6740ee58ef729311b3931eee0e45f48"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000076",
+      "slug": "leg-extension",
+      "sourceName": "Leg Extension",
+      "frames": [
+        {
+          "file": "leg-extension-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/leg-extension-start.webp",
+          "sha256": "97c34b7bbd7c3278bff9b8fb5e80263f5e9254e567f8068833d611d67318b030"
+        },
+        {
+          "file": "leg-extension-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/leg-extension-peak.webp",
+          "sha256": "04f79670ee65dd0e3ae710221942c2f3e1b27b696516ce87c8936c32539d4acc"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000077",
+      "slug": "seated-leg-curl",
+      "sourceName": "Seated Leg Curl",
+      "frames": [
+        {
+          "file": "seated-leg-curl-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/seated-leg-curl-start.webp",
+          "sha256": "dffec37199e454715880ca446f561dfbd291deab859fc300dd90ae3713de4740"
+        },
+        {
+          "file": "seated-leg-curl-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/seated-leg-curl-peak.webp",
+          "sha256": "7a493472aa088be76e4ffd1a66a294902b7beb427aa6aad15f2efcb6afbb8619"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000079",
+      "slug": "one-arm-seated-cable-row",
+      "sourceName": "One-Arm Seated Cable Row",
+      "frames": [
+        {
+          "file": "one-arm-seated-cable-row-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/one-arm-seated-cable-row-start.webp",
+          "sha256": "58dbfd5769ca4c7312c98e766fda87ca5d0cd3619a5364f920d588a31f59acda"
+        },
+        {
+          "file": "one-arm-seated-cable-row-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/one-arm-seated-cable-row-peak.webp",
+          "sha256": "91c7e8e967b4a4676fe848f83112ed34666d167987613a29fc06dd5497dfb135"
+        }
+      ]
+    },
+    {
+      "id": "c1700000-0000-4000-8000-000000000080",
+      "slug": "bird-dog",
+      "sourceName": "Bird-Dog",
+      "frames": [
+        {
+          "file": "bird-dog-start.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/bird-dog-start.webp",
+          "sha256": "ec53796fbd6c4eff423aea9f6d05faa5c0d88946f74a63da1daa45f73da6e591"
+        },
+        {
+          "file": "bird-dog-peak.webp",
+          "url": "https://raw.githubusercontent.com/RepDB/exercise-dataset/f12da458a90f353a86c953f204304d5a8bd98275/images/flat/bird-dog-peak.webp",
+          "sha256": "456923f6894e9737d927aae44261687f939c4f1a9d23d8018ace55bd9a9c8b5e"
+        }
+      ]
+    }
+  ],
+  "fallbacks": [
+    {
+      "id": "c1700000-0000-4000-8000-000000000078",
+      "reason": "No exact incline chest press machine; horizontal, dumbbell, barbell and Smith variants are not substitutes."
+    }
+  ]
+}

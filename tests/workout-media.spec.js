@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
@@ -112,9 +113,8 @@ for (const width of [1536, 390, 320]) {
     await expect(technique.locator('.exercise-media-still')).toHaveAttribute('data-media-state', 'ready');
     await expect(technique.locator('.technique-tips li span')).toHaveText(bench.technique.tips);
     await expect(technique.locator('.exercise-anatomy dd')).toHaveCount(3);
-    await expect(technique.locator('.media-sources')).not.toHaveAttribute('open');
-    await technique.locator('.media-sources > summary').click();
-    await expect(technique.getByRole('link', { name: 'Unlicense', exact: true })).toBeVisible();
+    await expect(technique.locator('.media-sources, .media-credit')).toHaveCount(0);
+    await expectGlobalCredit(page, bench);
     expect(animations(requests)).toHaveLength(0);
     await technique.getByRole('button', { name: 'Ver secuencia', exact: true }).click();
     await expect.poll(() => technique.locator('.technique-player').evaluate((img) => img.complete && img.naturalWidth)).toBe(640);

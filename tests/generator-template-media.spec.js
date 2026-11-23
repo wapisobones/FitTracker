@@ -1,3 +1,4 @@
+import { expectGlobalCredit } from './helpers/visual-credits.js';
 import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { BASE_EXERCISES } from '../src/data/exercises.js';
@@ -61,13 +62,9 @@ async function checkTechnique(page, exercise, { play = true } = {}) {
   await expect(dialog.locator('.technique-tips li span')).toHaveText(exercise.technique.tips);
   await expect(dialog.locator('.exercise-anatomy dd').first()).toHaveText(exercise.mainMuscle);
   await expect(dialog.locator('.exercise-anatomy dd')).toHaveCount(3);
-  await expect(dialog.locator('.media-sources')).not.toHaveAttribute('open');
-  const source = dialog.getByText('Fuente de las imágenes', { exact: true });
-  await source.focus();
-  await page.keyboard.press('Enter');
-  await expect(dialog.locator('.media-credit')).toBeVisible();
+  await expect(dialog.locator('.media-sources, .media-credit')).toHaveCount(0);
+  await expectGlobalCredit(page, exercise);
   await noOverflow(page, dialog);
-  await page.keyboard.press('Space');
   if (play) {
     await dialog.getByRole('button', { name: 'Ver secuencia', exact: true }).click();
     const player = dialog.locator('img.technique-player');

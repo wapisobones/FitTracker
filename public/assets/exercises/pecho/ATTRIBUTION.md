@@ -1,7 +1,8 @@
 # FitTracker — recursos visuales locales de Pecho
 
 Fuente de los doce pares JPG: **free-exercise-db**, https://github.com/yuhonas/free-exercise-db.
-Licencia declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.
+Licencia de esos doce pares JPG declarada en `recursos-originales/LICENCIA.txt`: **dominio público (Unlicense)**.
+El par PNG de Press inclinado de pecho en máquina fue proporcionado para FitTracker; no se atribuye a free-exercise-db ni se le asigna Unlicense.
 Licencia de la fuente: https://github.com/yuhonas/free-exercise-db/blob/main/LICENSE.
 Correspondencias: `recursos-originales/ejercicios.json` (nombre real, en plural).
 
@@ -9,8 +10,8 @@ Preparación: `pnpm prepare:exercise-assets --group=pecho`, sin red ni dependenc
 Originales intactos y excluidos del build. Core y sus atribuciones se conservan sin cambios.
 Salida: 640 × 427, calidad WebP 0.78, encuadre completo sin recorte.
 Miniatura: fotografía 0. Animación: dos fotogramas de 900 ms en bucle 0 → 1 → 0; sin audio ni interpolación.
-Diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos), indicadas en sus secciones.
-Los doce ejercicios conservan SVG como respaldo de carga.
+Los doce pares anteriores conservan diez correspondencias exactas y dos aproximadas (press unilateral en polea y fondos asistidos); el nuevo par local corresponde al press inclinado en máquina.
+Los trece ejercicios conservan SVG como respaldo de carga.
 
 ## Press de banca — c1700000-0000-4000-8000-000000000001
 
@@ -119,3 +120,14 @@ Correspondencia aproximada: referencia «Dips - Chest Version». Ajusta la asist
 
 - `pecho/fondos-asistidos-con-torso-inclinado.webp`: 56628 bytes; SHA-256 `2fc9e6f85b1f8d6493c5992830e21e241382155eeca74ead4d73ccd30cf2e21d`.
 - `pecho/fondos-asistidos-con-torso-inclinado-poster.webp`: 28908 bytes; SHA-256 `c35bfff54e525498c1933db6cd44984948b69935d6bc93493814b54bbfa38bb2`.
+
+## Press inclinado de pecho en máquina — c1700000-0000-4000-8000-000000000078
+
+Originales: `press-inclinado-maquina-start.png` y `press-inclinado-maquina-peak.png` (1448 × 1086; 4206395 bytes entre ambos).
+Referencia: **Imágenes proporcionadas para FitTracker**, coincidencia **exacta**.
+Referencia de dos posiciones del press inclinado en máquina. Sigue las instrucciones escritas para ajustar el asiento y controlar el recorrido.
+
+Procedencia: imágenes proporcionadas por el usuario para incorporarlas a FitTracker. No se atribuyen a RepDB ni a free-exercise-db ni se les asigna una licencia pública. No forman parte del JSON histórico de 72 ejercicios; el mapeo explícito está en `src/data/chest-visual-assets.js`.
+
+- `pecho/press-inclinado-maquina.webp`: 44164 bytes; SHA-256 `167b0ae7a84abbb030b0af04a18bf5d68f9a20381c7bed4daed6f605fec61032`.
+- `pecho/press-inclinado-maquina-poster.webp`: 21846 bytes; SHA-256 `39503a9d0d89e75397d4fc7803e594e1b7712beb769435837d4b9de329ed1086`.
