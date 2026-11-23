@@ -9,9 +9,9 @@ import { parseBackup, validateBackup } from '../src/features/profile/backup.js';
 import { backupFixture } from './helpers/backup.js';
 import { setText } from '../src/utils/set-format.js';
 
-test('Catálogo: modalidades por variante con los 72 IDs originales', () => {
-  assert.equal(BASE_EXERCISES.length, 72);
-  const body = [4, 8, 22, 23, 24, 30, 31, 32, 38, 39, 40, 42, 48, 66, 68, 72];
+test('Catálogo: modalidades por variante con los 72 IDs originales y ocho altas', () => {
+  assert.equal(BASE_EXERCISES.length, 80);
+  const body = [4, 8, 22, 23, 24, 30, 31, 32, 38, 39, 40, 42, 48, 66, 68, 72, 80];
   for (const [index, exercise] of BASE_EXERCISES.entries()) {
     const n = index + 1;
     assert.equal(exercise.id, `c1700000-0000-4000-8000-${String(n).padStart(12, '0')}`);

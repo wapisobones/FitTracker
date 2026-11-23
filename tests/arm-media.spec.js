@@ -9,7 +9,7 @@ async function openArms(page) {
   await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Crear ejercicio', exact: true })).toBeEnabled();
   await page.locator('[data-muscle="Brazos"]').click();
-  await expect(page.locator('.exercise-card')).toHaveCount(12);
+  await expect(page.locator('.exercise-card')).toHaveCount(13);
 }
 const triggerFor = (page, name = 'Curl de bíceps') => page.getByRole('button', { name: `Ver técnica de ${name}`, exact: true });
 const dialogFor = (page, name = 'Curl de bíceps') => page.getByRole('dialog', { name, exact: true });

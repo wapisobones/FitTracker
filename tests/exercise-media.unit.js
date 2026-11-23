@@ -14,11 +14,11 @@ const noMedia = { thumbnail: null, video: null, animation: null };
 const visualGroups = [['Core', 'core', CORE_VISUAL_ASSETS], ['Pecho', 'pecho', CHEST_VISUAL_ASSETS], ['Espalda', 'espalda', BACK_VISUAL_ASSETS], ['Piernas', 'piernas', LEG_VISUAL_ASSETS], ['Hombros', 'hombros', SHOULDER_VISUAL_ASSETS], ['Brazos', 'brazos', ARM_VISUAL_ASSETS]];
 const visualFallbacks = [...LEG_VISUAL_FALLBACKS, ...SHOULDER_VISUAL_FALLBACKS];
 
-test('Medios por ID: 72 ejercicios de seis grupos completos con SVG como respaldo', () => {
-  assert.equal(BASE_EXERCISES.length, 72);
+test('Medios por ID: 72 ejercicios con medios y ocho altas con SVG de respaldo', () => {
+  assert.equal(BASE_EXERCISES.length, 80);
   const core = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Core');
-  assert.equal(core.length, 12);
-  assert.deepEqual(Object.keys(EXERCISE_MEDIA).sort(), BASE_EXERCISES.filter((exercise) => visualGroups.some(([name]) => name === exercise.mainMuscle) && !visualFallbacks.some(({ id }) => id === exercise.id)).map((exercise) => exercise.id).sort());
+  assert.equal(core.length, 13);
+  assert.deepEqual(Object.keys(EXERCISE_MEDIA).sort(), BASE_EXERCISES.slice(0, 72).filter((exercise) => visualGroups.some(([name]) => name === exercise.mainMuscle) && !visualFallbacks.some(({ id }) => id === exercise.id)).map((exercise) => exercise.id).sort());
   assert.deepEqual(CORE_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [21, 22, 23, 24, 65, 66, 67, 68, 69, 70, 71, 72]);
   assert.equal(core.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(core.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
@@ -30,13 +30,13 @@ test('Medios por ID: 72 ejercicios de seis grupos completos con SVG como respald
   assert.equal(chest.filter((exercise) => exerciseMedia(exercise).video).length, 0);
   assert.deepEqual(BACK_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [5, 6, 7, 8, 33, 34, 35, 36, 37, 38, 39, 40]);
   const back = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Espalda');
-  assert.equal(back.length, 12);
+  assert.equal(back.length, 14);
   assert.equal(back.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(back.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
   assert.equal(back.filter((exercise) => exerciseMedia(exercise).video).length, 0);
   assert.deepEqual(LEG_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [9, 10, 11, 12, 41, 42, 43, 44, 45, 46, 47, 48]);
   const legs = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Piernas');
-  assert.equal(legs.length, 12);
+  assert.equal(legs.length, 15);
   assert.equal(legs.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(legs.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
   assert.equal(legs.filter((exercise) => exerciseMedia(exercise).video).length, 0);
@@ -50,7 +50,7 @@ test('Medios por ID: 72 ejercicios de seis grupos completos con SVG como respald
   assert.deepEqual(SHOULDER_VISUAL_FALLBACKS, []);
   assert.deepEqual(ARM_VISUAL_ASSETS.map((asset) => Number(asset.id.slice(-12))), [17, 18, 19, 20, 57, 58, 59, 60, 61, 62, 63, 64]);
   const arms = BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === 'Brazos');
-  assert.equal(arms.length, 12);
+  assert.equal(arms.length, 13);
   assert.equal(arms.filter((exercise) => exerciseMedia(exercise).thumbnail).length, 12);
   assert.equal(arms.filter((exercise) => exerciseMedia(exercise).animation).length, 12);
   assert.equal(arms.filter((exercise) => exerciseMedia(exercise).video).length, 0);

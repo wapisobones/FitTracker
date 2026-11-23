@@ -9,7 +9,7 @@ async function openLegs(page) {
   await page.getByRole('button', { name: 'Comenzar mi entrenamiento', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Crear ejercicio', exact: true })).toBeEnabled();
   await page.locator('[data-muscle="Piernas"]').click();
-  await expect(page.locator('.exercise-card')).toHaveCount(12);
+  await expect(page.locator('.exercise-card')).toHaveCount(15);
 }
 const triggerFor = (page, name = 'Sentadilla con barra') => page.getByRole('button', { name: `Ver técnica de ${name}`, exact: true });
 const dialogFor = (page, name = 'Sentadilla con barra') => page.getByRole('dialog', { name, exact: true });

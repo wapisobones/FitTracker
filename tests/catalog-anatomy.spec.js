@@ -16,9 +16,9 @@ const chooseRegion = async (page, group, id) => {
   await expect(region).toHaveAttribute('aria-pressed', 'true');
 };
 
-test('FT-010C catálogo: 72 ejercicios, filtros anatómicos combinados y detalle a 320/390 px y escritorio', async ({ page }) => {
+test('FT-010C catálogo: 80 ejercicios, filtros anatómicos combinados y detalle a 320/390 px y escritorio', async ({ page }) => {
   await start(page);
-  await expect(page.locator('.exercise-card')).toHaveCount(72);
+  await expect(page.locator('.exercise-card')).toHaveCount(80);
   const before = await readDatabase(page, 'personal');
   await mkdir('.cache', { recursive: true });
   for (const width of [1536, 390, 320]) {
@@ -43,7 +43,7 @@ test('FT-010C catálogo: 72 ejercicios, filtros anatómicos combinados y detalle
     await filters.getByRole('combobox', { name: 'Grupo muscular', exact: true }).selectOption('Hombros');
     await expect(filters.getByRole('combobox', { name: 'Región principal', exact: true })).toHaveValue('');
     await page.locator('.clear-filters').click();
-    await expect(page.locator('.exercise-card')).toHaveCount(72);
+    await expect(page.locator('.exercise-card')).toHaveCount(80);
     await filters.getByRole('combobox', { name: 'Grupo muscular', exact: true }).selectOption('Hombros');
     await filters.getByRole('combobox', { name: 'Región principal', exact: true }).selectOption('posterior-deltoid');
     await filters.getByRole('combobox', { name: 'Equipamiento', exact: true }).selectOption('Máquina');

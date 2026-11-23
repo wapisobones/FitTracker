@@ -14,19 +14,20 @@ import { knownHistory, FIXED_NOW } from './helpers/history.js';
 const input = (regions, group = 'Piernas', extra = {}) => ({ ...defaultConfig(), muscles: [group], regions, level: 'Intermedio', ...extra });
 const chosen = (result) => result.routine.sessions.flatMap((session) => session.prescriptions.map((item) => BASE_EXERCISES.find((exercise) => exercise.id === item.exerciseId)));
 
-test('72 IDs estables, 48 altas, 12 por grupo, todas las regiones y contenido/SVG propios válidos', () => {
-  assert.equal(BASE_EXERCISES.length, 72);
-  assert.equal(new Set(BASE_EXERCISES.map((exercise) => exercise.id)).size, 72);
-  assert.equal(new Set(BASE_EXERCISES.map((exercise) => exercise.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())).size, 72);
+test('Catálogo: 80 IDs únicos, 72 conservados, grupos y regiones válidos', () => {
+  assert.equal(BASE_EXERCISES.length, 80);
+  assert.equal(new Set(BASE_EXERCISES.map((exercise) => exercise.id)).size, 80);
+  assert.equal(new Set(BASE_EXERCISES.map((exercise) => exercise.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())).size, 80);
   const originalNames = ['Press de banca', 'Press inclinado con mancuernas', 'Aperturas con mancuernas', 'Flexiones', 'Jalón al pecho', 'Remo en polea', 'Remo con barra', 'Dominadas', 'Sentadilla con barra', 'Prensa de piernas', 'Peso muerto rumano', 'Zancadas', 'Press militar con mancuernas', 'Elevaciones laterales', 'Pájaros con mancuernas', 'Face pull', 'Curl de bíceps', 'Curl martillo', 'Extensión de tríceps en polea', 'Extensión de tríceps sobre la cabeza', 'Plancha', 'Dead bug', 'Crunch abdominal', 'Elevación de rodillas colgado'];
   for (let index = 0; index < 24; index++) {
     assert.equal(BASE_EXERCISES[index].id, `c1700000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`);
     assert.equal(BASE_EXERCISES[index].name, originalNames[index]);
     assert.equal(BASE_EXERCISES[index].mainMuscle, MUSCLE_GROUPS[Math.floor(index / 4)]);
   }
+  const groupCounts = { Pecho: 13, Espalda: 14, Piernas: 15, Hombros: 12, Brazos: 13, Core: 13 };
   for (const group of MUSCLE_GROUPS) {
-    assert.equal(BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === group).length, 12);
-    assert.equal(BASE_EXERCISES.slice(24).filter((exercise) => exercise.mainMuscle === group).length, 8);
+    assert.equal(BASE_EXERCISES.filter((exercise) => exercise.mainMuscle === group).length, groupCounts[group]);
+    assert.equal(BASE_EXERCISES.slice(24, 72).filter((exercise) => exercise.mainMuscle === group).length, 8);
   }
   for (const exercise of BASE_EXERCISES) {
     assert.doesNotThrow(() => validateExerciseInput(exercise));
@@ -34,7 +35,8 @@ test('72 IDs estables, 48 altas, 12 por grupo, todas las regiones y contenido/SV
     assert.ok(exercise.mainRegion);
     assert.ok(exercise.technique.steps.length >= 3 && exercise.technique.tips.length >= 2);
     assert.ok([...exercise.technique.steps, ...exercise.technique.tips].every((text) => typeof text === 'string' && text.length > 20));
-    assert.ok(exerciseVisual(exercise).includes('stroke-dasharray')); // A defined temporary pose, not a missing-key fallback.
+    if (BASE_EXERCISES.indexOf(exercise) < 72) assert.ok(exerciseVisual(exercise).includes('stroke-dasharray'));
+    else assert.equal(exercise.visual, null); // FT-015B uses the existing group SVG until media review.
     assert.equal(exercise.video, null);
   }
   for (const region of MUSCLE_REGIONS) assert.ok(BASE_EXERCISES.some((exercise) => exercise.mainRegion === region.id), `Falta región principal: ${region.id}`);

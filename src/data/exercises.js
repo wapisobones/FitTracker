@@ -35,8 +35,8 @@ function exercise(number, name, mainMuscle, secondaryMuscles, equipment, difficu
     origin: 'base', name, mainMuscle, mainRegion, equipment, difficulty, visual,
     secondaryRegions: Object.freeze(secondaryRegions), tracking: number === 21 ? 'duration' : 'repetitions',
     // Explicit exercise variants, independent of equipment and muscle group.
-    recordingMode: number === 21 ? 'duration' : [4, 8, 22, 23, 24, 30, 31, 32, 38, 39, 40, 42, 48, 66, 68, 72].includes(number) ? 'bodyweight_reps' : 'weight_reps',
-    anatomyNote: [21, 22].includes(number) ? 'El abdomen trabaja como estabilizador; la clasificación no significa aislamiento muscular.' : number === 24 ? 'La región abdominal corresponde a la retroversión pélvica indicada. Los flexores de cadera también participan y no tienen región propia en este mapa.' : '',
+    recordingMode: number === 21 ? 'duration' : [4, 8, 22, 23, 24, 30, 31, 32, 38, 39, 40, 42, 48, 66, 68, 72, 80].includes(number) ? 'bodyweight_reps' : 'weight_reps',
+    anatomyNote: [21, 22].includes(number) ? 'El abdomen trabaja como estabilizador; la clasificación no significa aislamiento muscular.' : number === 24 ? 'La región abdominal corresponde a la retroversión pélvica indicada. Los flexores de cadera también participan y no tienen región propia en este mapa.' : number === 80 ? 'Ejercicio de estabilidad del tronco durante el movimiento de brazo y pierna contrarios. La región principal es una clasificación funcional; participan varios estabilizadores y no se aísla el recto abdominal.' : '',
     secondaryMuscles: Object.freeze(secondaryMuscles),
     technique: Object.freeze({ steps: Object.freeze(steps), tips: Object.freeze(tips) }),
     notes: '', video: null,
@@ -405,4 +405,46 @@ export const BASE_EXERCISES = Object.freeze([
     'Eleva un hombro orientándolo hacia la rodilla contraria mediante una flexión y rotación corta del tronco.',
     'Apoya la espalda alta de nuevo y alterna el lado sin tirar del cuello.',
   ], ['Mantén la pelvis apoyada y evita empujar la cabeza con las manos.', 'Prioriza el control sobre la distancia que recorre el codo.'], 'obliques', ['rectus-abdominis']),
+  // FT-015B: missing routine exercises, appended to preserve existing indices.
+  // No reviewed media yet; null uses the existing muscle-group SVG fallback.
+  exercise(73, 'Remo horizontal con pecho apoyado en máquina', 'Espalda', [], 'Máquina', 'Principiante', null, [
+    'Ajusta asiento y almohadilla para apoyar el pecho y alcanzar los agarres sin encorvarte.',
+    'Acerca los agarres hacia abdomen o costillas bajas, llevando los codos atrás cerca del tronco.',
+    'Extiende los brazos lentamente sin despegar el pecho del apoyo.',
+  ], ['Mantén cuello y muñecas alineados.', 'Evita convertirlo en tirón alto con codos abiertos o impulsarte contra la almohadilla.'], 'rhomboids', ['latissimus', 'trapezius', 'posterior-deltoid', 'biceps']),
+  exercise(74, 'Extensión de tríceps sobre cabeza en polea', 'Brazos', [], 'Polea', 'Intermedio', null, [
+    'Coloca una cuerda en una polea baja y adopta una postura estable de espaldas a ella, con brazos elevados y agarre detrás de la cabeza.',
+    'Extiende los codos llevando las manos arriba sin adelantar las costillas.',
+    'Vuelve a flexionarlos con control y con la parte alta de los brazos estable.',
+  ], ['Usa un rango cómodo para hombros y codos.', 'Prepara la entrada y salida con poca carga; evita tirar con todo el cuerpo.'], 'triceps', ['rectus-abdominis']),
+  exercise(75, 'Peso muerto rumano con mancuernas', 'Piernas', [], 'Mancuernas', 'Intermedio', null, [
+    'Sujeta una mancuerna en cada mano delante de los muslos y flexiona ligeramente las rodillas.',
+    'Lleva la cadera atrás bajando las cargas cerca de las piernas, sin redondear el tronco.',
+    'Extiende la cadera para volver a erguirte sin inclinarte hacia atrás.',
+  ], ['Detén la bajada donde mantengas el control.', 'No lo conviertas en sentadilla ni busques tocar el suelo.', 'Registra la suma de ambas mancuernas: dos de 12 kg equivalen a 24 kg; diez repeticiones bilaterales se registran como diez repeticiones.'], 'hamstrings', ['gluteals', 'spinal-erectors']),
+  exercise(76, 'Extensión de cuádriceps en máquina', 'Piernas', [], 'Máquina', 'Principiante', null, [
+    'Regula asiento, respaldo y rodillo para alinear rodillas con el eje y apoyar la parte baja de las piernas por encima de los tobillos.',
+    'Extiende las rodillas de forma controlada sin levantar la pelvis.',
+    'Flexiónalas lentamente hasta el inicio ajustado.',
+  ], ['Sigue los ajustes del aparato y evita presión directa sobre el empeine.', 'No rebotes ni golpees las placas al bajar.'], 'quadriceps', []),
+  exercise(77, 'Curl femoral sentado en máquina', 'Piernas', [], 'Máquina', 'Principiante', null, [
+    'Apoya espalda y pelvis, alinea las rodillas con el eje y ajusta la sujeción de muslos y el rodillo detrás de la parte baja de las piernas.',
+    'Flexiona las rodillas llevando los talones hacia abajo y atrás sin despegarte del asiento.',
+    'Extiende las piernas despacio hasta el inicio cómodo.',
+  ], ['El rodillo no debe presionar directamente el tendón de Aquiles.', 'Reduce la carga si necesitas levantar los muslos o mover el tronco.'], 'hamstrings', ['gastrocnemius']),
+  exercise(78, 'Press inclinado de pecho en máquina', 'Pecho', [], 'Máquina', 'Principiante', null, [
+    'Ajusta una máquina de press inclinado para apoyar espalda y pies y comenzar con los agarres junto a la parte alta del pecho.',
+    'Empuja siguiendo la trayectoria del aparato hacia delante y arriba sin despegar el tronco.',
+    'Regresa lentamente hasta una apertura cómoda de los brazos.',
+  ], ['Comprueba que sea un press inclinado, no un press de hombros.', 'Evita elevar los hombros o forzar el recorrido inicial.'], 'pectorals', ['triceps', 'anterior-deltoid']),
+  exercise(79, 'Remo unilateral en polea', 'Espalda', [], 'Polea', 'Intermedio', null, [
+    'Siéntate frente a una polea baja con agarre individual, pies apoyados y tronco erguido.',
+    'Tira con un brazo llevando el codo hacia la cadera, sin girar hombros o pelvis.',
+    'Extiende el brazo con control y completa ambos lados con la misma carga.',
+  ], ['Empieza por el lado con menor control y ajusta al recorrido que puedas mantener.', 'Registra la suma de repeticiones de ambos lados y la carga de un brazo: diez por lado a 15 kg son veinte repeticiones a 15 kg. Completa la serie después de ambos lados.'], 'latissimus', ['rhomboids', 'trapezius', 'biceps', 'obliques']),
+  exercise(80, 'Bird dog', 'Core', [], 'Colchoneta', 'Intermedio', null, [
+    'Apoya manos bajo hombros y rodillas bajo caderas sobre una colchoneta, con espalda en posición neutra.',
+    'Alarga un brazo al frente y la pierna contraria atrás sin girar la pelvis ni arquear la zona lumbar.',
+    'Regresa a los cuatro apoyos con control y alterna la pareja de extremidades.',
+  ], ['Prioriza estabilidad y respiración sobre altura o velocidad.', 'Reduce el recorrido si pierdes alineación.', 'Cada extensión y regreso de una pareja cuenta como una repetición. Registra la suma de ambos lados: seis por lado son doce repeticiones, sin carga externa.'], 'obliques', ['rectus-abdominis', 'spinal-erectors', 'gluteals', 'anterior-deltoid']),
 ]);

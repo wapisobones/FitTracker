@@ -1,0 +1,2 @@
+mas ejercicios referente a la rutina que tengo esta en la conversacion
+revisar si la suma de volumen efectivamente se esta haciendo por semana de manera correcta
